@@ -4,24 +4,24 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 
-export async function login(formData: FormData) {
+export async function loginWithDiscord() {
     const supabase = await createClient()
 
-    // Type casting to string to avoid TypeScript errors
-    const email = formData.get('email') as string
-    const password = formData.get('password') as string
-
-    const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+    const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'discord',
+        options: {
+            redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.avrxt.in'}/auth/callback`,
+            scopes: 'guilds guilds.members.read',
+        },
     })
 
     if (error) {
-        return { error: error.message }
+        redirect('/auth/login?error=' + encodeURIComponent(error.message))
     }
 
-    revalidatePath('/', 'layout')
-    redirect('/docs/admin')
+    if (data.url) {
+        redirect(data.url)
+    }
 }
 
 export async function logout() {
@@ -34,5 +34,5 @@ export async function logout() {
     }
 
     revalidatePath('/', 'layout')
-    redirect('/docs/login')
+    redirect('/auth/login')
 }

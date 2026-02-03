@@ -17,7 +17,7 @@ export default async function MeAdminPage() {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-        redirect('/docs/login');
+        redirect('/auth/login');
     }
 
     const config = await getMeConfigAction();
