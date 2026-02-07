@@ -47,7 +47,7 @@ export default function HireMe() {
         const data = Object.fromEntries(formData);
 
         try {
-            const response = await fetch('https://api.avrxt.in/api/hireme', {
+            const response = await fetch('/api/hireme', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
