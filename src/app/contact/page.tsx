@@ -9,7 +9,7 @@ export default function Contact() {
     const [formStatus, setFormStatus] = useState<{ type: 'success' | 'error' | null, message: string }>({ type: null, message: '' });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const API_ENDPOINT = 'https://api.avrxt.in/api/contact';
+    const API_ENDPOINT = '/api/contact';
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
