@@ -74,6 +74,62 @@ export default function MeClient({ initialConfig }: MeClientProps) {
         setProgress(value);
     };
 
+    const [spotifyData, setSpotifyData] = useState<any>(null);
+    const [isSpotifyLive, setIsSpotifyLive] = useState(config.music.spotifyEnabled);
+
+    // Spotify Live Polling
+    useEffect(() => {
+        if (!config.music.spotifyEnabled) return;
+
+        const fetchNowPlaying = async () => {
+            try {
+                const res = await fetch('/api/spotify/now-playing');
+                const data = await res.json();
+                setSpotifyData(data);
+            } catch (error) {
+                console.error('Spotify fetch error:', error);
+            }
+        };
+
+        fetchNowPlaying();
+        const interval = setInterval(fetchNowPlaying, 5000); // Poll every 5 seconds
+        return () => clearInterval(interval);
+    }, [config.music.spotifyEnabled]);
+
+    const formatTimeAgo = (date: string) => {
+        if (!date) return '';
+        const now = new Date();
+        const playedAt = new Date(date);
+        const diffInSeconds = Math.floor((now.getTime() - playedAt.getTime()) / 1000);
+
+        if (diffInSeconds < 60) return `${diffInSeconds}s ago`;
+        const diffInMinutes = Math.floor(diffInSeconds / 60);
+        if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+        const diffInHours = Math.floor(diffInMinutes / 60);
+        if (diffInHours < 24) return `${diffInHours}h ago`;
+        const diffInDays = Math.floor(diffInHours / 24);
+        if (diffInDays < 30) return `${diffInDays}d ago`;
+        const diffInMonths = Math.floor(diffInDays / 30);
+        if (diffInMonths < 12) return `${diffInMonths}mo ago`;
+        return `${Math.floor(diffInMonths / 12)}y ago`;
+    };
+
+    // Live progress for Spotify
+    useEffect(() => {
+        if (!spotifyData?.isPlaying) return;
+
+        const tick = setInterval(() => {
+            setSpotifyData((prev: any) => {
+                if (!prev) return prev;
+                const newProgress = prev.progressMs + 1000;
+                if (newProgress >= prev.durationMs) return prev;
+                return { ...prev, progressMs: newProgress };
+            });
+        }, 1000);
+
+        return () => clearInterval(tick);
+    }, [spotifyData?.isPlaying, spotifyData?.title]);
+
     const handleSubscribe = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setIsSubmitting(true);
@@ -116,7 +172,7 @@ export default function MeClient({ initialConfig }: MeClientProps) {
                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.12] mix-blend-overlay"></div>
             </div>
 
-            <div className="relative z-20 w-full max-w-md px-6 flex flex-col items-center">
+            <div className="relative z-20 w-full max-w-md px-6 flex flex-col items-center [perspective:1000px]">
                 {/* Profile Header */}
                 <div className="text-center mb-10 animate-fade-in" style={{ animationDelay: '0.1s' }}>
                     <div className="mb-6 relative inline-block">
@@ -187,39 +243,143 @@ export default function MeClient({ initialConfig }: MeClientProps) {
 
                 {/* Music Player */}
                 <div className="w-full mb-8 animate-fade-in" style={{ animationDelay: '0.4s' }}>
-                    <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.2em] mb-3 ml-1 block">// Current_Freq</span>
-                    <div className="sub-card p-4 rounded-xl flex items-center gap-4 bg-white/[0.02] border border-white/[0.08] backdrop-blur-xl">
-                        <img
-                            src={config.music.coverUrl}
-                            className="w-16 h-16 rounded-lg object-cover shadow-lg border border-white/5"
-                            alt="Cover"
-                        />
-
-                        <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between mb-1">
-                                <div>
-                                    <h4 className="text-xs font-bold uppercase tracking-wider truncate text-white">{config.music.title}</h4>
-                                    <p className="text-[10px] text-zinc-500 font-mono italic">{config.music.artist}</p>
-                                </div>
-                                <button
-                                    onClick={togglePlay}
-                                    className="w-8 h-8 flex items-center justify-center rounded-full bg-white text-black hover:scale-105 transition-transform"
-                                >
-                                    {isPlaying ? <Pause className="w-4 h-4 fill-black" /> : <Play className="w-4 h-4 fill-black" />}
-                                </button>
+                    <div className="flex items-center justify-between mb-3 ml-1">
+                        <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.2em] block">
+                            {config.music.spotifyEnabled && spotifyData?.isPlaying ? '// Currently_Playing' : '// Current_Freq'}
+                        </span>
+                        {config.music.spotifyEnabled && (
+                            <div className={cn(
+                                "flex items-center gap-1.5 px-2 py-0.5 rounded-full border transition-colors duration-500",
+                                spotifyData?.isPlaying
+                                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500"
+                                    : "bg-red-500/10 border-red-500/20 text-red-500"
+                            )}>
+                                <div className={cn(
+                                    "w-1 h-1 rounded-full transition-colors duration-500",
+                                    spotifyData?.isPlaying ? "bg-emerald-500" : "bg-red-500"
+                                )} />
+                                <span className="text-[8px] font-bold uppercase tracking-tighter">
+                                    {spotifyData?.isPlaying ? 'Live_Spotify' : 'Offline'}
+                                </span>
                             </div>
-                            <input
-                                type="range"
-                                className="w-full h-[3px] bg-white/10 rounded-full appearance-none outline-none cursor-pointer accent-white"
-                                value={progress}
-                                onChange={handleProgressChange}
-                                min="0"
-                                max="100"
+                        )}
+                    </div>
+
+                    <div className="card-3d p-4 rounded-xl flex items-center gap-4 bg-white/[0.02] border border-white/[0.08] backdrop-blur-xl relative overflow-hidden group">
+                        <div className="relative w-16 h-16 shrink-0">
+                            <img
+                                src={config.music.spotifyEnabled && spotifyData?.isPlaying && spotifyData?.albumImageUrl ? spotifyData.albumImageUrl : config.music.coverUrl}
+                                className="w-full h-full rounded-lg object-cover shadow-lg border border-white/5 transition-transform duration-500"
+                                alt="Cover"
                             />
-                            <audio ref={audioRef} src={config.music.audioUrl} />
+                        </div>
+
+                        <div className="flex-1 min-w-0 z-10">
+                            <div className="flex items-center justify-between mb-1">
+                                <div className="min-w-0">
+                                    <h4 className="text-[11px] font-black uppercase tracking-wider truncate text-white">
+                                        {config.music.spotifyEnabled && spotifyData?.isPlaying && spotifyData?.title ? spotifyData.title : config.music.title}
+                                    </h4>
+                                    <p className="text-[9px] text-zinc-500 font-mono italic truncate">
+                                        {config.music.spotifyEnabled && spotifyData?.isPlaying && spotifyData?.artist ? spotifyData.artist : config.music.artist}
+                                    </p>
+                                </div>
+                                {(!config.music.spotifyEnabled || !spotifyData?.isPlaying) ? (
+                                    <button
+                                        onClick={togglePlay}
+                                        className="w-8 h-8 flex items-center justify-center rounded-full bg-white text-black hover:scale-110 transition-transform shrink-0 shadow-xl"
+                                    >
+                                        {isPlaying ? <Pause className="w-3.5 h-3.5 fill-black" /> : <Play className="w-3.5 h-3.5 fill-black ml-0.5" />}
+                                    </button>
+                                ) : (
+                                    spotifyData?.songUrl && (
+                                        <a
+                                            href={spotifyData.songUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="w-8 h-8 flex items-center justify-center rounded-full bg-[#1DB954] text-black hover:scale-110 transition-transform shrink-0 shadow-[0_0_15px_rgba(29,185,84,0.3)]"
+                                        >
+                                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.485 17.303c-.212.347-.662.455-1.009.244-2.822-1.725-6.375-2.113-10.559-1.159-.396.091-.796-.159-.887-.556-.092-.396.159-.797.555-.888 4.582-1.048 8.514-.606 11.656 1.312.347.213.454.662.244 1.047zm1.464-3.264c-.268.434-.833.573-1.267.306-3.227-1.983-8.147-2.556-11.963-1.397-.49.149-1.009-.129-1.157-.619-.149-.489.13-1.009.619-1.157 4.364-1.324 9.802-.68 13.464 1.571.434.267.573.833.306 1.267.001-.001.001 0 0 .029zm.126-3.4c-3.871-2.298-10.264-2.509-13.974-1.383-.593.18-1.224-.162-1.404-.755-.18-.593.162-1.224.755-1.404 4.256-1.291 11.316-1.039 15.786 1.614.533.317.708 1.005.392 1.538-.316.533-1.005.708-1.538.391l-.017-.001z" />
+                                            </svg>
+                                        </a>
+                                    )
+                                )}
+                            </div>
+
+                            {config.music.spotifyEnabled && spotifyData?.isPlaying ? (
+                                <div className="mt-3 space-y-1.5">
+                                    <div className="flex justify-between items-center px-0.5">
+                                        <span className="text-[7px] font-mono text-zinc-500 uppercase tracking-tighter">
+                                            {Math.floor(spotifyData.progressMs / 60000)}:{Math.floor((spotifyData.progressMs % 60000) / 1000).toString().padStart(2, '0')}
+                                        </span>
+                                        <div className="flex gap-0.5">
+                                            <div className="w-0.5 h-2 bg-emerald-500/40 rounded-full" />
+                                            <div className="w-0.5 h-3 bg-emerald-500/60 rounded-full" />
+                                            <div className="w-0.5 h-2 bg-emerald-500/40 rounded-full" />
+                                        </div>
+                                        <span className="text-[7px] font-mono text-zinc-500 uppercase tracking-tighter">
+                                            {Math.floor(spotifyData.durationMs / 60000)}:{Math.floor((spotifyData.durationMs % 60000) / 1000).toString().padStart(2, '0')}
+                                        </span>
+                                    </div>
+                                    <div className="w-full h-[2px] bg-white/5 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full animate-progress-flow transition-all duration-1000 shadow-[0_0_8px_#10b981]"
+                                            style={{ width: `${(spotifyData.progressMs / spotifyData.durationMs) * 100}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="mt-4 relative group/progress">
+                                    <div className="w-full h-[2px] bg-white/5 rounded-full overflow-hidden relative">
+                                        <div
+                                            className={cn(
+                                                "h-full transition-all duration-300 shadow-[0_0_8px_#ffffff20]",
+                                                isPlaying ? "animate-progress-flow bg-white shadow-[0_0_8px_#ffffff]" : "bg-zinc-600"
+                                            )}
+                                            style={{ width: `${progress}%` }}
+                                        />
+                                    </div>
+                                    <input
+                                        type="range"
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                        value={progress}
+                                        onChange={handleProgressChange}
+                                        min="0"
+                                        max="100"
+                                    />
+                                    <audio ref={audioRef} src={config.music.audioUrl} />
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
+
+                {/* Recently Played Section (New 3D Section) */}
+                {config.music.spotifyEnabled && spotifyData?.title && !spotifyData?.isPlaying && (
+                    <div className="w-full mb-8 animate-fade-in" style={{ animationDelay: '0.5s' }}>
+                        <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.2em] mb-3 ml-1 block">Recently_Synchronized</span>
+                        <div className="card-3d p-3 rounded-xl bg-gradient-to-br from-white/[0.03] to-transparent border border-white/[0.06] flex items-center gap-3 relative overflow-hidden group">
+                            {/* 3D Highlight Effect */}
+                            <div className="absolute -top-24 -left-24 w-48 h-48 bg-white/5 blur-[60px] rounded-full pointer-events-none group-hover:bg-emerald-500/5 transition-colors duration-700" />
+
+                            <img
+                                src={spotifyData.albumImageUrl}
+                                alt="Last Played"
+                                className="w-12 h-12 rounded-md object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500 shadow-lg"
+                            />
+
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-0.5">
+                                    <span className="text-[7px] font-mono text-zinc-500 px-1.5 py-0.5 rounded-sm bg-white/5 border border-white/5 tracking-widest uppercase">Last_Seen</span>
+                                    <span className="text-[7px] font-mono text-zinc-600 uppercase tracking-widest">{formatTimeAgo(spotifyData.playedAt)}</span>
+                                </div>
+                                <h5 className="text-[10px] font-bold text-white/80 uppercase tracking-wider truncate mb-0.5">{spotifyData.title}</h5>
+                                <p className="text-[8px] font-mono text-zinc-500 uppercase tracking-tighter truncate">{spotifyData.artist}</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Gallery Section */}
                 {config.gallery && config.gallery.length > 0 && (
@@ -376,6 +536,6 @@ export default function MeClient({ initialConfig }: MeClientProps) {
                     transition: all 1s ease;
                 }
             `}</style>
-        </main>
+        </main >
     );
 }

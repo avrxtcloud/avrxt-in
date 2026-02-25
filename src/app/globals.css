@@ -124,5 +124,50 @@
 .animate-fade-in {
   animation: fadeInPage 0.8s ease-out forwards;
 }
-.font-outfit { font-family: var(--font-outfit), sans-serif; }
-.font-accent { font-family: var(--font-accent), serif; }
+
+@keyframes progress-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+.animate-progress-flow {
+  background: linear-gradient(90deg, #10b981 0%, #34d399 25%, #10b981 50%, #34d399 75%, #10b981 100%);
+  background-size: 200% 100%;
+  animation: progress-flow 2s linear infinite;
+}
+
+@keyframes slow-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-slow-spin-slow {
+  animation: slow-spin 12s linear infinite;
+}
+
+.card-3d {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  transform-style: preserve-3d;
+  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.card-3d:hover {
+  transform: translateY(-5px) rotateX(4deg) rotateY(-2deg);
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow:
+    -10px 10px 20px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(16, 185, 129, 0.05);
+}

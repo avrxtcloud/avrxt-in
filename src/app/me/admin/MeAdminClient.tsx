@@ -6,19 +6,21 @@ import {
     Plus, Trash2, Save, LogOut,
     Music, Link as LinkIcon, Book,
     Check, ArrowUp, ArrowDown,
-    User, Eye, AlertCircle, Camera
+    User, Eye, AlertCircle, Camera, Upload
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { MeConfig } from '@/lib/me-config';
 import { saveMeConfigAction } from '@/app/actions/me';
 import { logout } from '@/app/actions/auth';
 import { createClient } from '@/utils/supabase/client';
-import { Upload } from 'lucide-react';
+import { disconnectSpotifyAction } from '@/app/actions/spotify';
 
 interface MeAdminClientProps {
     initialConfig: MeConfig;
+    isSpotifyConnected: boolean;
 }
 
-export default function MeAdminClient({ initialConfig }: MeAdminClientProps) {
+export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeAdminClientProps) {
     const [config, setConfig] = useState<MeConfig>(initialConfig);
     const [saveStatus, setSaveStatus] = useState<string>('');
     const [isPending, setIsPending] = useState(false);
@@ -286,64 +288,116 @@ export default function MeAdminClient({ initialConfig }: MeAdminClientProps) {
 
                         {/* Music Settings */}
                         <div className="p-6 rounded-2xl bg-zinc-900/40 border border-white/5 space-y-4">
-                            <h2 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2 font-mono">
-                                <Music size={16} className="text-zinc-500" /> Current_Freq
-                            </h2>
-                            <div className="space-y-3">
-                                <input
-                                    type="text"
-                                    value={config.music.title}
-                                    onChange={(e) => setConfig({ ...config, music: { ...config.music, title: e.target.value } })}
-                                    className="admin-input"
-                                    placeholder="Track Name"
-                                />
-                                <input
-                                    type="text"
-                                    value={config.music.artist}
-                                    onChange={(e) => setConfig({ ...config, music: { ...config.music, artist: e.target.value } })}
-                                    className="admin-input"
-                                    placeholder="Artist"
-                                />
-                                <input
-                                    type="text"
-                                    value={config.music.coverUrl}
-                                    onChange={(e) => setConfig({ ...config, music: { ...config.music, coverUrl: e.target.value } })}
-                                    className="admin-input"
-                                    placeholder="Cover Image URL"
-                                />
-                                <div className="flex items-center gap-2">
-                                    <label className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg cursor-pointer transition-all border border-white/5">
-                                        <Upload size={12} className="text-zinc-400" />
-                                        <span className="text-[10px] font-mono font-bold text-zinc-300">UPLOAD_COVER</span>
-                                        <input
-                                            type="file"
-                                            className="hidden"
-                                            accept="image/*"
-                                            onChange={(e) => handleFileUpload(e, 'music.coverUrl')}
-                                        />
-                                    </label>
-                                </div>
-                                <input
-                                    type="text"
-                                    value={config.music.audioUrl}
-                                    onChange={(e) => setConfig({ ...config, music: { ...config.music, audioUrl: e.target.value } })}
-                                    className="admin-input"
-                                    placeholder="Audio File URL (Direct mp3)"
-                                />
-                                <div className="flex items-center gap-2">
-                                    <label className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg cursor-pointer transition-all border border-white/5">
-                                        <Upload size={12} className="text-zinc-400" />
-                                        <span className="text-[10px] font-mono font-bold text-zinc-300">UPLOAD_AUDIO</span>
-                                        <input
-                                            type="file"
-                                            className="hidden"
-                                            accept=".mp3,.wav,.m4a"
-                                            onChange={(e) => handleFileUpload(e, 'music.audioUrl')}
-                                        />
-                                    </label>
-                                    <span className="text-[10px] text-zinc-600 font-mono">Max 50MB</span>
+                            <div className="flex justify-between items-center">
+                                <h2 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2 font-mono">
+                                    <Music size={16} className="text-zinc-500" /> Current_Freq
+                                </h2>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-[10px] font-mono text-zinc-500 uppercase">Live_Spotify</span>
+                                    <button
+                                        onClick={() => setConfig({ ...config, music: { ...config.music, spotifyEnabled: !config.music.spotifyEnabled } })}
+                                        className={cn(
+                                            "w-10 h-5 rounded-full transition-all relative border",
+                                            config.music.spotifyEnabled ? "bg-emerald-500/20 border-emerald-500/50" : "bg-white/5 border-white/10"
+                                        )}
+                                    >
+                                        <div className={cn(
+                                            "absolute top-1 w-2.5 h-2.5 rounded-full transition-all",
+                                            config.music.spotifyEnabled ? "right-1 bg-emerald-500" : "left-1 bg-zinc-600"
+                                        )}></div>
+                                    </button>
                                 </div>
                             </div>
+
+                            {/* Spotify Connection */}
+                            <div className="p-4 rounded-xl bg-black/40 border border-white/5 space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className={cn(
+                                            "w-8 h-8 rounded-full flex items-center justify-center",
+                                            isSpotifyConnected ? "bg-emerald-500/10" : "bg-white/5"
+                                        )}>
+                                            <svg className={cn("w-4 h-4", isSpotifyConnected ? "text-emerald-500" : "text-zinc-500")} viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.485 17.303c-.212.347-.662.455-1.009.244-2.822-1.725-6.375-2.113-10.559-1.159-.396.091-.796-.159-.887-.556-.092-.396.159-.797.555-.888 4.582-1.048 8.514-.606 11.656 1.312.347.213.454.662.244 1.047zm1.464-3.264c-.268.434-.833.573-1.267.306-3.227-1.983-8.147-2.556-11.963-1.397-.49.149-1.009-.129-1.157-.619-.149-.489.13-1.009.619-1.157 4.364-1.324 9.802-.68 13.464 1.571.434.267.573.833.306 1.267.001-.001.001 0 0 .029zm.126-3.4c-3.871-2.298-10.264-2.509-13.974-1.383-.593.18-1.224-.162-1.404-.755-.18-.593.162-1.224.755-1.404 4.256-1.291 11.316-1.039 15.786 1.614.533.317.708 1.005.392 1.538-.316.533-1.005.708-1.538.391l-.017-.001z" />
+                                            </svg>
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] font-bold text-white uppercase tracking-widest">Spotify_Sync</span>
+                                            <span className="text-[9px] font-mono text-zinc-500 uppercase">{isSpotifyConnected ? "CONNECTED" : "NOT_CONNECTED"}</span>
+                                        </div>
+                                    </div>
+
+                                    {isSpotifyConnected ? (
+                                        <button
+                                            onClick={async () => {
+                                                if (confirm('Disconnect Spotify?')) {
+                                                    const res = await disconnectSpotifyAction();
+                                                    if (res.success) window.location.reload();
+                                                }
+                                            }}
+                                            className="text-[9px] font-mono font-bold text-red-400 hover:text-red-300 transition-colors uppercase"
+                                        >
+                                            [DISCONNECT]
+                                        </button>
+                                    ) : (
+                                        <Link
+                                            href="/api/spotify/auth"
+                                            className="px-3 py-1.5 bg-[#1DB954] hover:bg-[#1ed760] text-black text-[9px] font-bold font-mono rounded-md transition-all uppercase"
+                                        >
+                                            Connect_Spotify
+                                        </Link>
+                                    )}
+                                </div>
+                            </div>
+
+                            {!config.music.spotifyEnabled && (
+                                <div className="space-y-3 pt-2">
+                                    <input
+                                        type="text"
+                                        value={config.music.title}
+                                        onChange={(e) => setConfig({ ...config, music: { ...config.music, title: e.target.value } })}
+                                        className="admin-input"
+                                        placeholder="Track Name"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={config.music.artist}
+                                        onChange={(e) => setConfig({ ...config, music: { ...config.music, artist: e.target.value } })}
+                                        className="admin-input"
+                                        placeholder="Artist"
+                                    />
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="space-y-2">
+                                            <input
+                                                type="text"
+                                                value={config.music.coverUrl}
+                                                onChange={(e) => setConfig({ ...config, music: { ...config.music, coverUrl: e.target.value } })}
+                                                className="admin-input"
+                                                placeholder="Cover URL"
+                                            />
+                                            <label className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg cursor-pointer transition-all border border-white/5">
+                                                <Upload size={12} className="text-zinc-400" />
+                                                <span className="text-[10px] font-mono font-bold text-zinc-300">UPLOAD_COVER</span>
+                                                <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'music.coverUrl')} />
+                                            </label>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <input
+                                                type="text"
+                                                value={config.music.audioUrl}
+                                                onChange={(e) => setConfig({ ...config, music: { ...config.music, audioUrl: e.target.value } })}
+                                                className="admin-input"
+                                                placeholder="Audio URL"
+                                            />
+                                            <label className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg cursor-pointer transition-all border border-white/5">
+                                                <Upload size={12} className="text-zinc-400" />
+                                                <span className="text-[10px] font-mono font-bold text-zinc-300">UPLOAD_AUDIO</span>
+                                                <input type="file" className="hidden" accept=".mp3,.wav,.m4a" onChange={(e) => handleFileUpload(e, 'music.audioUrl')} />
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
 

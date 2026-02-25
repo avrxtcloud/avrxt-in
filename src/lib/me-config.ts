@@ -24,6 +24,7 @@ export interface MeConfig {
         artist: string;
         coverUrl: string;
         audioUrl: string;
+        spotifyEnabled?: boolean;
     };
     links: MeLink[];
     gallery: {
@@ -56,7 +57,8 @@ export const defaultMeConfig: MeConfig = {
         title: "her",
         artist: "JVKE",
         coverUrl: "https://objects.avrxt.in/assets/ab67616d0000b273a0934c15232680a3afc9da6e.jpeg",
-        audioUrl: "https://objects.avrxt.in/assets/SpotiDownloader.com%20-%20her%20-%20JVKE.mp3"
+        audioUrl: "https://objects.avrxt.in/assets/SpotiDownloader.com%20-%20her%20-%20JVKE.mp3",
+        spotifyEnabled: false
     },
     links: [
         { id: '1', name: 'Instagram', url: 'https://instagram.com/avr.me', icon: 'Instagram', type: 'social' },

@@ -22,7 +22,15 @@ export default async function MeAdminPage() {
 
     const config = await getMeConfigAction();
 
+    const { data: spotifyToken } = await supabase
+        .from('spotify_tokens')
+        .select('id')
+        .single();
+
     return (
-        <MeAdminClient initialConfig={config} />
+        <MeAdminClient
+            initialConfig={config}
+            isSpotifyConnected={!!spotifyToken}
+        />
     );
 }

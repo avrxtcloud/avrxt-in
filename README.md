@@ -45,10 +45,29 @@ graph TD
 
 ### 🎯 Core Pages & Functionality
 - **Landing Page (`/`)**: High-impact hero section with glassmorphism, tech stack matrices, and production metrics.
-- **Profile Node (`/me`)**: Immersive "Link in Bio" ecosystem with live status, music synchronization, and newsletter terminal.
+- **Profile Node (`/me`)**: Immersive "Link in Bio" ecosystem with **Real-Time Spotify Synchronization**, 3D recently played cards, and newsletter terminal.
 - **Technical Library (`/docs`)**: Markdown-powered documentation system with professional SEO and admin controls.
 - **Interaction Hub (`/guestbook`)**: Verified community messaging system via GitHub OAuth.
 - **Project Intake (`/hireme`)**: Advanced budget/timeline estimator for service inquiries.
+
+### 🎵 Music Synchronization Engine
+- **Live_Spotify Protocol**: Real-time polling of Spotify playback status with dynamic progress bars.
+- **Intelligent Dual-Buffer**: Automatic transition between Live Spotify and local Uploaded Music frequency when offline.
+- **Recently_Synchronized 3D Cards**: Historical playback memory with "Last Seen" timestamps and immersive 3D hover interactions.
+- **Visual Flow Bars**: Premium CSS-animated gradient flow on all music progress indicators.
+
+```mermaid
+graph LR
+    SpotifyAPI((Spotify API)) -->|OAuth/Refresh| SyncEngine[Music Sync Engine]
+    SyncEngine -->|Playing| UI_Live[Live Spotify Card]
+    SyncEngine -->|Paused/Offline| Fallback[Local Upload Fallback]
+    SyncEngine -->|DB Upsert| Supabase[(Supabase History)]
+    Supabase -->|Recently Played| UI_3D[Recently Synchronized 3D Card]
+    
+    style UI_Live fill:#1DB954,stroke:#333,color:#000
+    style Fallback fill:#fff,stroke:#333,color:#000
+    style SpotifyAPI fill:#1DB954,stroke:#333,color:#fff
+```
 
 ### ☁️ Cloud Engineering (`/cloud`)
 Premium tier-based service architecture for:
@@ -134,4 +153,4 @@ This project is strictly for the exclusive use of **@avrxt**. Unauthorized copyi
 
 **Developer**: [@avrxt](https://instagram.com/aviorxt) | [support@avrxt.in](mailto:support@avrxt.in)
 
-*Last Updated: January 15, 2026*
+*Last Updated: February 25, 2026*

@@ -10,10 +10,12 @@ export async function GET(request: Request) {
         const supabase = await createClient();
         const { error } = await supabase.auth.exchangeCodeForSession(code);
         if (!error) {
-            return NextResponse.redirect(`${origin}${next}`);
+            // Force the redirect to stay on the current origin (e.g. localhost or 127.0.0.1)
+            // instead of falling back to the Supabase "Site URL"
+            return NextResponse.redirect(new URL(next, request.url));
         }
     }
 
     // return the user to an error page with instructions
-    return NextResponse.redirect(`${origin}/auth/auth-error`);
+    return NextResponse.redirect(new URL('/auth/auth-error', request.url));
 }
