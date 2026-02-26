@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
     const client_id = process.env.SPOTIFY_CLIENT_ID;
-    const redirect_uri = process.env.SPOTIFY_REDIRECT_URI || 'https://127.0.0.1:3000/api/spotify/callback';
+    const redirect_uri = process.env.SPOTIFY_REDIRECT_URI || 'https://www.avrxt.in/api/spotify/callback';
     const scope = 'user-read-currently-playing user-read-playback-state user-read-recently-played';
 
     console.log('--- SPOTIFY AUTH ATTEMPT ---');
