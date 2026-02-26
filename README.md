@@ -129,9 +129,21 @@ src/
    npm install
    ```
 
-2. **Environment**: Configure `.env.local` with Supabase, Resend, Razorpay, and Google Service Account credentials.
+2. **Environment**: Configure `.env.local` with the following:
+   - Supabase: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and **`SUPABASE_SERVICE_ROLE_KEY`** (Required for Spotify visitor support).
+   - Resend, Razorpay, and Google Service Account credentials.
 
 3. **Deploy**: Optimized for Vercel with automatic CI/CD on `main` and `development` branches.
+
+---
+
+## 🎵 Spotify Visitor Support Fix
+The Now Playing widget now uses a **Supabase Admin Client** (bypassing RLS) on the server-side to fetch playback tokens. This ensures that:
+- Visitors can see your live status without being authenticated.
+- Tokens are automatically refreshed on behalf of the admin.
+- Playback history is securely managed.
+
+**Legacy Note**: Previously, the widget would show "Offline" for visitors because Row Level Security (RLS) prevented anonymous users from reading the admin's refresh token.
 
 ---
 
@@ -153,4 +165,4 @@ This project is strictly for the exclusive use of **@avrxt**. Unauthorized copyi
 
 **Developer**: [@avrxt](https://instagram.com/aviorxt) | [support@avrxt.in](mailto:support@avrxt.in)
 
-*Last Updated: February 25, 2026*
+*Last Updated: February 26, 2026*

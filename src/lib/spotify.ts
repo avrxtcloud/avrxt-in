@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server';
+import { createAdminClient } from '@/utils/supabase/admin';
 
 const client_id = process.env.SPOTIFY_CLIENT_ID;
 const client_secret = process.env.SPOTIFY_CLIENT_SECRET;
@@ -7,7 +7,7 @@ const NOW_PLAYING_ENDPOINT = `https://api.spotify.com/v1/me/player/currently-pla
 const TOKEN_ENDPOINT = `https://accounts.spotify.com/api/token`;
 
 export async function getSpotifyTokens() {
-    const supabase = await createClient();
+    const supabase = createAdminClient();
     const { data: tokens, error } = await supabase
         .from('spotify_tokens')
         .select('*')
@@ -33,7 +33,7 @@ export async function refreshAccessToken(refresh_token: string) {
     const data = await response.json();
     if (!response.ok) throw new Error('Failed to refresh token');
 
-    const supabase = await createClient();
+    const supabase = createAdminClient();
     const { error: updateError } = await supabase
         .from('spotify_tokens')
         .update({
@@ -72,7 +72,7 @@ export async function getNowPlaying() {
 
     // Save to history if playing
     if (song.is_playing) {
-        const supabase = await createClient();
+        const supabase = createAdminClient();
         await supabase.from('spotify_history').upsert({
             song_name: song.item.name,
             artist: song.item.artists.map((_artist: any) => _artist.name).join(', '),

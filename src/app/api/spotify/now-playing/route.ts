@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getNowPlaying, getSpotifyTokens } from '@/lib/spotify';
-import { createClient } from '@/utils/supabase/server';
+import { createAdminClient } from '@/utils/supabase/admin';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,7 +18,7 @@ export async function GET() {
         }
 
         // If not playing, get last played from history
-        const supabase = await createClient();
+        const supabase = createAdminClient();
         const { data: lastPlayed, error } = await supabase
             .from('spotify_history')
             .select('*')
