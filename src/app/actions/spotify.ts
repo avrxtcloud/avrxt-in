@@ -1,3 +1,5 @@
+'use server';
+
 import { createClient } from '@/utils/supabase/server';
 import { searchSpotify } from '@/lib/spotify';
 import { revalidatePath } from 'next/cache';
