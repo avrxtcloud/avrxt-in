@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation';
+import { protectAdminPage } from '@/lib/auth-checks';
 import { createClient } from '@/utils/supabase/server';
 import { getAdminDocs } from '@/app/actions/docs';
 import AdminClient from './AdminClient';
@@ -12,12 +12,13 @@ export const metadata: Metadata = {
 };
 
 export default async function DocsAdminPage() {
-    const supabase = await createClient();
+    await protectAdminPage();
 
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-        redirect('/auth/login?source=admin');
+        return null; // Should be handled by protectAdminPage, but for safety
     }
 
     const docs = await getAdminDocs();
