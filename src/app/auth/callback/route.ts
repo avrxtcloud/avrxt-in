@@ -12,8 +12,12 @@ export async function GET(request: Request) {
         const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
         if (!error && data.user && data.session) {
-            // Check if this is an admin login attempt by checking if the source matches our admin dashboard
-            const isAdminRequest = next.startsWith('/me/admin');
+            // Check if this is an admin login attempt 
+            const isAdminPath = next.startsWith('/me/admin') || next.startsWith('/docs/admin');
+            const isSourceAdmin = searchParams.get('source') === 'admin';
+            const isAdminRequest = isAdminPath || isSourceAdmin;
+
+            console.log(`[AUTH_CALLBACK] Login for ${data.user.email}. Path: ${next}. AdminRequest: ${isAdminRequest}`);
 
             if (isAdminRequest) {
                 // Check if user logged in via Discord
