@@ -1,8 +1,8 @@
-import { redirect } from 'next/navigation';
 import { createClient } from '@/utils/supabase/server';
 import { getMeConfigAction } from '@/app/actions/me';
 import MeAdminClient from './MeAdminClient';
 import { Metadata } from 'next';
+import { protectAdminPage } from '@/lib/auth-checks';
 
 export const metadata: Metadata = {
     robots: {
@@ -12,14 +12,9 @@ export const metadata: Metadata = {
 };
 
 export default async function MeAdminPage() {
+    await protectAdminPage();
+
     const supabase = await createClient();
-
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-        redirect('/auth/login?source=admin');
-    }
-
     const config = await getMeConfigAction();
 
     const { data: spotifyToken } = await supabase

@@ -64,6 +64,17 @@ function LoginContent() {
                     </p>
                 </div>
 
+                {searchParams.get('error') && (
+                    <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+                        <p className="text-xs text-red-400 font-mono uppercase tracking-wider">
+                            {searchParams.get('error') === 'discord_required' && 'Discord authentication is required.'}
+                            {searchParams.get('error') === 'metadata_missing' && 'Discord identity not found.'}
+                            {searchParams.get('error') === 'unauthorized_role' && 'Access Denied: Required Role Missing.'}
+                            {!['discord_required', 'metadata_missing', 'unauthorized_role'].includes(searchParams.get('error') || '') && 'An authentication error occurred.'}
+                        </p>
+                    </div>
+                )}
+
                 {source === 'guestbook' && (
                     <button
                         onClick={handleGithubLogin}

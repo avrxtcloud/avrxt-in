@@ -1,8 +1,7 @@
-'use server'
-
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { MeConfig, defaultMeConfig } from '@/lib/me-config';
+import { verifyAdmin } from '@/lib/auth-checks';
 
 export async function getMeConfigAction(): Promise<MeConfig> {
     const supabase = await createClient();
@@ -22,6 +21,11 @@ export async function getMeConfigAction(): Promise<MeConfig> {
 }
 
 export async function saveMeConfigAction(config: MeConfig) {
+    const { authorized, error: authError } = await verifyAdmin();
+    if (!authorized) {
+        return { error: `Unauthorized: ${authError}` };
+    }
+
     const supabase = await createClient();
 
     const { error } = await supabase
