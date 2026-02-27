@@ -42,6 +42,7 @@ function LoginContent() {
             provider: 'discord',
             options: {
                 redirectTo: `${origin}/auth/callback?next=${next}`,
+                scopes: 'identify email guilds.members.read',
             },
         });
     };
