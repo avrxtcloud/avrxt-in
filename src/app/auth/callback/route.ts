@@ -53,9 +53,9 @@ export async function GET(request: Request) {
                 });
 
                 if (updateError) {
-                    console.error('[AUTH_CALLBACK] Failed to tag user as admin:', updateError);
+                    console.error(`[AUTH_CALLBACK] ❌ FAILED to tag user ${data.user.email} as admin:`, updateError);
                 } else {
-                    console.log(`[AUTH_CALLBACK] User ${data.user.email} successfully tagged as admin in DB.`);
+                    console.log(`[AUTH_CALLBACK] ✅ User ${data.user.email} is now a VERIFIED ADMIN in the database.`);
                 }
             }
 
