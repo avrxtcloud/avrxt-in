@@ -18,7 +18,7 @@ export async function checkDiscordRole(userId: string, providerToken?: string) {
                     headers: {
                         Authorization: `Bearer ${providerToken}`,
                     },
-                    next: { revalidate: 0 }
+                    cache: 'no-store'
                 }
             );
 
@@ -27,10 +27,14 @@ export async function checkDiscordRole(userId: string, providerToken?: string) {
                 const userRoles: string[] = data.roles || [];
                 const hasRole = userRoles.includes(roleId);
 
-                console.log(`[DISCORD_AUTH] Success! Discord reported roles: ${userRoles.join(', ')}`);
-                console.log(`[DISCORD_AUTH] Match Found (${roleId}): ${hasRole}`);
-
-                return hasRole;
+                if (hasRole) {
+                    console.log(`[DISCORD_AUTH] ✅ Access Granted. User has role ${roleId}`);
+                    return true;
+                } else {
+                    console.warn(`[DISCORD_AUTH] ❌ Access Denied. User lacks the role.`);
+                    console.log(`[DISCORD_AUTH] DISCOVERY: User has these roles in this guild: [${userRoles.join(', ')}]`);
+                    return false;
+                }
             } else {
                 const errorData = await response.text();
                 if (response.status === 404) {
@@ -57,7 +61,7 @@ export async function checkDiscordRole(userId: string, providerToken?: string) {
                     headers: {
                         Authorization: `Bot ${botToken}`,
                     },
-                    next: { revalidate: 0 }
+                    cache: 'no-store'
                 }
             );
 

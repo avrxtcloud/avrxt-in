@@ -41,11 +41,18 @@ export async function GET(request: Request) {
 
                 // If they have the role, we "tag" them as an admin in Supabase app_metadata
                 // This allows us to check their admin status on every page without calling Discord again
+                console.log(`[AUTH_CALLBACK] Discord verification successful for ${data.user.email}. Tagging as admin...`);
                 const { createAdminClient } = await import('@/utils/supabase/admin');
                 const adminClient = createAdminClient();
-                await adminClient.auth.admin.updateUserById(data.user.id, {
+                const { error: updateError } = await adminClient.auth.admin.updateUserById(data.user.id, {
                     app_metadata: { ...data.user.app_metadata, role: 'admin' }
                 });
+
+                if (updateError) {
+                    console.error('[AUTH_CALLBACK] Failed to tag user as admin:', updateError);
+                } else {
+                    console.log(`[AUTH_CALLBACK] User ${data.user.email} successfully tagged as admin in DB.`);
+                }
             }
 
             // Force the redirect to stay on the current origin
