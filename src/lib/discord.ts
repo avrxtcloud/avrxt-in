@@ -4,13 +4,13 @@ export async function checkDiscordRole(userId: string, providerToken?: string) {
     const roleId = process.env.DISCORD_ROLE_ID;
 
     if (!guildId || !roleId) {
-        console.error('Missing Discord configuration. Please ensure DISCORD_GUILD_ID and DISCORD_ROLE_ID are set.');
+        console.error('[DISCORD_AUTH] Missing IDs: GUILD_ID or ROLE_ID not set in env.');
         return false;
     }
 
-    // 1. Try checking via User's own Token (No Bot Required)
     if (providerToken) {
         try {
+            console.log(`[DISCORD_AUTH] Attempting role check for user ${userId} in guild ${guildId} using User Token...`);
             const response = await fetch(
                 `https://discord.com/api/v10/users/@me/guilds/${guildId}/member`,
                 {
@@ -23,19 +23,24 @@ export async function checkDiscordRole(userId: string, providerToken?: string) {
 
             if (response.ok) {
                 const data = await response.json();
-                return data.roles && data.roles.includes(roleId);
+                const hasRole = data.roles && data.roles.includes(roleId);
+                console.log(`[DISCORD_AUTH] Success! User roles: ${JSON.stringify(data.roles)}. Match found: ${hasRole}`);
+                return hasRole;
+            } else {
+                const errorData = await response.text();
+                console.error(`[DISCORD_AUTH] Discord API Error (User Token). Status: ${response.status}. Body: ${errorData}`);
+                // If 403, it means the user hasn't authorized 'guilds.members.read' scope
+                // If 404, the user is likely not in the guild at all
             }
-            // If the user's token doesn't have the right scopes or failed, we continue to bot fallback
-            console.warn('Discord User Token check failed, falling back to bot if available.');
         } catch (error) {
-            console.error('Error checking Discord role with user token:', error);
+            console.error('[DISCORD_AUTH] Fetch Exception (User Token):', error);
         }
     }
 
-    // 2. Fallback to Bot Token (If you set DISCORD_TOKEN)
     const botToken = process.env.DISCORD_TOKEN;
     if (botToken) {
         try {
+            console.log('[DISCORD_AUTH] Falling back to Bot Token check...');
             const response = await fetch(
                 `https://discord.com/api/v10/guilds/${guildId}/members/${userId}`,
                 {
@@ -51,8 +56,10 @@ export async function checkDiscordRole(userId: string, providerToken?: string) {
                 return data.roles && data.roles.includes(roleId);
             }
         } catch (error) {
-            console.error('Error checking Discord role with bot token:', error);
+            console.error('[DISCORD_AUTH] Fetch Exception (Bot Token):', error);
         }
+    } else {
+        console.warn('[DISCORD_AUTH] No Bot Token available for fallback check.');
     }
 
     return false;
