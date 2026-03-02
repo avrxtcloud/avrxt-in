@@ -405,9 +405,7 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                                                     });
 
                                                     if (data?.url) {
-                                                        const projectHost = 'jirohobyxsihzbpopsse.supabase.co';
-                                                        const proxyHost = 'edge.avrxt.in';
-                                                        window.location.href = data.url.split(projectHost).join(proxyHost);
+                                                        window.location.href = data.url;
                                                     }
                                                 }}
                                                 className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-[9px] font-bold font-mono rounded-md transition-all uppercase"

@@ -9,6 +9,13 @@ export async function GET(request: Request) {
 
     if (code) {
         const supabase = await createClient();
+
+        // Ensure we aren't already logged in before exchanging
+        const { data: { session: existingSession } } = await supabase.auth.getSession();
+        if (existingSession) {
+            return NextResponse.redirect(new URL(next, request.url));
+        }
+
         const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
         if (!error && data.user && data.session) {

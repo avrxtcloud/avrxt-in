@@ -4,8 +4,13 @@ import { cookies } from 'next/headers'
 export async function createClient() {
     const cookieStore = await cookies()
 
+    // Enforce proxy domain for auth stability
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('supabase.co')
+        ? process.env.NEXT_PUBLIC_SUPABASE_URL.replace('jirohobyxsihzbpopsse.supabase.co', 'edge.avrxt.in')
+        : process.env.NEXT_PUBLIC_SUPABASE_URL!;
+
     return createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        supabaseUrl,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         {
             cookies: {
