@@ -26,26 +26,37 @@ function LoginContent() {
         }
     }, [source, router]);
 
-    const handleGithubLogin = async () => {
+    const handleOAuthLogin = async (provider: 'github' | 'discord') => {
         const origin = window.location.origin;
-        await supabase.auth.signInWithOAuth({
-            provider: 'github',
-            options: {
-                redirectTo: `${origin}/auth/callback?next=${next}`,
-            },
+        const options: any = {
+            redirectTo: `${origin}/auth/callback?next=${next}`,
+            skipBrowserRedirect: true
+        };
+
+        if (provider === 'discord') {
+            options.scopes = 'identify email guilds.members.read';
+        }
+
+        const { data, error } = await supabase.auth.signInWithOAuth({
+            provider,
+            options
         });
+
+        if (data?.url) {
+            const url = new URL(data.url);
+            const currentRedirectUri = url.searchParams.get('redirect_uri');
+            if (currentRedirectUri) {
+                const proxyUrl = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL!);
+                const redirectUrlObj = new URL(currentRedirectUri);
+                redirectUrlObj.host = proxyUrl.host;
+                url.searchParams.set('redirect_uri', redirectUrlObj.toString());
+            }
+            window.location.href = url.toString();
+        }
     };
 
-    const handleDiscordLogin = async () => {
-        const origin = window.location.origin;
-        await supabase.auth.signInWithOAuth({
-            provider: 'discord',
-            options: {
-                redirectTo: `${origin}/auth/callback?next=${next}`,
-                scopes: 'identify email guilds.members.read',
-            },
-        });
-    };
+    const handleGithubLogin = () => handleOAuthLogin('github');
+    const handleDiscordLogin = () => handleOAuthLogin('discord');
 
     if (!source) return null;
 
