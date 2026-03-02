@@ -26,29 +26,26 @@ function LoginContent() {
         }
     }, [source, router]);
 
-    const handleOAuthLogin = async (provider: 'github' | 'discord') => {
+    const handleGithubLogin = async () => {
         const origin = window.location.origin;
-        const options: any = {
-            redirectTo: `${origin}/auth/callback?next=${next}`,
-            skipBrowserRedirect: true
-        };
-
-        if (provider === 'discord') {
-            options.scopes = 'identify email guilds.members.read';
-        }
-
-        const { data, error } = await supabase.auth.signInWithOAuth({
-            provider,
-            options
+        await supabase.auth.signInWithOAuth({
+            provider: 'github',
+            options: {
+                redirectTo: `${origin}/auth/callback?next=${next}`,
+            },
         });
-
-        if (data?.url) {
-            window.location.href = data.url;
-        }
     };
 
-    const handleGithubLogin = () => handleOAuthLogin('github');
-    const handleDiscordLogin = () => handleOAuthLogin('discord');
+    const handleDiscordLogin = async () => {
+        const origin = window.location.origin;
+        await supabase.auth.signInWithOAuth({
+            provider: 'discord',
+            options: {
+                redirectTo: `${origin}/auth/callback?next=${next}`,
+                scopes: 'identify email guilds.members.read',
+            },
+        });
+    };
 
     if (!source) return null;
 

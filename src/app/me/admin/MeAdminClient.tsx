@@ -396,17 +396,10 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                                             <button
                                                 onClick={async () => {
                                                     const supabase = createClient();
-                                                    const { data, error } = await supabase.auth.signInWithOAuth({
+                                                    await supabase.auth.signInWithOAuth({
                                                         provider: 'discord',
-                                                        options: {
-                                                            redirectTo: window.location.href,
-                                                            // Removed skipBrowserRedirect: true as it's no longer needed with proxy-level host rewriting
-                                                        }
+                                                        options: { redirectTo: window.location.href }
                                                     });
-
-                                                    if (data?.url) {
-                                                        window.location.href = data.url;
-                                                    }
                                                 }}
                                                 className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-[9px] font-bold font-mono rounded-md transition-all uppercase"
                                             >

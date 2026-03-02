@@ -86,14 +86,8 @@ export async function signInWithGithub() {
         provider: 'github',
         options: {
             redirectTo: `${origin}/auth/callback?next=/guestbook`,
-            skipBrowserRedirect: true,
         },
     });
 
-    if (data?.url) {
-        const projectHost = 'jirohobyxsihzbpopsse.supabase.co';
-        const proxyHost = 'edge.avrxt.in';
-        return { url: data.url.split(projectHost).join(proxyHost), error: error?.message };
-    }
-    return { url: null, error: error?.message };
+    return { url: data.url, error: error?.message };
 }
