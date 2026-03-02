@@ -91,16 +91,9 @@ export async function signInWithGithub() {
     });
 
     if (data?.url) {
-        const url = new URL(data.url);
-        const currentRedirectUri = url.searchParams.get('redirect_uri');
-        if (currentRedirectUri) {
-            const proxyUrl = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL!);
-            const redirectUrlObj = new URL(currentRedirectUri);
-            redirectUrlObj.host = proxyUrl.host;
-            url.searchParams.set('redirect_uri', redirectUrlObj.toString());
-        }
-        return { url: url.toString(), error: error?.message };
+        const projectHost = 'jirohobyxsihzbpopsse.supabase.co';
+        const proxyHost = 'edge.avrxt.in';
+        return { url: data.url.split(projectHost).join(proxyHost), error: error?.message };
     }
-
     return { url: null, error: error?.message };
 }

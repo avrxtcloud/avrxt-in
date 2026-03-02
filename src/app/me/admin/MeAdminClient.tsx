@@ -398,22 +398,16 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                                                     const supabase = createClient();
                                                     const { data, error } = await supabase.auth.signInWithOAuth({
                                                         provider: 'discord',
-                                                        options: { 
+                                                        options: {
                                                             redirectTo: window.location.href,
                                                             skipBrowserRedirect: true
                                                         }
                                                     });
-                                                    
+
                                                     if (data?.url) {
-                                                        const url = new URL(data.url);
-                                                        const currentRedirectUri = url.searchParams.get('redirect_uri');
-                                                        if (currentRedirectUri) {
-                                                            const proxyUrl = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL!);
-                                                            const redirectUrlObj = new URL(currentRedirectUri);
-                                                            redirectUrlObj.host = proxyUrl.host;
-                                                            url.searchParams.set('redirect_uri', redirectUrlObj.toString());
-                                                        }
-                                                        window.location.href = url.toString();
+                                                        const projectHost = 'jirohobyxsihzbpopsse.supabase.co';
+                                                        const proxyHost = 'edge.avrxt.in';
+                                                        window.location.href = data.url.split(projectHost).join(proxyHost);
                                                     }
                                                 }}
                                                 className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-[9px] font-bold font-mono rounded-md transition-all uppercase"
