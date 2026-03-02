@@ -400,7 +400,7 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                                                         provider: 'discord',
                                                         options: {
                                                             redirectTo: window.location.href,
-                                                            skipBrowserRedirect: true
+                                                            // Removed skipBrowserRedirect: true as it's no longer needed with proxy-level host rewriting
                                                         }
                                                     });
 
