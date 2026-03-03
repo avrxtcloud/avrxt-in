@@ -14,7 +14,7 @@ export default function Security() {
     return (
         <main className="max-w-3xl mx-auto px-6 pt-40 pb-32">
             <Reveal className="active">
-                <p className="text-[10px] uppercase tracking-[0.4em] text-zinc-500 mb-4 font-mono">// Security Protocol v2.5</p>
+                <p className="text-[10px] uppercase tracking-[0.4em] text-zinc-500 mb-4 font-mono">{"// Security Protocol v2.5"}</p>
                 <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-12 text-white">Security_</h1>
 
                 <div className="space-y-12">

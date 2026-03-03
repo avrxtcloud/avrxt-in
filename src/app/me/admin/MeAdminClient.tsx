@@ -15,6 +15,7 @@ import { logout } from '@/app/actions/auth';
 import { createClient } from '@/utils/supabase/client';
 import { disconnectSpotifyAction } from '@/app/actions/spotify';
 import { searchYouTubeAction } from '@/app/actions/youtube';
+import { uploadToR2Action } from '@/app/actions/r2';
 import { Search, Youtube } from 'lucide-react';
 
 interface MeAdminClientProps {
@@ -77,30 +78,34 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
         setSaveStatus('UPLOADING...');
 
         try {
-            const supabase = createClient();
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${target.replace('.', '-')}-${Date.now()}.${fileExt}`;
-            const filePath = `${fileName}`;
-
-            // Check file size for audio/video (limit 50MB for now to be safe)
-            if (file.size > 50 * 1024 * 1024) {
-                throw new Error("File too large (Max 50MB)");
+            // Determine old URL for auto-deletion if we are replacing a file
+            let oldUrl: string | undefined = undefined;
+            if (target === 'music.coverUrl') oldUrl = config.music.coverUrl;
+            else if (target === 'music.audioUrl') oldUrl = config.music.audioUrl;
+            else if (target.startsWith('profile.')) {
+                const field = target.split('.')[1] as keyof typeof config.profile;
+                oldUrl = config.profile[field] as string;
+            } else if (target.startsWith('link:')) {
+                const linkId = target.split(':')[1];
+                oldUrl = config.links.find(l => l.id === linkId)?.icon;
             }
 
-            const { error: uploadError } = await supabase.storage
-                .from('images')
-                .upload(filePath, file);
+            const formData = new FormData();
+            formData.append('file', file);
 
-            if (uploadError) throw uploadError;
+            const result = await uploadToR2Action(formData, oldUrl);
 
-            const { data } = supabase.storage.from('images').getPublicUrl(filePath);
-            const publicUrl = data.publicUrl;
+            if (result.error || !result.publicUrl) {
+                throw new Error(result.error || 'UPLOAD_FAILED');
+            }
+
+            const publicUrl = result.publicUrl;
 
             if (target === 'gallery') {
-                // Add new gallery item
+                // Add new gallery item (no deletion for gallery uploads)
                 const newItem = {
                     id: Date.now().toString(),
-                    type: galleryType || 'image',
+                    type: galleryType || (file.type.startsWith('video/') ? 'video' : 'image'),
                     url: publicUrl,
                     caption: 'New Upload'
                 };

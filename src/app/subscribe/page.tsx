@@ -40,7 +40,7 @@ export default function Subscribe() {
     return (
         <main className="max-w-4xl mx-auto px-6 pt-48 pb-32">
             <Reveal className="text-center mb-16 active">
-                <p className="text-xs uppercase tracking-[0.4em] text-zinc-500 mb-6 font-mono">// Transmission_List_v1</p>
+                <p className="text-xs uppercase tracking-[0.4em] text-zinc-500 mb-6 font-mono">{"// Transmission_List_v1"}</p>
                 <h1 className="text-5xl md:text-7xl font-black tracking-tighter mb-8 gradient-heading">
                     Newsletter <span className="text-zinc-500">Node_</span>
                 </h1>

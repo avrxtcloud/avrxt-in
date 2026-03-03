@@ -27,7 +27,7 @@ export default function DocWrapper({ children, title, category, date }: DocWrapp
 
             <main className="max-w-4xl mx-auto px-4 py-16">
                 <section className="animate-fade-in">
-                    <p className="text-sm text-[#666666] mb-2 tracking-widest font-mono">// {category}</p>
+                    <p className="text-sm text-[#666666] mb-2 tracking-widest font-mono">{"// "}{category}</p>
                     <h1 className="text-5xl md:text-6xl font-extrabold leading-tight mb-4 font-mono text-cyan-400">
                         {title}
                     </h1>

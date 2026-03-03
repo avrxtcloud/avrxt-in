@@ -60,7 +60,7 @@ export default function Home() {
       <Reveal id="about" className="py-32 border-t border-white/5">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
           <div>
-            <h2 className="text-xs uppercase tracking-[0.4em] text-zinc-600 mb-4">// Origin</h2>
+            <h2 className="text-xs uppercase tracking-[0.4em] text-zinc-600 mb-4">{"// Origin"}</h2>
             <h3 className="text-4xl font-bold tracking-tighter leading-none text-white">Full Stack <br />Developer</h3>
           </div>
           <div className="lg:col-span-2 text-lg text-zinc-400 leading-relaxed space-y-6">
@@ -165,7 +165,7 @@ export default function Home() {
         <SpotlightBox>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <p className="text-xs uppercase tracking-[0.4em] text-zinc-500 mb-4 font-mono">// Stay Updated</p>
+              <p className="text-xs uppercase tracking-[0.4em] text-zinc-500 mb-4 font-mono">{"// Stay Updated"}</p>
               <h2 className="text-4xl md:text-6xl font-black tracking-tighter mb-6 gradient-heading">
                 Access Exclusive <br />Tech Insights.
               </h2>
@@ -202,7 +202,7 @@ export default function Home() {
       <Reveal id="solutions" className="py-32 border-t border-white/5">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
           <div>
-            <h2 className="text-xs uppercase tracking-[0.4em] text-zinc-600 mb-4">// Business Layer</h2>
+            <h2 className="text-xs uppercase tracking-[0.4em] text-zinc-600 mb-4">{"// Business Layer"}</h2>
             <h3 className="text-4xl font-bold tracking-tighter text-white">Enterprise-Ready Solutions</h3>
           </div>
           <div className="lg:col-span-2 space-y-4">
