@@ -67,8 +67,8 @@ export async function getPresignedR2UrlAction(fileName: string, fileType: string
 
     // Organize images in /i and videos in /v as requested
     let folder: 'i' | 'v' = 'i';
-    const isVideo = fileType.startsWith('video/') || fileName.match(/\.(mp4|webm|ogg|mov|m4v)$/i);
-    const isAudio = fileType.startsWith('audio/') || fileName.match(/\.(mp3|wav|ogg|m4a|flac)$/i);
+    const isVideo = (fileType || '').startsWith('video/') || fileName.match(/\.(mp4|webm|ogg|mov|m4v)$/i);
+    const isAudio = (fileType || '').startsWith('audio/') || fileName.match(/\.(mp3|wav|ogg|m4a|flac)$/i);
 
     if (isVideo || isAudio) {
         folder = 'v';

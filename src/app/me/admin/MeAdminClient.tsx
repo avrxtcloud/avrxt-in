@@ -108,7 +108,7 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                     method: 'PUT',
                     body: file,
                     headers: {
-                        'Content-Type': file.type,
+                        'Content-Type': file.type || 'application/octet-stream',
                     },
                     // Direct upload to R2 doesn't need credentials in headers if using presigned URL
                 });
@@ -126,9 +126,10 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
             // Step 3: Success! Update UI state
             setSaveStatus('STEP 3: FINALIZING...');
             if (target === 'gallery') {
+                const fType = file.type || '';
                 const newItem = {
                     id: Date.now().toString(),
-                    type: galleryType || (file.type.startsWith('video/') ? 'video' : 'image'),
+                    type: galleryType || (fType.startsWith('video/') ? 'video' : 'image'),
                     url: publicUrl,
                     caption: 'New Upload'
                 };
@@ -157,7 +158,10 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
             setSaveStatus(`ERROR: ${error.message || 'UPLOAD_FAILED'}`);
         } finally {
             setIsPending(false);
-            setTimeout(() => setSaveStatus(''), 2000);
+            // Keep error messages visible longer (8 seconds)
+            // but clear success messages faster (2 seconds)
+            const isError = saveStatus?.startsWith('ERROR');
+            setTimeout(() => setSaveStatus(''), isError ? 12000 : 2000);
         }
     };
 
