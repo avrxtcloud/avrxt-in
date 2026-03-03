@@ -22,13 +22,12 @@ graph TD
     subgraph "Data & Persistence"
         Logic -->|PostgreSQL Query| SupabaseDB[(Supabase DB)]
         Logic -->|Auth / JWT| SupabaseAuth[Supabase Auth]
-        Logic -->|Blob Storage| SupabaseStorage[(Supabase Storage)]
+        Logic -->|Object Storage| R2[(Cloudflare R2)]
     end
 
-    subgraph "External Integrations"
-        Logic -->|Lead Capture| GSheets[(Google Sheets API)]
-        Logic -->|SMTP / API| Resend[(Resend Email)]
-        Logic -->|Payment Gateway| Razorpay[(Razorpay API)]
+    subgraph "CDN Layer"
+        R2 -->|Images| i_cdn[i.cdn.avrxt.in]
+        R2 -->|Videos| v_cdn[v.cdn.avrxt.in]
     end
 
     Admin((Admin)) -->|Verified Auth| AdminPanels[Admin Dashboards]
@@ -49,6 +48,12 @@ graph TD
 - **Technical Library (`/docs`)**: Markdown-powered documentation system with professional SEO and admin controls.
 - **Interaction Hub (`/guestbook`)**: Verified community messaging system via GitHub OAuth.
 - **Project Intake (`/hireme`)**: Advanced budget/timeline estimator for service inquiries.
+
+### ☁️ Cloudflare R2 Integration (New)
+- **High-Resolution Pipeline**: Direct client-to-cloud uploads via **S3 Presigned URLs**, bypassing Vercel's 4.5MB limit.
+- **Dynamic Asset Sync**: Automated deletion of old files when replacing profile pictures, banners, or music tracks.
+- **CDN Segmentation**: Intelligent routing to `i.cdn.avrxt.in` (images) and `v.cdn.avrxt.in` (media).
+- **Hard-Purge Logic**: Immediate cloud deletion when removing items from the visual gallery.
 
 ### 🎵 Music Synchronization Engine
 - **Live_Spotify Protocol**: Real-time polling of Spotify playback status with dynamic progress bars.
@@ -95,9 +100,11 @@ Premium tier-based service architecture for:
 | **Frontend** | Next.js 15+, React 19, Tailwind CSS 4, Lucide |
 | **Backend** | Next.js Server Actions, Node.js |
 | **Database** | Supabase (PostgreSQL), Realtime |
+| **Storage** | Cloudflare R2 (S3 Compatible) |
 | **Auth** | Supabase Auth, GitHub OAuth |
 | **Communications** | Resend API, Google Sheets API |
 | **Payments** | Razorpay SDK |
+| **CDN** | Cloudflare Global Edge |
 | **Observability** | Vercel Analytics, Vercel Speed Insights |
 
 ---
@@ -153,4 +160,4 @@ This project is strictly for the exclusive use of **@avrxt**. Unauthorized copyi
 
 **Developer**: [@avrxt](https://instagram.com/aviorxt) | [support@avrxt.in](mailto:support@avrxt.in)
 
-*Last Updated: February 25, 2026*
+*Last Updated: March 3, 2026 by Vipin R*

@@ -167,6 +167,29 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
         }
     };
 
+    const handleDeleteGalleryItem = async (id: string, url: string) => {
+        if (!confirm('ARE_YOU_SURE? THIS_WILL_DELETE_FROM_CLOUD')) return;
+
+        setIsPending(true);
+        setSaveStatus('STEP 1: WIPING CLOUD...');
+
+        try {
+            const result = await deleteFromR2Action(url);
+            if (result && 'error' in result) {
+                throw new Error(result.error);
+            }
+
+            setConfig({ ...config, gallery: config.gallery?.filter(i => i.id !== id) });
+            setSaveStatus('SUCCESS: ASSET_PURGED');
+        } catch (error: any) {
+            console.error('Delete error:', error);
+            setSaveStatus(`ERROR: ${error.message || 'PURGE_FAILED'}`);
+        } finally {
+            setIsPending(false);
+            setTimeout(() => setSaveStatus(''), 3000);
+        }
+    };
+
     return (
         <>
             <main className="min-h-screen bg-black text-white p-6 md:p-12 selection:bg-white/10">
@@ -1121,7 +1144,7 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                                                     <span className="text-[10px] font-bold uppercase text-zinc-500">{item.type}</span>
                                                 </div>
                                                 <button
-                                                    onClick={() => setConfig({ ...config, gallery: config.gallery?.filter(i => i.id !== item.id) })}
+                                                    onClick={() => handleDeleteGalleryItem(item.id, item.url)}
                                                     className="text-white/20 hover:text-red-500 transition-all opacity-40 group-hover:opacity-100 p-1"
                                                 >
                                                     <Trash2 size={12} />
