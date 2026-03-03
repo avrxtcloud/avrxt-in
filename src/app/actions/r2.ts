@@ -81,7 +81,8 @@ export async function getPresignedR2UrlAction(fileName: string, fileType: string
         const nameWithoutExt = cleanName.split('.').slice(0, -1).join('.');
         const finalName = `${nameWithoutExt}-${Date.now()}.${fileExt}`;
 
-        const data = await getPresignedUploadUrl(finalName, fileType, folder);
+        const cleanType = fileType || 'application/octet-stream';
+        const data = await getPresignedUploadUrl(finalName, cleanType, folder);
 
         // If there's an old file, we can't delete it yet because the upload hasn't happened.
         // We return the oldUrl to the client so it can call delete later, or we handle it here if preferred.

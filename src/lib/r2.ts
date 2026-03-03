@@ -3,11 +3,13 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const r2 = new S3Client({
     region: "auto",
-    endpoint: process.env.R2_ENDPOINT,
+    endpoint: process.env.R2_ENDPOINT?.replace(/\/$/, ""), // Remove trailing slash if exists
     credentials: {
         accessKeyId: process.env.R2_ACCESS_KEY_ID || "",
         secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || "",
     },
+    // R2 works best with path-style for presigned URLs on some systems
+    forcePathStyle: true,
 });
 
 export async function uploadFile(buffer: Buffer, fileName: string, contentType: string, folder: 'i' | 'v') {

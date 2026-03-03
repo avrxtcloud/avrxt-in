@@ -116,7 +116,9 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                 if (!uploadResponse.ok) {
                     const errorText = await uploadResponse.text();
                     console.error('Cloud upload response error:', errorText);
-                    throw new Error(`S2_CLOUD_FAIL: ${uploadResponse.status} ${uploadResponse.statusText}`);
+                    // Extract a bit of the error message if possible
+                    const shortError = errorText.substring(0, 50).replace(/[<>]/g, '');
+                    throw new Error(`S2_CLOUD_FAIL: ${uploadResponse.status} ${shortError}`);
                 }
             } catch (fetchError: any) {
                 console.error('Fetch error during upload:', fetchError);
@@ -220,9 +222,14 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                     </div>
 
                     {saveStatus && (
-                        <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
-                            <Check className="text-emerald-500" size={16} />
-                            <span className="text-[10px] font-mono text-emerald-500 uppercase">{saveStatus}</span>
+                        <div className={cn(
+                            "mb-6 p-4 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2",
+                            saveStatus.includes('ERROR')
+                                ? "bg-red-500/10 border border-red-500/20 text-red-500"
+                                : "bg-emerald-500/10 border border-emerald-500/20 text-emerald-500"
+                        )}>
+                            {saveStatus.includes('ERROR') ? <AlertCircle size={16} /> : <Check size={16} />}
+                            <span className="text-[10px] font-mono uppercase tracking-widest">{saveStatus}</span>
                         </div>
                     )}
 
