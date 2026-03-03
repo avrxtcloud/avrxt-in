@@ -23,7 +23,7 @@ export async function uploadFile(buffer: Buffer, fileName: string, contentType: 
     );
 
     const domain = folder === 'i' ? process.env.NEXT_PUBLIC_R2_IMAGE_DOMAIN : process.env.NEXT_PUBLIC_R2_VIDEO_DOMAIN;
-    return `https://${domain}/${fileName}`;
+    return `https://${domain}/${folder}/${fileName}`;
 }
 
 export async function deleteFile(url: string) {
