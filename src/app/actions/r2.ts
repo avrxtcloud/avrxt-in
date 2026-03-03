@@ -13,7 +13,14 @@ export async function uploadToR2Action(formData: FormData, oldUrl?: string) {
     if (!file) return { error: 'No file provided' };
 
     // Organize images in /i and videos in /v as requested
-    const folder = file.type.startsWith('video/') ? 'v' : 'i';
+    // Default to 'i', but check for video/audio types
+    let folder: 'i' | 'v' = 'i';
+    const isVideo = file.type.startsWith('video/') || file.name.match(/\.(mp4|webm|ogg|mov|m4v)$/i);
+    const isAudio = file.type.startsWith('audio/') || file.name.match(/\.(mp3|wav|ogg|m4a|flac)$/i);
+
+    if (isVideo || isAudio) {
+        folder = 'v';
+    }
 
     try {
         const arrayBuffer = await file.arrayBuffer();
