@@ -61,7 +61,7 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
 
         const result = await saveMeConfigAction(config);
 
-        if (result.error) {
+        if ('error' in result) {
             setSaveStatus(`ERROR: ${result.error}`);
         } else {
             setSaveStatus('SUCCESS: CONFIG_SYNCED');
@@ -91,30 +91,40 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
             }
 
             // Step 1: Get Presigned URL from Server Action
-            // This allows the client to upload DIRECTLY to Cloudflare R2
-            // bypassing Vercel's 4.5MB body size limit.
+            setSaveStatus('STEP 1: PREPARING CLOUD...');
             const result = await getPresignedR2UrlAction(file.name, file.type, oldUrl);
 
             if ('error' in result) {
-                throw new Error(result.error || 'UPLOAD_INIT_FAILED');
+                throw new Error(`S1_ERROR: ${result.error}`);
             }
 
             const { uploadUrl, publicUrl } = result;
 
             // Step 2: Upload the file directly to Cloudflare
-            const uploadResponse = await fetch(uploadUrl, {
-                method: 'PUT',
-                body: file,
-                headers: {
-                    'Content-Type': file.type,
-                },
-            });
+            setSaveStatus(`STEP 2: UPLOADING (${(file.size / 1024 / 1024).toFixed(2)}MB)...`);
 
-            if (!uploadResponse.ok) {
-                throw new Error('CLOUD_UPLOAD_FAILED');
+            try {
+                const uploadResponse = await fetch(uploadUrl, {
+                    method: 'PUT',
+                    body: file,
+                    headers: {
+                        'Content-Type': file.type,
+                    },
+                    // Direct upload to R2 doesn't need credentials in headers if using presigned URL
+                });
+
+                if (!uploadResponse.ok) {
+                    const errorText = await uploadResponse.text();
+                    console.error('Cloud upload response error:', errorText);
+                    throw new Error(`S2_CLOUD_FAIL: ${uploadResponse.status} ${uploadResponse.statusText}`);
+                }
+            } catch (fetchError: any) {
+                console.error('Fetch error during upload:', fetchError);
+                throw new Error(`S2_NETWORK_FAIL: ${fetchError.message || 'Check CORS or Connection'}`);
             }
 
             // Step 3: Success! Update UI state
+            setSaveStatus('STEP 3: FINALIZING...');
             if (target === 'gallery') {
                 const newItem = {
                     id: Date.now().toString(),
