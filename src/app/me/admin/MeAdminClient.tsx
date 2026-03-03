@@ -95,7 +95,7 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
             // bypassing Vercel's 4.5MB body size limit.
             const result = await getPresignedR2UrlAction(file.name, file.type, oldUrl);
 
-            if (result.error || !result.uploadUrl || !result.publicUrl) {
+            if ('error' in result) {
                 throw new Error(result.error || 'UPLOAD_INIT_FAILED');
             }
 
