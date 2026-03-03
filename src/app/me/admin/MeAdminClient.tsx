@@ -15,7 +15,7 @@ import { logout } from '@/app/actions/auth';
 import { createClient } from '@/utils/supabase/client';
 import { disconnectSpotifyAction } from '@/app/actions/spotify';
 import { searchYouTubeAction } from '@/app/actions/youtube';
-import { uploadToR2Action } from '@/app/actions/r2';
+import { uploadToR2Action, getPresignedR2UrlAction, deleteFromR2Action } from '@/app/actions/r2';
 import { Search, Youtube } from 'lucide-react';
 
 interface MeAdminClientProps {
@@ -90,19 +90,32 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                 oldUrl = config.links.find(l => l.id === linkId)?.icon;
             }
 
-            const formData = new FormData();
-            formData.append('file', file);
+            // Step 1: Get Presigned URL from Server Action
+            // This allows the client to upload DIRECTLY to Cloudflare R2
+            // bypassing Vercel's 4.5MB body size limit.
+            const result = await getPresignedR2UrlAction(file.name, file.type, oldUrl);
 
-            const result = await uploadToR2Action(formData, oldUrl);
-
-            if (result.error || !result.publicUrl) {
-                throw new Error(result.error || 'UPLOAD_FAILED');
+            if (result.error || !result.uploadUrl || !result.publicUrl) {
+                throw new Error(result.error || 'UPLOAD_INIT_FAILED');
             }
 
-            const publicUrl = result.publicUrl;
+            const { uploadUrl, publicUrl } = result;
 
+            // Step 2: Upload the file directly to Cloudflare
+            const uploadResponse = await fetch(uploadUrl, {
+                method: 'PUT',
+                body: file,
+                headers: {
+                    'Content-Type': file.type,
+                },
+            });
+
+            if (!uploadResponse.ok) {
+                throw new Error('CLOUD_UPLOAD_FAILED');
+            }
+
+            // Step 3: Success! Update UI state
             if (target === 'gallery') {
-                // Add new gallery item (no deletion for gallery uploads)
                 const newItem = {
                     id: Date.now().toString(),
                     type: galleryType || (file.type.startsWith('video/') ? 'video' : 'image'),
@@ -121,6 +134,11 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                 const linkId = target.split(':')[1];
                 const newLinks = config.links.map(l => l.id === linkId ? { ...l, icon: publicUrl } : l);
                 setConfig({ ...config, links: newLinks });
+            }
+
+            // Step 4: Auto-delete old file if it was a replacement
+            if (oldUrl) {
+                await deleteFromR2Action(oldUrl);
             }
 
             setSaveStatus('SUCCESS: UPLOAD_COMPLETE');

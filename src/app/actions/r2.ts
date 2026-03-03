@@ -1,6 +1,6 @@
 'use server';
 
-import { uploadFile, deleteFile } from '@/lib/r2';
+import { uploadFile, deleteFile, getPresignedUploadUrl } from '@/lib/r2';
 import { verifyAdmin } from '@/lib/auth-checks';
 
 export async function uploadToR2Action(formData: FormData, oldUrl?: string) {
@@ -57,5 +57,39 @@ export async function deleteFromR2Action(url: string) {
         return { success: true };
     } catch (error: any) {
         return { error: error.message || 'DELETE_FAILED' };
+    }
+}
+export async function getPresignedR2UrlAction(fileName: string, fileType: string, oldUrl?: string) {
+    const { authorized, error: authError } = await verifyAdmin();
+    if (!authorized) {
+        return { error: `Unauthorized: ${authError}` };
+    }
+
+    // Organize images in /i and videos in /v as requested
+    let folder: 'i' | 'v' = 'i';
+    const isVideo = fileType.startsWith('video/') || fileName.match(/\.(mp4|webm|ogg|mov|m4v)$/i);
+    const isAudio = fileType.startsWith('audio/') || fileName.match(/\.(mp3|wav|ogg|m4a|flac)$/i);
+
+    if (isVideo || isAudio) {
+        folder = 'v';
+    }
+
+    try {
+        // Use a clean, timestamped filename
+        const cleanName = fileName.replace(/[^a-zA-Z0-9.]/g, '-');
+        const fileExt = cleanName.split('.').pop();
+        const nameWithoutExt = cleanName.split('.').slice(0, -1).join('.');
+        const finalName = `${nameWithoutExt}-${Date.now()}.${fileExt}`;
+
+        const data = await getPresignedUploadUrl(finalName, fileType, folder);
+
+        // If there's an old file, we can't delete it yet because the upload hasn't happened.
+        // We return the oldUrl to the client so it can call delete later, or we handle it here if preferred.
+        // For simplicity, we'll let the client call deleteFromR2Action after a successful PUT.
+
+        return { success: true, ...data };
+    } catch (error: any) {
+        console.error('R2 Presigned URL Action Error:', error);
+        return { error: error.message || 'R2_PRESIGNED_FAILED' };
     }
 }

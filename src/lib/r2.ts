@@ -1,4 +1,5 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const r2 = new S3Client({
     region: "auto",
@@ -24,6 +25,25 @@ export async function uploadFile(buffer: Buffer, fileName: string, contentType: 
 
     const domain = folder === 'i' ? process.env.NEXT_PUBLIC_R2_IMAGE_DOMAIN : process.env.NEXT_PUBLIC_R2_VIDEO_DOMAIN;
     return `https://${domain}/${folder}/${fileName}`;
+}
+
+export async function getPresignedUploadUrl(fileName: string, contentType: string, folder: 'i' | 'v') {
+    const bucketName = process.env.R2_BUCKET_NAME!;
+    const key = `${folder}/${fileName}`;
+
+    const command = new PutObjectCommand({
+        Bucket: bucketName,
+        Key: key,
+        ContentType: contentType,
+    });
+
+    // Valid for 1 hour
+    const url = await getSignedUrl(r2, command, { expiresIn: 3600 });
+
+    const domain = folder === 'i' ? process.env.NEXT_PUBLIC_R2_IMAGE_DOMAIN : process.env.NEXT_PUBLIC_R2_VIDEO_DOMAIN;
+    const publicUrl = `https://${domain}/${folder}/${fileName}`;
+
+    return { uploadUrl: url, publicUrl, key };
 }
 
 export async function deleteFile(url: string) {
