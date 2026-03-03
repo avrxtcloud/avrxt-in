@@ -6,7 +6,8 @@ import {
     Plus, Trash2, Save, LogOut,
     Music, Link as LinkIcon, Book,
     Check, ArrowUp, ArrowDown,
-    User, Eye, AlertCircle, Camera, Upload, Activity
+    User, Eye, AlertCircle, Camera, Upload, Activity,
+    Search, Youtube
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MeConfig } from '@/lib/me-config';
@@ -16,7 +17,6 @@ import { createClient } from '@/utils/supabase/client';
 import { disconnectSpotifyAction } from '@/app/actions/spotify';
 import { searchYouTubeAction } from '@/app/actions/youtube';
 import { uploadToR2Action, getPresignedR2UrlAction, deleteFromR2Action } from '@/app/actions/r2';
-import { Search, Youtube } from 'lucide-react';
 
 interface MeAdminClientProps {
     initialConfig: MeConfig;

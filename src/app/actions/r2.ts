@@ -15,8 +15,10 @@ export async function uploadToR2Action(formData: FormData, oldUrl?: string) {
     // Organize images in /i and videos in /v as requested
     // Default to 'i', but check for video/audio types
     let folder: 'i' | 'v' = 'i';
-    const isVideo = file.type.startsWith('video/') || file.name.match(/\.(mp4|webm|ogg|mov|m4v)$/i);
-    const isAudio = file.type.startsWith('audio/') || file.name.match(/\.(mp3|wav|ogg|m4a|flac)$/i);
+    const cleanType = file?.type || '';
+    const cleanName = file?.name || '';
+    const isVideo = cleanType.startsWith('video/') || cleanName.match(/\.(mp4|webm|ogg|mov|m4v)$/i);
+    const isAudio = cleanType.startsWith('audio/') || cleanName.match(/\.(mp3|wav|ogg|m4a|flac)$/i);
 
     if (isVideo || isAudio) {
         folder = 'v';
@@ -84,9 +86,7 @@ export async function getPresignedR2UrlAction(fileName: string, fileType: string
         const cleanType = fileType || 'application/octet-stream';
         const data = await getPresignedUploadUrl(finalName, cleanType, folder);
 
-        // If there's an old file, we can't delete it yet because the upload hasn't happened.
-        // We return the oldUrl to the client so it can call delete later, or we handle it here if preferred.
-        // For simplicity, we'll let the client call deleteFromR2Action after a successful PUT.
+        console.log(`[R2_PRESIGNED] Generated URL for ${finalName} in folder ${folder}`);
 
         return { success: true, ...data };
     } catch (error: any) {
