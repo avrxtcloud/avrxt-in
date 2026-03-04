@@ -9,6 +9,7 @@ import {
     Cloud, Sun, Thermometer, MapPin, Quote
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import StatusBadge from '@/components/StatusBadge';
 import { MeConfig } from '@/lib/me-config';
 
 const iconMap: Record<string, any> = {
@@ -874,9 +875,8 @@ export default function MeClient({ initialConfig }: MeClientProps) {
 
                 {/* Footer */}
                 <footer className="mt-auto pt-8 text-center animate-fade-in" style={{ animationDelay: '0.7s' }}>
-                    <div className="flex items-center justify-center gap-2 mb-4">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span className="font-mono text-[11px] tracking-[0.3em] text-zinc-500 uppercase">All Systems Online</span>
+                    <div className="flex items-center justify-center mb-4">
+                        <StatusBadge />
                     </div>
                     <div className="flex items-center justify-center gap-4 text-[10px] text-zinc-700 font-mono uppercase tracking-widest mt-2">
                         <span>&copy; {new Date().getFullYear()} avrxt.in</span>
