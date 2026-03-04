@@ -166,7 +166,7 @@ export async function POST(request: NextRequest) {
 
         // 6. Dispatch Premium Welcome Email
         const { error: emailError } = await resend.emails.send({
-            from: 'Glory at avrxt.in <mail@notify.avrxt.in>',
+            from: 'Glory at avrxt.in <notify@mail.avrxt.in>',
             to: sanitizedEmail,
             subject: '✓ Connection Established: Welcome to avrxt.in',
             html: `
