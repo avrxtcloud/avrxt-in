@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Github, Mail, Instagram } from 'lucide-react';
 
+import StatusBadge from './StatusBadge';
+
 export default function Footer() {
     const pathname = usePathname();
     const year = new Date().getFullYear();
@@ -26,14 +28,7 @@ export default function Footer() {
                 </div>
 
                 <div className="footer-status-blend flex justify-center order-1 md:order-2">
-                    <iframe
-                        src="https://status.avrxt.in/badge?theme=dark"
-                        width="250"
-                        height="30"
-                        frameBorder="0"
-                        scrolling="no"
-                        className="color-scheme-normal"
-                    />
+                    <StatusBadge />
                 </div>
 
                 <div className="flex justify-center md:justify-end gap-x-6 gap-y-2 text-zinc-500 text-[10px] font-mono uppercase tracking-widest order-3 flex-wrap">

@@ -96,16 +96,11 @@
     transform: translateY(-20px) scale(0.98);
   }
 
-  .footer-status-blend iframe {
-    filter: grayscale(1) brightness(1.4) contrast(1.1);
-    mix-blend-mode: screen;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    transform: translate(38px, 6px);
-  }
-
-  .footer-status-blend:hover iframe {
-    filter: grayscale(0) brightness(1.1) drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
-    transform: translate(25px, 6px) scale(1.05);
+  /* Custom Status Badge overrides if needed */
+  .footer-status-blend {
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 
