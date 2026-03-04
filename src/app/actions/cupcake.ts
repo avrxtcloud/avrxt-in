@@ -6,7 +6,8 @@ import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Removed top-level instantiation to prevent build errors
+// const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function createTipOrder(amount: number) {
     try {
@@ -72,6 +73,7 @@ export async function verifyTipAndSave(
 
     // 3. Send Thank You Email to User via Resend
     try {
+        const resend = new Resend(process.env.RESEND_API_KEY);
         await resend.emails.send({
             from: process.env.RESEND_FROM_EMAIL || 'support@avrxt.in',
             to: tipDetails.userEmail,

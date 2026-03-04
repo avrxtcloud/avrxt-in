@@ -18,17 +18,19 @@ export default function Subscribe() {
         const data = Object.fromEntries(formData);
 
         try {
-            const response = await fetch('https://api.avrxt.in/api/subscribe', {
+            const response = await fetch('/api/subscribe', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
             });
 
+            const result = await response.json();
+
             if (response.ok) {
-                setFormStatus({ type: 'success', message: '// SUCCESS: SUBSCRIPTION_ACTIVE' });
+                setFormStatus({ type: 'success', message: result.message || '// SUCCESS: SUBSCRIPTION_ACTIVE' });
                 (e.target as HTMLFormElement).reset();
             } else {
-                setFormStatus({ type: 'error', message: '// ERROR: UPLINK_DENIED' });
+                setFormStatus({ type: 'error', message: `// ERROR: ${result.error || 'UPLINK_DENIED'}` });
             }
         } catch (error) {
             setFormStatus({ type: 'error', message: '// ERROR: UPLINK_LOST' });
