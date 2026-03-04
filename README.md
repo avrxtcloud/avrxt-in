@@ -74,6 +74,35 @@ graph LR
     style SpotifyAPI fill:#1DB954,stroke:#333,color:#fff
 ```
 
+### 📧 Newsletter & Mail Protocol (v3)
+A hardened, internal mailing engine replaces the previous proxy-based implementation.
+- **Micro-Staggered Handshake**: To respect Resend's free-tier rate limits (2 req/sec), the system implements a sequential throttle (1s + 2s + 2s) between List, Create, and Send operations.
+- **Shield Protocol (Spam Defense)**:
+  - **Internal Blocklist**: Prevents `avrxt.in`, `avrxt.space`, and `aviorxt.aero` from internal spamming.
+  - **Burner Detection**: Integrated **Mailcheck.ai** and local blacklists to block temporary/throwaway email providers.
+  - **DNS MX Validation**: Technical DNS handshake to verify mailbox existence before processing.
+- **Direct-to-Core API**: Communications now flow through `/api/subscribe`, eliminating external "Link Lost" errors.
+
+```mermaid
+sequenceDiagram
+    participant U as User Terminal
+    participant API as /api/subscribe
+    participant Shield as Shield (DNS/API)
+    participant Resend as Resend.com
+    
+    U->>API: POST {email}
+    API->>API: Rate Limit Check (5/day)
+    API->>Shield: Validate Identity (MX/Burner/Internal)
+    Shield-->>API: Verified
+    Note over API: [Delay 1s]
+    API->>Resend: GET /contacts (Duplicate check)
+    Note over API: [Delay 2s]
+    API->>Resend: POST /contacts (Registration)
+    Note over API: [Delay 2s]
+    API->>Resend: POST /emails (Premium Handshake)
+    API-->>U: NODE_REGISTERED
+```
+
 ### ☁️ Cloud Engineering (`/cloud`)
 Premium tier-based service architecture for:
 - **Discord Bot Development**: Moderation, AI Dashboards, and Custom Neural Architectures.
@@ -97,8 +126,10 @@ Premium tier-based service architecture for:
 
 | Layer | Technologies |
 |--- |--- |
-| **Frontend** | Next.js 15+, React 19, Tailwind CSS 4, Lucide |
-| **Backend** | Next.js Server Actions, Node.js |
+| **Frontend** | Next.js 16+, React 19, Tailwind CSS 4, Lucide |
+| **Backend** | Next.js API Routes, Server Actions |
+| **Mailing** | Resend SDK (Staggered Protocol) |
+| **Security** | Mailcheck.ai, DNS MX Lookup, LRU Cache |
 | **Database** | Supabase (PostgreSQL), Realtime |
 | **Storage** | Cloudflare R2 (S3 Compatible) |
 | **Auth** | Supabase Auth, GitHub OAuth |
@@ -114,13 +145,14 @@ Premium tier-based service architecture for:
 ```bash
 src/
 ├── app/
-│   ├── (legal)/         # Privacy, Terms, Refund, Security pages
-│   ├── actions/        # Secured Server Actions (Cloud, Cupcake, Docs)
-│   ├── admin/          # Multi-node admin dashboards
+│   ├── api/
+│   │   ├── subscribe/     # Hardened Newsletter API Node (New)
+│   ├── actions/           # Secured Server Actions (Cloud, Cupcake, Docs)
 │   ├── cloud/          # Cloud services & payment infrastructure
-│   ├── me/             # Personalized profile & bio terminal
+│   ├── me/                # Personalized profile & bio terminal
 │   ├── robots.ts       # Dynamic Robots configuration
-│   └── sitemap.ts      # Dynamic Sitemap generator
+│   ├── sitemap.ts      # Dynamic Sitemap generator
+│   ├── subscribe/         # Premium Frontend Node
 ├── components/         # Premium UI Components (Reveal, Spotlight, etc.)
 ├── lib/               # Shared logic & Supabase client
 └── utils/             # Helper functions & constants
@@ -150,14 +182,23 @@ The system follows a **"Dark Mesh"** design language:
 
 ---
 
+## 📝 Fixes & Updates Log
+
+### [March 4, 2026] - Mail Core v3
+- **FIX**: Resolved "Uplink Lost" errors by implementing local `/api/subscribe`.
+- **FIX**: Resolved build-time crashes caused by top-level `Resend` instantiation across `actions/`.
+- **NEW**: Implemented **Glory at avrxt.in** custom branding for all transactional emails.
+- **NEW**: Added **Shield Protocol** (MX lookup + Blacklisting) to save on mailing costs.
+- **NEW**: Implemented **Staggered API Calls** to mitigate Resend 429 rate limits.
+
+---
+
 ## 📝 License & Contact
 **PROPRIETARY & CONFIDENTIAL**  
 Copyright © 2026 **@avrxt**. All rights reserved.
-
-This project is strictly for the exclusive use of **@avrxt**. Unauthorized copying, modification, distribution, or any form of reproduction of this project (source code, design, or architecture) without express written permission is a violation of international intellectual property laws.
 
 ⚠️ **LEGAL NOTICE**: Any unauthorized usage or duplication of this project will lead to immediate **legal action**.
 
 **Developer**: [@avrxt](https://instagram.com/aviorxt) | [support@avrxt.in](mailto:support@avrxt.in)
 
-*Last Updated: March 3, 2026 by Vipin R*
+*Last Updated: March 4, 2026 by Vipin R*
