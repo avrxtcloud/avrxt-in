@@ -184,12 +184,14 @@ The system follows a **"Dark Mesh"** design language:
 
 ## 📝 Fixes & Updates Log
 
-### [March 4, 2026] - Mail Core v3
+### [March 4, 2026] - Mail Core v3 & Status v2
 - **FIX**: Resolved "Uplink Lost" errors by implementing local `/api/subscribe`.
 - **FIX**: Resolved build-time crashes caused by top-level `Resend` instantiation across `actions/`.
 - **NEW**: Implemented **Glory at avrxt.in** custom branding for all transactional emails.
 - **NEW**: Added **Shield Protocol** (MX lookup + Blacklisting) to save on mailing costs.
 - **NEW**: Implemented **Staggered API Calls** to mitigate Resend 429 rate limits.
+- **NEW**: Redesigned **Betterstack Status Badge** with a premium, animated React component mapping to the site's dark design system.
+
 
 ---
 
