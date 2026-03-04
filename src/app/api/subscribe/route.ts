@@ -117,10 +117,7 @@ export async function POST(request: NextRequest) {
                 { status: 403 }
             );
         }
-
-        // 5-second artificial delay for rate-limiting & user feedback
-        await sleep(5000);
-
+        
         if (!process.env.RESEND_API_KEY || !AUDIENCE_ID) {
             console.error('RESEND_CONFIG_MISSING');
             return NextResponse.json(
@@ -131,7 +128,10 @@ export async function POST(request: NextRequest) {
 
         const resend = new Resend(process.env.RESEND_API_KEY);
 
-        // 4. Check Persistence (Check if already in Audience)
+        // --- STEP A: INITIAL THROTTLE (Wait 1s) ---
+        await sleep(1000);
+
+        // 4. Check Persistence
         const { data: contacts, error: listError } = await resend.contacts.list({
             audienceId: AUDIENCE_ID,
         });
@@ -152,6 +152,9 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // --- STEP B: SPACING DELAY (Wait 2s before creation) ---
+        await sleep(2000);
+
         // 5. Create Contact
         const { error: createError } = await resend.contacts.create({
             email: sanitizedEmail,
@@ -168,6 +171,9 @@ export async function POST(request: NextRequest) {
             }
             throw new Error(createError.message);
         }
+
+        // --- STEP C: SPACING DELAY (Wait 2s before email dispatch) ---
+        await sleep(2000);
 
         // 6. Dispatch Premium Welcome Email
         const { error: emailError } = await resend.emails.send({
