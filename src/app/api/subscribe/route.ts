@@ -29,6 +29,8 @@ const rateLimit = new LRUCache<string, number>({
     ttl: 1000 * 60 * 60 * 24,
 });
 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 async function isFakeEmail(email: string): Promise<boolean> {
     const domain = email.split('@')[1]?.toLowerCase();
     if (!domain) return true;
@@ -115,6 +117,9 @@ export async function POST(request: NextRequest) {
                 { status: 403 }
             );
         }
+
+        // 5-second artificial delay for rate-limiting & user feedback
+        await sleep(5000);
 
         if (!process.env.RESEND_API_KEY || !AUDIENCE_ID) {
             console.error('RESEND_CONFIG_MISSING');
