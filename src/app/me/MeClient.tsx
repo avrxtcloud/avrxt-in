@@ -378,22 +378,25 @@ export default function MeClient({ initialConfig }: MeClientProps) {
         setIsSubmitting(true);
         setSubscribeStatus({ type: null, message: '' });
 
-        const email = (e.currentTarget.elements.namedItem('email') as HTMLInputElement).value;
+        const formData = new FormData(e.currentTarget);
+        const data = Object.fromEntries(formData);
 
         try {
             const response = await fetch('/api/subscribe', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email }),
+                body: JSON.stringify(data),
             });
+
             const result = await response.json();
+
             if (response.ok) {
-                setSubscribeStatus({ type: 'success', message: '// SUCCESS: NOTE_RESERVED' });
-                (e.target as HTMLFormElement).reset();
+                setSubscribeStatus({ type: 'success', message: result.message || '// SUCCESS: SUBSCRIPTION_ACTIVE' });
+                e.currentTarget.reset();
             } else {
-                setSubscribeStatus({ type: 'error', message: `// ERROR: ${result.error || 'Denied'}` });
+                setSubscribeStatus({ type: 'error', message: `// ERROR: ${result.error || 'UPLINK_DENIED'}` });
             }
-        } catch (error) {
+        } catch {
             setSubscribeStatus({ type: 'error', message: '// ERROR: UPLINK_LOST' });
         } finally {
             setIsSubmitting(false);
@@ -910,3 +913,4 @@ export default function MeClient({ initialConfig }: MeClientProps) {
         </main >
     );
 }
+

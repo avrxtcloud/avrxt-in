@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { ShieldCheck, Activity, ExternalLink, AlertTriangle, AlertCircle } from 'lucide-react';
-import { getBetterstackStatus } from '@/app/actions/status';
 
 type StatusState = {
     status: 'operational' | 'down' | 'maintenance' | 'unknown' | 'degraded';
@@ -16,14 +15,46 @@ export default function StatusBadge() {
     });
 
     useEffect(() => {
-        async function fetchStatus() {
-            const res = await getBetterstackStatus();
-            setData(res as StatusState);
-        }
+        let mounted = true;
+
+        const fetchStatus = async () => {
+            try {
+                const response = await fetch('/api/status', {
+                    method: 'GET',
+                    cache: 'no-store'
+                });
+
+                if (!response.ok) {
+                    return;
+                }
+
+                const result = await response.json();
+                if (mounted) {
+                    setData(result as StatusState);
+                }
+            } catch {
+                // Keep previous status on transient network issues.
+            }
+        };
+
         fetchStatus();
-        // Refresh every 5 minutes
-        const interval = setInterval(fetchStatus, 300000);
-        return () => clearInterval(interval);
+
+        const interval = setInterval(fetchStatus, 15000);
+        const refreshOnFocus = () => {
+            if (document.visibilityState === 'visible') {
+                fetchStatus();
+            }
+        };
+
+        document.addEventListener('visibilitychange', refreshOnFocus);
+        window.addEventListener('focus', fetchStatus);
+
+        return () => {
+            mounted = false;
+            clearInterval(interval);
+            document.removeEventListener('visibilitychange', refreshOnFocus);
+            window.removeEventListener('focus', fetchStatus);
+        };
     }, []);
 
     const getStatusConfig = () => {
