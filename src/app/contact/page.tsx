@@ -9,7 +9,7 @@ export default function Contact() {
     const [formStatus, setFormStatus] = useState<{ type: 'success' | 'error' | null, message: string }>({ type: null, message: '' });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const API_ENDPOINT = 'https://api.avrxt.in/api/contact';
+    const API_ENDPOINT = '/api/contact';
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -29,7 +29,7 @@ export default function Contact() {
                 body: JSON.stringify(data),
             });
 
-            const result = await response.json();
+            const result = await response.json().catch(() => ({}));
 
             if (response.ok) {
                 setFormStatus({ type: 'success', message: '// SUCCESS: SIGNAL_DELIVERED' });
@@ -130,3 +130,4 @@ export default function Contact() {
         </main>
     );
 }
+
