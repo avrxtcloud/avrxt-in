@@ -20,7 +20,7 @@ function nowMs() {
   return Date.now();
 }
 
-function required(value: string | undefined | null) {
+function required(value: string | undefined | null): value is string {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
@@ -360,6 +360,7 @@ export async function GET() {
     }
   );
 }
+
 
 
 
