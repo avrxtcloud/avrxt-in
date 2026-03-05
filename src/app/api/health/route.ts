@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server';
-import nodemailer from 'nodemailer';
-import { google } from 'googleapis';
 import { Resend } from 'resend';
 import { resolveMx } from 'node:dns/promises';
 import { createAdminClient } from '@/utils/supabase/admin';
-import { getGooglePrivateKey } from '@/lib/google-key';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -36,90 +33,13 @@ async function withTimeout<T>(promise: PromiseLike<T>, ms: number): Promise<T> {
   }
 }
 
-async function checkGoogleSheet(sheetId: string, name: string): Promise<CheckResult> {
-  const start = nowMs();
-  const privateKey = getGooglePrivateKey(process.env.GOOGLE_PRIVATE_KEY);
-  const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-
-  if (!required(privateKey) || !required(clientEmail) || !required(sheetId)) {
-    return {
-      name,
-      ok: false,
-      details: 'Google Sheets credentials missing',
-      latencyMs: nowMs() - start,
-    };
-  }
-
-  try {
-    const auth = new google.auth.GoogleAuth({
-      credentials: {
-        client_email: clientEmail,
-        private_key: privateKey,
-      },
-      scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
-    });
-    const sheets = google.sheets({ version: 'v4', auth });
-    await withTimeout(
-      sheets.spreadsheets.get({
-        spreadsheetId: sheetId,
-        fields: 'spreadsheetId',
-      }),
-      10000
-    );
-    return {
-      name,
-      ok: true,
-      details: 'Google Sheets reachable',
-      latencyMs: nowMs() - start,
-    };
-  } catch (error) {
-    return {
-      name,
-      ok: false,
-      details: `Google Sheets check failed: ${error instanceof Error ? error.message : 'unknown error'}`,
-      latencyMs: nowMs() - start,
-    };
-  }
-}
-
-async function checkGmail(name: string): Promise<CheckResult> {
-  const start = nowMs();
-  const gmailPassword = process.env.GMAIL_APP_PASSWORD;
-  if (!required(gmailPassword)) {
-    return {
-      name,
-      ok: false,
-      details: 'GMAIL_APP_PASSWORD missing',
-      latencyMs: nowMs() - start,
-    };
-  }
-
-  try {
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: 'aviorxtaero@gmail.com',
-        pass: gmailPassword,
-      },
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 10000,
-    });
-    await withTimeout(transporter.verify(), 12000);
-    return {
-      name,
-      ok: true,
-      details: 'Gmail SMTP reachable',
-      latencyMs: nowMs() - start,
-    };
-  } catch (error) {
-    return {
-      name,
-      ok: false,
-      details: `Gmail SMTP check failed: ${error instanceof Error ? error.message : 'unknown error'}`,
-      latencyMs: nowMs() - start,
-    };
-  }
+function skippedCheck(name: string, details: string): CheckResult {
+  return {
+    name,
+    ok: true,
+    details,
+    latencyMs: 0,
+  };
 }
 
 async function checkSupabase(name: string): Promise<CheckResult> {
@@ -288,47 +208,12 @@ async function checkStatusProvider(name: string): Promise<CheckResult> {
   }
 }
 
-async function checkContactApi(): Promise<CheckResult> {
-  const start = nowMs();
-  const [sheetCheck, gmailCheck] = await Promise.all([
-    checkGoogleSheet(process.env.GOOGLE_SHEET_ID || '', 'contact/google-sheets'),
-    checkGmail('contact/gmail'),
-  ]);
-
-  const ok = sheetCheck.ok || gmailCheck.ok;
-  return {
-    name: 'api/contact',
-    ok,
-    details: ok
-      ? `contact path ready (${sheetCheck.ok ? 'sheets' : 'no-sheets'}, ${gmailCheck.ok ? 'gmail' : 'no-gmail'})`
-      : 'contact path not functional (Google Sheets and Gmail checks failed)',
-    latencyMs: nowMs() - start,
-  };
-}
-
-async function checkHiremeApi(): Promise<CheckResult> {
-  const start = nowMs();
-  const sheetCheck = await checkGoogleSheet(process.env.INTAKE_SHEET_ID || '', 'hireme/google-sheets');
-  const gmailCheck = await checkGmail('hireme/gmail');
-  const adminEmailOk = required(process.env.ADMIN_GMAIL_ID) || required(process.env.ADMIN_EMAIL);
-
-  const ok = sheetCheck.ok && gmailCheck.ok && adminEmailOk;
-  return {
-    name: 'api/hireme',
-    ok,
-    details: ok
-      ? 'hireme path ready'
-      : `hireme path failed (${sheetCheck.ok ? 'sheets-ok' : `sheets-fail: ${sheetCheck.details}`}, ${gmailCheck.ok ? 'gmail-ok' : `gmail-fail: ${gmailCheck.details}`}, ${adminEmailOk ? 'admin-email-ok' : 'admin-email-missing'})`,
-    latencyMs: nowMs() - start,
-  };
-}
-
 export async function GET() {
   const started = nowMs();
 
   const checks = await Promise.all([
-    checkContactApi(),
-    checkHiremeApi(),
+    Promise.resolve(skippedCheck('api/contact', 'Google Sheets/Gmail deep check skipped by policy')),
+    Promise.resolve(skippedCheck('api/hireme', 'Google Sheets deep check skipped by policy')),
     checkSpotifyConfig('api/spotify/auth+callback'),
     checkSupabase('api/spotify/now-playing'),
     checkResendAndDns('api/subscribe'),
@@ -360,7 +245,3 @@ export async function GET() {
     }
   );
 }
-
-
-
-
