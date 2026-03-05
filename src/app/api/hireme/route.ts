@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
         const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
         const sheetId = process.env.INTAKE_SHEET_ID;
         const gmailPassword = process.env.GMAIL_APP_PASSWORD;
-        const adminEmail = process.env.ADMIN_GMAIL_ID;
+        const adminEmail = process.env.ADMIN_GMAIL_ID || process.env.ADMIN_EMAIL;
 
         // Strict check for required configuration
         if (!privateKey || !clientEmail || !sheetId || !gmailPassword || !adminEmail) {
@@ -104,3 +104,4 @@ export async function OPTIONS(request: NextRequest) {
         },
     });
 }
+

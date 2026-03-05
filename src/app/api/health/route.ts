@@ -309,7 +309,7 @@ async function checkHiremeApi(): Promise<CheckResult> {
   const start = nowMs();
   const sheetCheck = await checkGoogleSheet(process.env.INTAKE_SHEET_ID || '', 'hireme/google-sheets');
   const gmailCheck = await checkGmail('hireme/gmail');
-  const adminEmailOk = required(process.env.ADMIN_GMAIL_ID);
+  const adminEmailOk = required(process.env.ADMIN_GMAIL_ID) || required(process.env.ADMIN_EMAIL);
 
   const ok = sheetCheck.ok && gmailCheck.ok && adminEmailOk;
   return {
@@ -317,7 +317,7 @@ async function checkHiremeApi(): Promise<CheckResult> {
     ok,
     details: ok
       ? 'hireme path ready'
-      : `hireme path failed (${sheetCheck.ok ? 'sheets-ok' : 'sheets-fail'}, ${gmailCheck.ok ? 'gmail-ok' : 'gmail-fail'}, ${adminEmailOk ? 'admin-email-ok' : 'admin-email-missing'})`,
+      : `hireme path failed (${sheetCheck.ok ? 'sheets-ok' : `sheets-fail: ${sheetCheck.details}`}, ${gmailCheck.ok ? 'gmail-ok' : `gmail-fail: ${gmailCheck.details}`}, ${adminEmailOk ? 'admin-email-ok' : 'admin-email-missing'})`,
     latencyMs: nowMs() - start,
   };
 }
