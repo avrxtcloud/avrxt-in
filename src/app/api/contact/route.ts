@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 import { google } from 'googleapis';
+import { getGooglePrivateKey } from '@/lib/google-key';
 
 export async function POST(request: NextRequest) {
     try {
@@ -16,7 +17,7 @@ export async function POST(request: NextRequest) {
         // --- 1. GOOGLE SHEETS AUTH ---
         let sheetSuccess = false;
         try {
-            const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+            const privateKey = getGooglePrivateKey(process.env.GOOGLE_PRIVATE_KEY);
             const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
             const sheetId = process.env.GOOGLE_SHEET_ID;
 
@@ -101,3 +102,4 @@ export async function OPTIONS(request: NextRequest) {
         },
     });
 }
+

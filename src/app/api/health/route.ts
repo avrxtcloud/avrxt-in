@@ -4,6 +4,7 @@ import { google } from 'googleapis';
 import { Resend } from 'resend';
 import { resolveMx } from 'node:dns/promises';
 import { createAdminClient } from '@/utils/supabase/admin';
+import { getGooglePrivateKey } from '@/lib/google-key';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -37,7 +38,7 @@ async function withTimeout<T>(promise: PromiseLike<T>, ms: number): Promise<T> {
 
 async function checkGoogleSheet(sheetId: string, name: string): Promise<CheckResult> {
   const start = nowMs();
-  const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+  const privateKey = getGooglePrivateKey(process.env.GOOGLE_PRIVATE_KEY);
   const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
 
   if (!required(privateKey) || !required(clientEmail) || !required(sheetId)) {
@@ -359,4 +360,5 @@ export async function GET() {
     }
   );
 }
+
 
