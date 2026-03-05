@@ -23,7 +23,7 @@ function required(value: string | undefined) {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
-async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+async function withTimeout<T>(promise: PromiseLike<T>, ms: number): Promise<T> {
   let timer: NodeJS.Timeout | undefined;
   const timeoutPromise = new Promise<never>((_, reject) => {
     timer = setTimeout(() => reject(new Error(`Timeout after ${ms}ms`)), ms);
@@ -138,18 +138,20 @@ async function checkSupabase(name: string): Promise<CheckResult> {
 
   try {
     const supabase = createAdminClient();
-    const { error } = await withTimeout(
+    const queryResult = await withTimeout(
       supabase.from('spotify_tokens').select('id').limit(1),
       10000
-    );
-    if (error) {
+    ) as { error: { message: string } | null };
+
+    if (queryResult.error) {
       return {
         name,
         ok: false,
-        details: `Supabase query failed: ${error.message}`,
+        details: `Supabase query failed: ${queryResult.error.message}`,
         latencyMs: nowMs() - start,
       };
     }
+
     return {
       name,
       ok: true,
@@ -357,3 +359,4 @@ export async function GET() {
     }
   );
 }
+
