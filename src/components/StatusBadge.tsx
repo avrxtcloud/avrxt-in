@@ -5,7 +5,7 @@ import { ShieldCheck, Activity, ExternalLink, AlertTriangle, AlertCircle } from 
 import { getBetterstackStatus } from '@/app/actions/status';
 
 type StatusState = {
-    status: 'operational' | 'down' | 'maintenance' | 'unknown';
+    status: 'operational' | 'down' | 'maintenance' | 'unknown' | 'degraded';
     label: string;
 };
 
@@ -47,6 +47,16 @@ export default function StatusBadge() {
                     border: 'border-yellow-400/30',
                     icon: AlertTriangle,
                     glow: 'via-yellow-500/5'
+                };
+            case 'degraded':
+                return {
+                    color: 'text-amber-400',
+                    bg: 'bg-amber-500/20',
+                    dot: 'bg-amber-500',
+                    shadow: 'shadow-[0_0_10px_rgba(245,158,11,0.7)]',
+                    border: 'border-amber-400/30',
+                    icon: AlertTriangle,
+                    glow: 'via-amber-500/5'
                 };
             default:
                 return {
