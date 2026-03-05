@@ -12,7 +12,9 @@ type StatusPayload = {
 };
 
 function mapAggregateState(state: string): StatusPayload {
-    switch (state) {
+    const normalized = (state || '').toLowerCase().replace(/[-\s]/g, '_');
+
+    switch (normalized) {
         case 'operational':
             return { status: 'operational', label: 'Systems Active' };
         case 'degraded':
@@ -35,21 +37,25 @@ async function fetchBetterstackStatus(): Promise<StatusPayload> {
         return { status: 'unknown', label: 'Status Offline' };
     }
 
-    const response = await fetch(`${BASE_URL}/status-pages/${STATUS_PAGE_ID}`, {
-        headers: {
-            Authorization: `Bearer ${API_KEY}`,
-            'Content-Type': 'application/json'
-        },
-        cache: 'no-store'
-    });
+    try {
+        const response = await fetch(`${BASE_URL}/status-pages/${STATUS_PAGE_ID}`, {
+            headers: {
+                Authorization: `Bearer ${API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            cache: 'no-store'
+        });
 
-    if (!response.ok) {
+        if (!response.ok) {
+            return { status: 'unknown', label: 'Status Offline' };
+        }
+
+        const page = await response.json();
+        const aggregateState: string = page?.data?.attributes?.aggregate_state ?? 'unknown';
+        return mapAggregateState(aggregateState);
+    } catch {
         return { status: 'unknown', label: 'Status Offline' };
     }
-
-    const page = await response.json();
-    const aggregateState: string = page?.data?.attributes?.aggregate_state ?? 'unknown';
-    return mapAggregateState(aggregateState);
 }
 
 async function fetchPublicStatus(): Promise<StatusPayload> {
@@ -57,13 +63,18 @@ async function fetchPublicStatus(): Promise<StatusPayload> {
         const response = await fetch('https://status.avrxt.in/badge?theme=dark', {
             cache: 'no-store'
         });
-        const html = await response.text();
 
-        if (html.includes('Major outage')) return { status: 'down', label: 'Major Outage' };
-        if (html.includes('Partial outage') || html.includes('Some services are down')) return { status: 'down', label: 'Partial Outage' };
-        if (html.includes('Degraded') || html.includes('performance')) return { status: 'degraded', label: 'Performance Degraded' };
-        if (html.includes('Maintenance')) return { status: 'maintenance', label: 'Ongoing Maintenance' };
-        if (html.includes('All systems operational') || html.includes('operational')) return { status: 'operational', label: 'Systems Active' };
+        if (!response.ok) {
+            return { status: 'unknown', label: 'Status Offline' };
+        }
+
+        const html = (await response.text()).toLowerCase();
+
+        if (html.includes('major outage')) return { status: 'down', label: 'Major Outage' };
+        if (html.includes('partial outage') || html.includes('some services are down')) return { status: 'down', label: 'Partial Outage' };
+        if (html.includes('degraded') || html.includes('performance')) return { status: 'degraded', label: 'Performance Degraded' };
+        if (html.includes('maintenance')) return { status: 'maintenance', label: 'Ongoing Maintenance' };
+        if (html.includes('all systems operational') || html.includes('operational')) return { status: 'operational', label: 'Systems Active' };
 
         return { status: 'unknown', label: 'Status Unknown' };
     } catch {
@@ -72,9 +83,19 @@ async function fetchPublicStatus(): Promise<StatusPayload> {
 }
 
 export async function GET() {
-    const result = API_KEY && STATUS_PAGE_ID
-        ? await fetchBetterstackStatus()
-        : await fetchPublicStatus();
+    let result: StatusPayload = { status: 'unknown', label: 'Status Offline' };
+
+    if (API_KEY && STATUS_PAGE_ID) {
+        result = await fetchBetterstackStatus();
+    }
+
+    // Fallback when Betterstack env is missing/unavailable/unmapped
+    if (result.status === 'unknown') {
+        const publicResult = await fetchPublicStatus();
+        if (publicResult.status !== 'unknown') {
+            result = publicResult;
+        }
+    }
 
     return NextResponse.json(result, {
         headers: {
