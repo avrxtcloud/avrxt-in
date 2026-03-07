@@ -8,58 +8,160 @@ A high-performance, premium personal website and service platform built with **N
 
 ## 🏗️ System Architecture
 
+
+> Note: Static pages are intentionally omitted from this workflow map.
+
 ```mermaid
-
 graph TD
+    U["User"] --> EDGE["Cloudflare WAF + Vercel Edge"]
+    A["Admin"] --> EDGE
+    EDGE --> PROXY["src/proxy.ts status subdomain rewrite"]
+    PROXY --> ROUTER["Next.js App Router"]
 
-    User((User)) -->|HTTPS/TLS 1.3| WAF[Cloudflare WAF / Firewall]
+    subgraph DYN["Dynamic Pages and Route Handlers"]
+        P_GUEST["/guestbook"]
+        P_DOCS["/docs"]
+        P_DOCS_SLUG["/docs/[slug]"]
+        P_DOCS_ADMIN["/docs/admin"]
+        P_ME["/me"]
+        P_ME_ADMIN["/me/admin"]
+        P_CUPCAKE["/cupcake"]
+        P_AUTH_CB["/auth/callback"]
 
-    WAF -->|Traffic Filtering| Vercel[Vercel Edge Network]
-
-    subgraph "Application Layer (Next.js)"
-
-        Vercel -->|SSR / ISR| AppRouter[App Router]
-
-        AppRouter -->|Server Actions| Logic[Business Logic]
-
-        AppRouter -->|Guestbook Post/Edit| ModLayer[OpenAI Moderation Layer]
-
-        ModLayer -->|Allow/Block Result| Logic
-
-        AppRouter -->|Metadata Engine| SEO[Dynamic SEO/Robots]
-
+        API_CONTACT["/api/contact"]
+        API_HIREME["/api/hireme"]
+        API_SUBSCRIBE["/api/subscribe"]
+        API_STATUS["/api/status"]
+        API_HEALTH["/api/health"]
+        API_SPOTIFY_AUTH["/api/spotify/auth"]
+        API_SPOTIFY_CB["/api/spotify/callback"]
+        API_NOW_PLAYING["/api/spotify/now-playing"]
     end
 
-    subgraph "Data & Persistence"
+    ROUTER --> P_GUEST
+    ROUTER --> P_DOCS
+    ROUTER --> P_DOCS_SLUG
+    ROUTER --> P_DOCS_ADMIN
+    ROUTER --> P_ME
+    ROUTER --> P_ME_ADMIN
+    ROUTER --> P_CUPCAKE
+    ROUTER --> P_AUTH_CB
+    ROUTER --> API_CONTACT
+    ROUTER --> API_HIREME
+    ROUTER --> API_SUBSCRIBE
+    ROUTER --> API_STATUS
+    ROUTER --> API_HEALTH
+    ROUTER --> API_SPOTIFY_AUTH
+    ROUTER --> API_SPOTIFY_CB
+    ROUTER --> API_NOW_PLAYING
 
-        Logic -->|PostgreSQL Query| SupabaseDB[(Supabase DB)]
-
-        Logic -->|Auth / JWT| SupabaseAuth[Supabase Auth]
-
-        Logic -->|Object Storage| R2[(Cloudflare R2)]
-
-        ModLayer -->|Decision Cache Read/Write| ModCache[(Supabase Moderation Cache)]
-
+    subgraph SA["Server Actions and Shared Logic"]
+        ACT_GUEST["actions/guestbook.ts"]
+        ACT_DOCS["actions/docs.ts"]
+        ACT_ME["actions/me.ts"]
+        ACT_R2["actions/r2.ts"]
+        ACT_SPOTIFY["actions/spotify.ts"]
+        ACT_CUPCAKE["actions/cupcake.ts"]
+        ACT_CLOUD["actions/cloud.ts"]
+        AUTH_CHECKS["verifyAdmin and protectAdminPage"]
+        MOD_PIPE["guestbook moderation pipeline"]
+        PRICE_MAP["lib/cloud-services.ts trusted variant pricing"]
     end
 
-    subgraph "CDN Layer"
+    P_GUEST --> ACT_GUEST
+    ACT_GUEST --> MOD_PIPE
+    P_DOCS --> ACT_DOCS
+    P_DOCS_SLUG --> ACT_DOCS
+    P_DOCS_ADMIN --> AUTH_CHECKS
+    P_DOCS_ADMIN --> ACT_DOCS
+    P_ME --> ACT_ME
+    P_ME --> API_NOW_PLAYING
+    P_ME_ADMIN --> AUTH_CHECKS
+    P_ME_ADMIN --> ACT_ME
+    P_ME_ADMIN --> ACT_R2
+    P_ME_ADMIN --> ACT_SPOTIFY
+    P_CUPCAKE --> ACT_CUPCAKE
+    P_AUTH_CB --> AUTH_CHECKS
 
-        R2 -->|Images| i_cdn[i.cdn.avrxt.in]
+    CLOUD_UI["Cloud booking form from SSG service page"] --> ACT_CLOUD
+    ACT_CLOUD --> PRICE_MAP
 
-        R2 -->|Videos| v_cdn[v.cdn.avrxt.in]
+    API_SPOTIFY_AUTH --> AUTH_CHECKS
+    API_SPOTIFY_CB --> AUTH_CHECKS
+    ACT_SPOTIFY --> API_SPOTIFY_AUTH
+    ACT_SPOTIFY --> API_SPOTIFY_CB
 
+    subgraph DATA["Data and Storage"]
+        DB_GUEST["Supabase table guestbook"]
+        DB_MOD["Supabase table guestbook_moderation_cache"]
+        DB_DOCS["Supabase table documents"]
+        DB_ME["Supabase table me_config"]
+        DB_SPOT_TOKENS["Supabase table spotify_tokens"]
+        DB_SPOT_HISTORY["Supabase table spotify_history"]
+        DB_TIPS["Supabase table cupcake_tips"]
+        DB_CLOUD["Supabase table cloud_bookings"]
+        R2["Cloudflare R2 bucket"]
+        CDN_I["i.cdn.avrxt.in image CDN"]
+        CDN_V["v.cdn.avrxt.in media CDN"]
     end
 
-    Admin((Admin)) -->|Verified Auth| AdminPanels[Admin Dashboards]
+    ACT_GUEST --> DB_GUEST
+    MOD_PIPE --> DB_MOD
+    ACT_DOCS --> DB_DOCS
+    ACT_ME --> DB_ME
+    API_NOW_PLAYING --> DB_SPOT_TOKENS
+    API_NOW_PLAYING --> DB_SPOT_HISTORY
+    API_SPOTIFY_CB --> DB_SPOT_TOKENS
+    ACT_CUPCAKE --> DB_TIPS
+    ACT_CLOUD --> DB_CLOUD
+    ACT_R2 --> R2
+    R2 --> CDN_I
+    R2 --> CDN_V
 
-    AdminPanels --> Logic
+    subgraph EXT["External Providers and Security Controls"]
+        OPENAI["OpenAI Moderation API"]
+        MEM_CACHE["In-memory LRU moderation cache"]
+        SPOTIFY_ACCOUNTS["Spotify Accounts OAuth"]
+        SPOTIFY_API["Spotify Web API"]
+        OAUTH_STATE["HTTP-only OAuth state cookie"]
+        RAZORPAY["Razorpay orders and payment verification"]
+        RESEND["Resend contacts and email"]
+        GMAIL["Gmail SMTP"]
+        SHEETS["Google Sheets API"]
+        MAILCHECK["mailcheck.ai disposable email check"]
+        DNS_MX["DNS MX resolution"]
+        BETTERSTACK["Betterstack status API"]
+        STATUS_FALLBACK["status.avrxt.in badge fallback"]
+        DISCORD["Discord role verification"]
+    end
 
-    style SEO fill:#f9f,stroke:#333,stroke-width:2px
-
-    style WAF fill:#f60,stroke:#333,stroke-width:2px
-
-    style Vercel fill:#000,stroke:#fff,color:#fff
-
+    MOD_PIPE --> MEM_CACHE
+    MOD_PIPE --> OPENAI
+    AUTH_CHECKS --> DISCORD
+    API_SPOTIFY_AUTH --> OAUTH_STATE
+    API_SPOTIFY_AUTH --> SPOTIFY_ACCOUNTS
+    API_SPOTIFY_CB --> OAUTH_STATE
+    API_SPOTIFY_CB --> SPOTIFY_ACCOUNTS
+    API_NOW_PLAYING --> SPOTIFY_API
+    ACT_CUPCAKE --> RAZORPAY
+    ACT_CUPCAKE --> RESEND
+    ACT_CUPCAKE --> GMAIL
+    ACT_CLOUD --> RAZORPAY
+    ACT_CLOUD --> RESEND
+    ACT_CLOUD --> GMAIL
+    API_CONTACT --> SHEETS
+    API_CONTACT --> GMAIL
+    API_HIREME --> SHEETS
+    API_HIREME --> GMAIL
+    API_SUBSCRIBE --> MAILCHECK
+    API_SUBSCRIBE --> DNS_MX
+    API_SUBSCRIBE --> RESEND
+    API_STATUS --> BETTERSTACK
+    API_STATUS --> STATUS_FALLBACK
+    API_HEALTH --> BETTERSTACK
+    API_HEALTH --> DNS_MX
+    API_HEALTH --> RESEND
+    API_HEALTH --> DB_SPOT_TOKENS
 ```
 
 ---
