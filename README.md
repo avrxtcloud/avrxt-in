@@ -184,6 +184,17 @@ The system follows a **"Dark Mesh"** design language:
 
 ## 📝 Fixes & Updates Log
 
+### [March 7, 2026] - Security Hardening v4 & Payment Integrity Patch
+- **CRITICAL FIX**: Removed client-side trust for cloud pricing by validating `serviceId + variantId` server-side before Razorpay order creation.
+- **CRITICAL FIX**: Added strict payment verification against Razorpay `order.amount` and `payment.order_id` before marking bookings as paid.
+- **FIX**: Repaired "Price on Request" flow with dedicated lead capture path for non-paid tiers (no fake signature path).
+- **FIX**: Hardened Spotify OAuth with admin-gated access plus CSRF `state` cookie validation on auth callback.
+- **FIX**: Patched auth callback redirect handling by sanitizing `next` path to prevent open redirect misuse.
+- **FIX**: Escaped user-supplied HTML content in contact/hireme mail templates and improved email validation.
+- **FIX**: Improved anti-abuse behavior on `/api/subscribe` with normalized client IP extraction and scoped CORS origin handling.
+- **FIX**: Switched Supabase admin client to fail-fast mode when service role credentials are missing.
+- **UPDATE**: Upgraded Next.js stack to `16.1.6` and resolved all known npm audit vulnerabilities.
+- **UPDATE**: Lint/build/audit pipeline now passes cleanly after v4 remediation.
 ### [March 4, 2026] - Mail Core v3 & Status v2
 - **FIX**: Resolved "Uplink Lost" errors by implementing local `/api/subscribe`.
 - **FIX**: Resolved build-time crashes caused by top-level `Resend` instantiation across `actions/`.
@@ -203,4 +214,5 @@ Copyright © 2026 **@avrxt**. All rights reserved.
 
 **Developer**: [@avrxt](https://instagram.com/aviorxt) | [support@avrxt.in](mailto:support@avrxt.in)
 
-*Last Updated: March 4, 2026 by Vipin R*
+*Last Updated: March 7, 2026 by Vipin R*
+
