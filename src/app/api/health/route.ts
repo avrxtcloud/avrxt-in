@@ -46,7 +46,7 @@ async function checkSupabase(name: string): Promise<CheckResult> {
   const start = nowMs();
 
   const hasUrl = required(process.env.NEXT_PUBLIC_SUPABASE_URL);
-  const hasKey = required(process.env.SUPABASE_SERVICE_ROLE_KEY) || required(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  const hasKey = required(process.env.SUPABASE_SERVICE_ROLE_KEY);
 
   if (!hasUrl || !hasKey) {
     return {

@@ -1,23 +1,23 @@
 import { notFound } from 'next/navigation';
-import { SERVICES } from '../page';
+import { CLOUD_SERVICES } from '@/lib/cloud-services';
 import Reveal from '@/components/Reveal';
 import SpotlightBox from '@/components/SpotlightBox';
 import BookingForm from './BookingForm';
-import { CheckCircle2, ShieldCheck, Zap, Laptop, Globe, Layers, Bot, Code2, Cloud } from 'lucide-react';
+import { CheckCircle2, ShieldCheck, Zap, Globe, Layers, Bot, Code2, Cloud } from 'lucide-react';
 
-const iconMap: Record<string, any> = {
+const iconMap = {
     Globe, Layers, Bot, Code2, Zap, Cloud, ShieldCheck
 };
 
 export async function generateStaticParams() {
-    return SERVICES.map((service) => ({
+    return CLOUD_SERVICES.map((service) => ({
         service: service.id,
     }));
 }
 
 export default async function ServicePage({ params }: { params: Promise<{ service: string }> }) {
     const { service: serviceId } = await params;
-    const service = SERVICES.find(s => s.id === serviceId);
+    const service = CLOUD_SERVICES.find((s) => s.id === serviceId);
 
     if (!service) {
         notFound();
@@ -57,7 +57,7 @@ export default async function ServicePage({ params }: { params: Promise<{ servic
                     </div>
 
                     <div className="space-y-4">
-                        <h3 className="text-xs font-mono uppercase tracking-[0.3em] text-zinc-600 mb-6">// Specifications</h3>
+                        <h3 className="text-xs font-mono uppercase tracking-[0.3em] text-zinc-600 mb-6">Specifications</h3>
                         <div className="space-y-3">
                             {service.variants[0].features.map((f: string) => (
                                 <div key={f} className="flex items-center gap-4 p-4 rounded-xl border border-white/5 bg-white/[0.01]">

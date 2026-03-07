@@ -3,103 +3,111 @@ import nodemailer from 'nodemailer';
 import { google } from 'googleapis';
 import { getGooglePrivateKey } from '@/lib/google-key';
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function getAllowedOrigin(request: NextRequest): string {
+  const configured = process.env.NEXT_PUBLIC_SITE_URL;
+  const origin = request.headers.get('origin');
+  if (configured && origin && origin === configured) return origin;
+  return configured || 'https://www.avrxt.in';
+}
+
 export async function POST(request: NextRequest) {
+  try {
+    const { name, email, message } = (await request.json()) as { name?: string; email?: string; message?: string };
+
+    if (!name || !email || !message) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    const userEmail = email.trim().toLowerCase();
+    if (!isValidEmail(userEmail)) {
+      return NextResponse.json({ error: 'Invalid email format' }, { status: 400 });
+    }
+
+    const safeName = escapeHtml(name.trim());
+    const safeEmail = escapeHtml(userEmail);
+    const safeMessage = escapeHtml(message.trim());
+
     try {
-        const { name, email, message } = await request.json();
+      const privateKey = getGooglePrivateKey(process.env.GOOGLE_PRIVATE_KEY);
+      const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+      const sheetId = process.env.GOOGLE_SHEET_ID;
 
-        if (!name || !email || !message) {
-            return NextResponse.json(
-                { error: 'Missing required fields' },
-                { status: 400 }
-            );
-        }
-
-        // --- 1. GOOGLE SHEETS AUTH ---
-        let sheetSuccess = false;
-        try {
-            const privateKey = getGooglePrivateKey(process.env.GOOGLE_PRIVATE_KEY);
-            const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-            const sheetId = process.env.GOOGLE_SHEET_ID;
-
-            if (!privateKey || !clientEmail || !sheetId) {
-                console.error('Missing Google Sheets credentials');
-                // We don't return here, we just skip sheet logging so email can still be sent
-            } else {
-                const auth = new google.auth.GoogleAuth({
-                    credentials: {
-                        client_email: clientEmail,
-                        private_key: privateKey,
-                    },
-                    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-                });
-
-                const sheets = google.sheets({ version: 'v4', auth });
-                await sheets.spreadsheets.values.append({
-                    spreadsheetId: sheetId,
-                    range: 'Sheet1!A:D',
-                    valueInputOption: 'USER_ENTERED',
-                    requestBody: {
-                        values: [[new Date().toLocaleString('en-IN'), name, email, message]],
-                    },
-                });
-                sheetSuccess = true;
-            }
-        } catch (sheetError: unknown) {
-            console.error('GOOGLE_SHEETS_ERROR:', sheetError);
-            // Continue to email even if sheet fails
-        }
-
-        // --- 2. GMAIL SMTP NOTIFICATION ---
-        if (process.env.GMAIL_APP_PASSWORD) {
-            const transporter = nodemailer.createTransport({
-                service: 'gmail',
-                auth: {
-                    user: 'aviorxtaero@gmail.com',
-                    pass: process.env.GMAIL_APP_PASSWORD,
-                },
-            });
-
-            await transporter.sendMail({
-                from: `"avrxt Terminal" <aviorxtaero@gmail.com>`,
-                to: 'irgtxpc@gmail.com',
-                replyTo: email,
-                subject: `🚨 NEW_SIGNAL: ${name}`,
-                html: `
-                    <div style="background:#000; color:#fff; font-family:monospace; padding:30px; border:1px solid #333;">
-                        <h2 style="color:#666; font-size:14px; border-bottom:1px solid #222; padding-bottom:10px;">// INCOMING_PAYLOAD</h2>
-                        <p style="margin:20px 0;"><strong>SENDER:</strong> ${name}</p>
-                        <p style="margin:20px 0;"><strong>ADDRESS:</strong> ${email}</p>
-                        <div style="background:#050505; border:1px solid #222; padding:15px; margin-top:20px; white-space:pre-wrap; color:#ccc; line-height:1.6;">
-                            ${message}
-                        </div>
-                    </div>
-                `,
-            });
-        }
-
-        return NextResponse.json({
-            success: true,
-            message: 'Signal stored and transmitted.'
+      if (privateKey && clientEmail && sheetId) {
+        const auth = new google.auth.GoogleAuth({
+          credentials: {
+            client_email: clientEmail,
+            private_key: privateKey,
+          },
+          scopes: ['https://www.googleapis.com/auth/spreadsheets'],
         });
 
-    } catch (error: unknown) {
-        console.error('CONTACT_API_ERROR:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        return NextResponse.json(
-            { error: 'SYSTEM_FAILURE', details: errorMessage },
-            { status: 500 }
-        );
+        const sheets = google.sheets({ version: 'v4', auth });
+        await sheets.spreadsheets.values.append({
+          spreadsheetId: sheetId,
+          range: 'Sheet1!A:D',
+          valueInputOption: 'USER_ENTERED',
+          requestBody: {
+            values: [[new Date().toISOString(), name.trim(), userEmail, message.trim()]],
+          },
+        });
+      }
+    } catch (sheetError) {
+      console.error('GOOGLE_SHEETS_ERROR:', sheetError);
     }
+
+    if (process.env.GMAIL_APP_PASSWORD) {
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: 'aviorxtaero@gmail.com',
+          pass: process.env.GMAIL_APP_PASSWORD,
+        },
+      });
+
+      await transporter.sendMail({
+        from: '"avrxt Terminal" <aviorxtaero@gmail.com>',
+        to: 'irgtxpc@gmail.com',
+        replyTo: userEmail,
+        subject: `NEW_SIGNAL: ${safeName}`,
+        html: `
+          <div style="background:#000; color:#fff; font-family:monospace; padding:30px; border:1px solid #333;">
+            <h2 style="color:#666; font-size:14px; border-bottom:1px solid #222; padding-bottom:10px;">// INCOMING_PAYLOAD</h2>
+            <p style="margin:20px 0;"><strong>SENDER:</strong> ${safeName}</p>
+            <p style="margin:20px 0;"><strong>ADDRESS:</strong> ${safeEmail}</p>
+            <div style="background:#050505; border:1px solid #222; padding:15px; margin-top:20px; white-space:pre-wrap; color:#ccc; line-height:1.6;">${safeMessage}</div>
+          </div>
+        `,
+      });
+    }
+
+    return NextResponse.json({ success: true, message: 'Signal stored and transmitted.' });
+  } catch (error: unknown) {
+    console.error('CONTACT_API_ERROR:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: 'SYSTEM_FAILURE', details: errorMessage }, { status: 500 });
+  }
 }
 
 export async function OPTIONS(request: NextRequest) {
-    return new NextResponse(null, {
-        status: 200,
-        headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type',
-        },
-    });
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': getAllowedOrigin(request),
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  });
 }
-
