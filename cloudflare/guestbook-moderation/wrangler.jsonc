@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "avrxt-guestbook-moderation",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-03-08",
+  "workers_dev": true,
+  "routes": [
+    {
+      "pattern": "guestbook-mod.avrxt.in",
+      "custom_domain": true
+    }
+  ],
+  "ai": {
+    "binding": "AI"
+  },
+  "vars": {
+    "MODERATION_MODEL": "@cf/meta/llama-3.1-8b-instruct"
+  }
+}
