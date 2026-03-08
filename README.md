@@ -286,7 +286,7 @@ sequenceDiagram
 
   - **L2 Supabase Cache (Persistent)**: Shared moderation memory across restarts/deployments.
 
-- **Fail-Closed Behavior**: If moderation service is unavailable or not configured, unsafe bypass is blocked by default.
+- **Degraded Safety Mode**: Default is fail-closed (`block`). Optional `heuristic_allow` mode applies local safety heuristics during moderation API outages.
 
 - **Auditability**: Cached decisions track reasons, model, hit count, and last seen timestamp.
 
@@ -465,6 +465,7 @@ src/
      - `OPENAI_API_KEY` (required)
      - `OPENAI_MODERATION_MODEL` (optional, default: `omni-moderation-latest`)
      - `SUPABASE_SERVICE_ROLE_KEY` (required for persistent moderation cache)
+     - `GUESTBOOK_MODERATION_DEGRADED_MODE` (optional: `block` or `heuristic_allow`; default: `block`)
    - Run SQL migration in Supabase:
      - `supabase/migrations/20260307_guestbook_moderation_cache.sql`
    - This creates `public.guestbook_moderation_cache` used for permanent moderation memory.
@@ -490,6 +491,7 @@ The system follows a **"Dark Mesh"** design language:
 ### [March 7, 2026] - Guestbook Moderation v4 Core
 - **NEW**: Added OpenAI Moderation enforcement for guestbook `post` and `edit` flows.
 - **NEW**: Added dual-layer moderation cache (in-memory LRU + persistent Supabase cache).
+- **UPDATE**: Added degraded moderation mode with heuristic fallback for API outages (`GUESTBOOK_MODERATION_DEGRADED_MODE=heuristic_allow`).
 - **NEW**: Added migration for `guestbook_moderation_cache` with RLS enabled:
   - `supabase/migrations/20260307_guestbook_moderation_cache.sql`
 - **UPDATE NOTE**: Guestbook moderation reference implementation:
