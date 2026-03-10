@@ -1,17 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
     const pathname = usePathname();
 
-    // Hide navbar on /me routes
-    if (pathname.startsWith('/me')) {
+    // Hide navbar only on /me/admin routes
+    if (pathname.startsWith('/me/admin')) {
         return null;
     }
 
@@ -20,10 +22,27 @@ export default function Navbar() {
         { name: '/skills', href: '/#expertise' },
         { name: '/projects', href: '/#projects' },
         { name: '/uses', href: '/uses' },
+        { name: '/me', href: '/me' },
         { name: '/cloud', href: '/cloud' },
         { name: '/cupcake', href: '/cupcake' },
         { name: '/biz', href: '/#solutions' },
     ];
+
+    const searchItems = [
+        { name: '/me', href: '/me', description: "Profile and Link's" },
+        { name: '/subscribe', href: '/subscribe', description: 'Newsletter Subscription' },
+        { name: '/contact', href: '/contact', description: 'Contact @avrxt' },
+        { name: '/guestbook', href: '/guestbook', description: 'Leave a footprint' },
+    ];
+
+    const filteredSearchItems = useMemo(() => {
+        const query = searchQuery.trim().toLowerCase();
+        if (!query) return searchItems;
+        return searchItems.filter((item) =>
+            item.name.toLowerCase().includes(query) ||
+            item.description.toLowerCase().includes(query)
+        );
+    }, [searchQuery]);
 
     return (
         <header className="fixed top-0 w-full z-50 text-white">
@@ -40,24 +59,68 @@ export default function Navbar() {
                     </Link>
 
                     <div className="hidden sm:flex items-center gap-6 text-[12px] font-medium tracking-tight text-zinc-400">
-                        {navLinks.map((link) => {
-                            const isActive = link.href === pathname || (link.href.startsWith('/#') && pathname === '/');
-                            return (
-                                <Link
-                                    key={link.href}
-                                    href={link.href}
-                                    className={cn(
-                                        "relative transition-colors hover:text-white",
-                                        isActive && "text-white"
-                                    )}
-                                >
-                                    {link.name}
-                                    {isActive && (
-                                        <span className="absolute -bottom-2 left-0 h-[2px] w-full bg-gradient-to-r from-emerald-400 via-cyan-300 to-transparent" />
-                                    )}
-                                </Link>
-                            );
-                        })}
+                        <div className="flex items-center gap-6">
+                            {navLinks.map((link) => {
+                                const isActive = link.href === pathname || (link.href.startsWith('/#') && pathname === '/');
+                                return (
+                                    <Link
+                                        key={link.href}
+                                        href={link.href}
+                                        className={cn(
+                                            "relative transition-colors hover:text-white",
+                                            isActive && "text-white"
+                                        )}
+                                    >
+                                        {link.name}
+                                        {isActive && (
+                                            <span className="absolute -bottom-2 left-0 h-[2px] w-full bg-gradient-to-r from-emerald-400 via-cyan-300 to-transparent" />
+                                        )}
+                                    </Link>
+                                );
+                            })}
+                        </div>
+
+                        <div
+                            className="relative"
+                            onFocus={() => setIsSearchOpen(true)}
+                            onBlur={() => setTimeout(() => setIsSearchOpen(false), 120)}
+                        >
+                            <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-zinc-400">
+                                <Search className="h-4 w-4 text-zinc-500" />
+                                <input
+                                    value={searchQuery}
+                                    onChange={(event) => setSearchQuery(event.target.value)}
+                                    placeholder="Search pages"
+                                    className="bg-transparent outline-none placeholder:text-zinc-600 w-36"
+                                />
+                            </div>
+                            {isSearchOpen && (
+                                <div className="absolute right-0 mt-3 w-64 rounded-2xl border border-white/10 bg-black/90 p-3 shadow-[0_20px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl">
+                                    <div className="mb-2 text-[10px] font-mono uppercase tracking-[0.3em] text-zinc-500">
+                                        Quick Access
+                                    </div>
+                                    <div className="space-y-2">
+                                        {filteredSearchItems.length === 0 ? (
+                                            <div className="rounded-xl border border-white/5 bg-white/5 px-3 py-2 text-xs text-zinc-500">
+                                                No matches. Try another keyword.
+                                            </div>
+                                        ) : (
+                                            filteredSearchItems.map((item) => (
+                                                <Link
+                                                    key={item.href}
+                                                    href={item.href}
+                                                    className="block rounded-xl border border-white/5 bg-white/5 px-3 py-2 text-xs text-zinc-300 transition-colors hover:border-white/20 hover:text-white"
+                                                >
+                                                    <div className="font-semibold">{item.name}</div>
+                                                    <div className="text-[11px] text-zinc-500">{item.description}</div>
+                                                </Link>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
                         <Link
                             href="/contact"
                             className="bg-white text-black px-4 py-1.5 rounded-full hover:scale-105 transition-transform font-bold"
@@ -82,6 +145,37 @@ export default function Navbar() {
                 )}
                 style={{ paddingBottom: isOpen ? "calc(env(safe-area-inset-bottom) + 24px)" : undefined }}
             >
+                <div className="relative">
+                    <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-zinc-400">
+                        <Search className="h-4 w-4 text-zinc-500" />
+                        <input
+                            value={searchQuery}
+                            onChange={(event) => setSearchQuery(event.target.value)}
+                            placeholder="Search pages"
+                            className="bg-transparent outline-none placeholder:text-zinc-600 w-full"
+                        />
+                    </div>
+                    <div className="mt-3 space-y-2">
+                        {filteredSearchItems.length === 0 ? (
+                            <div className="rounded-xl border border-white/5 bg-white/5 px-3 py-2 text-xs text-zinc-500">
+                                No matches. Try another keyword.
+                            </div>
+                        ) : (
+                            filteredSearchItems.map((item) => (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    className="block rounded-xl border border-white/5 bg-white/5 px-3 py-2 text-xs text-zinc-300 transition-colors hover:border-white/20 hover:text-white"
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    <div className="font-semibold">{item.name}</div>
+                                    <div className="text-[11px] text-zinc-500">{item.description}</div>
+                                </Link>
+                            ))
+                        )}
+                    </div>
+                </div>
+
                 {navLinks.map((link) => (
                     <Link
                         key={link.href}
