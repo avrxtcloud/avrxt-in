@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Space_Mono, Outfit, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
@@ -50,6 +50,13 @@ export const metadata: Metadata = {
     description: "avrxt: Full Stack Developer specializing in React, Node.js, API development, and AI automation. Building secure, scalable, and enterprise-ready web solutions.",
     images: [siteFavicon],
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#000000",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({

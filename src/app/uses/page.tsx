@@ -86,6 +86,36 @@ const sections = [
                 url: 'https://www.cloudflare.com/',
             },
             {
+                name: 'AWS S3',
+                description: 'Object storage for assets, backups, and long-term files.',
+                url: 'https://aws.amazon.com/s3/',
+            },
+            {
+                name: 'AWS EC2',
+                description: 'Flexible compute for custom workloads and long-running services.',
+                url: 'https://aws.amazon.com/ec2/',
+            },
+            {
+                name: 'AWS Route 53',
+                description: 'Domain management and routing when I need AWS-native DNS.',
+                url: 'https://aws.amazon.com/route53/',
+            },
+            {
+                name: 'AWS DynamoDB',
+                description: 'Managed NoSQL storage for low-latency workloads.',
+                url: 'https://aws.amazon.com/dynamodb/',
+            },
+            {
+                name: 'AWS Amplify',
+                description: 'Quick web app hosting with CI/CD and previews.',
+                url: 'https://aws.amazon.com/amplify/',
+            },
+            {
+                name: 'AWS CloudFront',
+                description: 'CDN acceleration for global asset delivery.',
+                url: 'https://aws.amazon.com/cloudfront/',
+            },
+            {
                 name: 'Self-hosted DNS management (VPS)',
                 description: 'Running my own DNS stack on a VPS for full control.',
                 url: 'https://coredns.io/',
