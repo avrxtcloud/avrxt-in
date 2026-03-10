@@ -26,10 +26,10 @@ export default function Navbar() {
     ];
 
     return (
-        <header className="fixed top-0 w-full z-50">
+        <header className="fixed top-0 w-full z-50 text-white">
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 h-px bg-white/5" />
-            <div className="bg-black/60 backdrop-blur-2xl" style={{ paddingTop: "env(safe-area-inset-top)" }}>
+            <div className="bg-black/80 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.4)]" style={{ paddingTop: "env(safe-area-inset-top)" }}>
                 <nav className="max-w-6xl mx-auto px-6 h-20 flex justify-between items-center">
                     <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-80">
                         <img src="https://cdn.avrxt.in/assets/logo.png" alt="avrxt" className="h-10 md:h-12 w-auto" />
@@ -66,21 +66,27 @@ export default function Navbar() {
                         </Link>
                     </div>
 
-                    <button className="sm:hidden" onClick={() => setIsOpen(!isOpen)}>
+                    <button
+                        className="sm:hidden rounded-full border border-white/10 bg-white/5 p-2 text-white transition-colors hover:border-white/30 hover:bg-white/10"
+                        onClick={() => setIsOpen(!isOpen)}
+                    >
                         {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                     </button>
                 </nav>
             </div>
 
-            <div className={cn(
-                "sm:hidden bg-black/80 border-b border-white/5 px-6 space-y-4 overflow-hidden transition-all duration-400 backdrop-blur-2xl",
-                isOpen ? "max-h-[420px] py-6 opacity-100" : "max-h-0 py-0 opacity-0"
-            )}>
+            <div
+                className={cn(
+                    "sm:hidden bg-black/80 border-b border-white/5 px-6 space-y-4 overflow-x-hidden overflow-y-auto transition-all duration-400 backdrop-blur-2xl",
+                    isOpen ? "max-h-[80vh] py-6 opacity-100" : "max-h-0 py-0 opacity-0"
+                )}
+                style={{ paddingBottom: isOpen ? "calc(env(safe-area-inset-bottom) + 24px)" : undefined }}
+            >
                 {navLinks.map((link) => (
                     <Link
                         key={link.href}
                         href={link.href}
-                        className="block text-zinc-400 py-2"
+                        className="block text-zinc-300 py-2 transition-colors hover:text-white"
                         onClick={() => setIsOpen(false)}
                     >
                         {link.name}
