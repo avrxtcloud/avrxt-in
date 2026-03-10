@@ -8,6 +8,7 @@ const sections = [
             {
                 name: 'VSCode',
                 description: 'After using Sublime for many years, I moved to VSCode like everybody else.',
+                url: 'https://code.visualstudio.com/',
             },
         ],
     },
@@ -17,6 +18,7 @@ const sections = [
             {
                 name: 'Hyper',
                 description: "Performance could be better, but I enjoy using this since it's made with JavaScript.",
+                url: 'https://hyper.is/',
             },
         ],
     },
@@ -26,24 +28,48 @@ const sections = [
             {
                 name: 'Bartender',
                 description: 'Perfect way to declutter and manage the macOS menubar.',
+                url: 'https://www.macbartender.com/',
             },
             {
                 name: 'Figma',
                 description: 'I never thought something would replace the Adobe suite for me. Figma did.',
+                url: 'https://www.figma.com/',
             },
             {
                 name: 'Things',
                 description: 'My current choice for to-do lists and organizing personal tasks.',
+                url: 'https://culturedcode.com/things/',
             },
             {
                 name: 'Divvy',
                 description: 'Tiny app that I use to create custom window positions.',
+                url: 'https://mizage.com/divvy/',
             },
-            { name: 'Zoho Mail' },
-            { name: 'Spotify' },
-            { name: 'Proton Mail' },
-            { name: 'Proton Pass' },
-            { name: 'Proton Authenticator' },
+            {
+                name: 'Zoho Mail',
+                description: 'Primary inbox for business mail and custom domains.',
+                url: 'https://www.zoho.com/mail/',
+            },
+            {
+                name: 'Spotify',
+                description: 'Daily streaming for focus, momentum, and long work sessions.',
+                url: 'https://www.spotify.com/',
+            },
+            {
+                name: 'Proton Mail',
+                description: 'Secure email for privacy-first communication.',
+                url: 'https://proton.me/mail',
+            },
+            {
+                name: 'Proton Pass',
+                description: 'Password manager for secure vaults across devices.',
+                url: 'https://proton.me/pass',
+            },
+            {
+                name: 'Proton Authenticator',
+                description: 'Two-factor codes that stay synced and protected.',
+                url: 'https://proton.me/authenticator',
+            },
         ],
     },
     {
@@ -52,30 +78,37 @@ const sections = [
             {
                 name: 'Algolia',
                 description: 'My first choice when adding search capabilities to any project.',
+                url: 'https://www.algolia.com/',
             },
             {
                 name: 'Cloudflare',
                 description: 'The DNS service I use with all my domains. Amazing product.',
+                url: 'https://www.cloudflare.com/',
             },
             {
                 name: 'Self-hosted DNS management (VPS)',
                 description: 'Running my own DNS stack on a VPS for full control.',
+                url: 'https://coredns.io/',
             },
             {
                 name: 'Self-hosted Supabase',
                 description: 'Self-hosted for flexibility and control over data.',
+                url: 'https://supabase.com/docs/guides/self-hosting',
             },
             {
                 name: 'Resend',
                 description: 'The new email API for developers.',
+                url: 'https://resend.com/',
             },
             {
                 name: 'Vercel',
                 description: 'Here is where I host all my websites. By far the best developer experience.',
+                url: 'https://vercel.com/',
             },
             {
                 name: 'Render.com',
                 description: 'Extra compute for services I do not want on Vercel.',
+                url: 'https://render.com/',
             },
         ],
     },
@@ -85,6 +118,7 @@ const sections = [
             {
                 name: 'Audible',
                 description: 'The perfect choice to listen to a book while running outside.',
+                url: 'https://www.audible.com/',
             },
         ],
     },
@@ -94,14 +128,17 @@ const sections = [
             {
                 name: 'OpenAI Codex',
                 description: 'For fixes and planning.',
+                url: 'https://openai.com/codex',
             },
             {
                 name: 'Google Antigravity',
                 description: 'For development assistance.',
+                url: 'https://antigravity.google/',
             },
             {
                 name: 'Claude',
                 description: 'For analyzing and troubleshooting.',
+                url: 'https://claude.ai/',
             },
         ],
     },
@@ -144,7 +181,18 @@ export default function UsesPage() {
                                         {String(itemIndex + 1).padStart(2, '0')}
                                     </div>
                                     <div>
-                                        <p className="text-sm font-semibold text-white">{item.name}</p>
+                                        {item.url ? (
+                                            <a
+                                                href={item.url}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="text-sm font-semibold text-white transition-colors hover:text-emerald-200"
+                                            >
+                                                {item.name}
+                                            </a>
+                                        ) : (
+                                            <p className="text-sm font-semibold text-white">{item.name}</p>
+                                        )}
                                         {item.description && (
                                             <p className="mt-1 text-sm text-zinc-500 leading-relaxed">{item.description}</p>
                                         )}
