@@ -83,9 +83,9 @@ export default function Navbar() {
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 h-px bg-white/5" />
             <div className="bg-black/80 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.4)]" style={{ paddingTop: "env(safe-area-inset-top)" }}>
-                <nav className="max-w-6xl mx-auto px-6 h-20 grid grid-cols-[auto,1fr,auto] items-center gap-6">
+                <nav className="max-w-6xl mx-auto px-6 py-2 sm:py-0 sm:h-20 grid grid-cols-[auto,1fr,auto] items-start sm:items-center gap-6">
                     <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-80">
-                        <img src="https://cdn.avrxt.in/assets/logo.png" alt="avrxt" className="h-10 md:h-12 w-auto" />
+                        <img src="https://cdn.avrxt.in/assets/logo.png" alt="avrxt" className="h-9 sm:h-10 md:h-12 w-auto" />
                         <div className="hidden md:block">
                             <div className="text-[10px] font-mono uppercase tracking-[0.4em] text-zinc-500">avrxt</div>
                             <div className="text-[11px] text-zinc-400">Premium Stack</div>
