@@ -14,6 +14,7 @@ export const metadata: Metadata = {
     description: "Building the next generation of digital infrastructure.",
     type: "website",
     url: "https://avrxt.in",
+    images: ["https://cdn.avrxt.in/icons/favicon.jpg"],
   }
 };
 

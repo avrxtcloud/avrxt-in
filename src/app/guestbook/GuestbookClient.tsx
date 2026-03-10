@@ -258,7 +258,7 @@ export default function GuestbookClient({ user, initialMessages }: { user: User 
 
                                     {/* Actions for owner */}
                                     {user?.id === msg.user_id && editingId !== msg.id && (
-                                        <div className="flex gap-3 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className="flex gap-3 mt-4 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                                             <button
                                                 onClick={() => {
                                                     setEditingId(msg.id);

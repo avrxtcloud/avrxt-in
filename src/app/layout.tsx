@@ -28,11 +28,27 @@ const instrumentSerif = Instrument_Serif({
   style: ["italic"],
 });
 
+const siteFavicon = "https://cdn.avrxt.in/icons/favicon.jpg";
+
 export const metadata: Metadata = {
   title: "avrxt | Full Stack Developer & Tech Innovator",
   description: "avrxt: Full Stack Developer specializing in React, Node.js, API development, and AI automation. Building secure, scalable, and enterprise-ready web solutions.",
   icons: {
-    icon: "https://camo.githubusercontent.com/870cfca3432cad5e7be3cb0bdb72a4492ac41a7c4e835a2ee34879164587a897/68747470733a2f2f63646e2e61767278742e696e2f6173736574732f6c6f676f2d30322e706e67",
+    icon: [{ url: siteFavicon, type: "image/jpeg" }],
+    shortcut: [siteFavicon],
+    apple: [siteFavicon],
+  },
+  openGraph: {
+    title: "avrxt | Full Stack Developer & Tech Innovator",
+    description: "avrxt: Full Stack Developer specializing in React, Node.js, API development, and AI automation. Building secure, scalable, and enterprise-ready web solutions.",
+    images: [siteFavicon],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "avrxt | Full Stack Developer & Tech Innovator",
+    description: "avrxt: Full Stack Developer specializing in React, Node.js, API development, and AI automation. Building secure, scalable, and enterprise-ready web solutions.",
+    images: [siteFavicon],
   },
 };
 

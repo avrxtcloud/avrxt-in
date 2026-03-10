@@ -20,6 +20,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
         '/gallery',
         '/cloud',
         '/subscribe',
+        '/uses',
     ];
 
     const staticSitemap = staticPages.map((route) => ({
