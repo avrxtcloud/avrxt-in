@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import {
     ExternalLink,
@@ -8,8 +8,6 @@ import {
     Pause,
     Volume2,
     VolumeX,
-    Maximize2,
-    Minimize2,
     Cloud,
     Droplets,
     Wind,
@@ -17,64 +15,26 @@ import {
     Camera,
     BookOpen,
     ArrowRight,
-    Search,
     Github,
     Twitter,
     Instagram,
     Linkedin,
     LinkedinIcon,
-    Youtube
+    Youtube,
+    Mail
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import StatusBadge from '@/components/StatusBadge';
 import Reveal from '@/components/Reveal';
 import Tilt from '@/components/Tilt';
 import Magnetic from '@/components/Magnetic';
-
-interface MeConfig {
-    profile: {
-        name: string;
-        username: string;
-        bio: string;
-        avatarUrl: string;
-        bannerUrl: string;
-        themeColor: string;
-        location: string;
-    };
-    links: {
-        id: string;
-        name: string;
-        url: string;
-        icon: string;
-    }[];
-    music: {
-        spotifyEnabled: boolean;
-        youtubeVideoId: string;
-        audioUrl: string;
-        autoPlay: boolean;
-    };
-    gallery: {
-        id: string;
-        url: string;
-        type: 'image' | 'video';
-        caption: string;
-    }[];
-    resources: {
-        id: string;
-        title: string;
-        url: string;
-        type: 'gallery' | 'doc' | 'post';
-        previewUrl?: string;
-        meta?: string;
-    }[];
-}
+import { MeConfig } from '@/lib/me-config';
 
 const iconMap: Record<string, any> = {
-    Github, Twitter, Instagram, Linkedin, LinkedinIcon, Youtube, ExternalLink
+    Github, Twitter, Instagram, Linkedin, LinkedinIcon, Youtube, ExternalLink, Mail
 };
 
-export default function MeClient({ config: initialConfig }: { config: MeConfig }) {
-    const [config] = useState<MeConfig>(initialConfig);
+export default function MeClient({ config }: { config: MeConfig }) {
     const [isPlaying, setIsPlaying] = useState(false);
     const [isMuted, setIsMuted] = useState(false);
     const [isImmersive, setIsImmersive] = useState(false);
@@ -119,8 +79,8 @@ export default function MeClient({ config: initialConfig }: { config: MeConfig }
 
     const fetchLanyard = async () => {
         try {
-            // Updated Lanyard ID to avrxt's Discord ID. Using a placeholder for now.
-            const res = await fetch(`https://api.lanyard.rest/v1/users/354181966035156993`);
+            if (!config.profile.presence?.discordId) return;
+            const res = await fetch(`https://api.lanyard.rest/v1/users/${config.profile.presence.discordId}`);
             const data = await res.json();
             if (data.success) {
                 setLanyardData(data.data);
@@ -132,8 +92,6 @@ export default function MeClient({ config: initialConfig }: { config: MeConfig }
                         albumImageUrl: data.data.spotify.album_art_url,
                         playedAt: Date.now()
                     });
-                } else if (data.data.activities.find((a: any) => a.name === "Spotify")) {
-                     // Fallback/Update
                 }
             }
         } catch (e) { console.error(e); }
@@ -152,7 +110,7 @@ export default function MeClient({ config: initialConfig }: { config: MeConfig }
             return;
         }
 
-        if (audioRef.current) {
+        if (audioRef.current && audioRef.current.src) {
             if (isPlaying) {
                 audioRef.current.pause();
             } else {
@@ -194,14 +152,6 @@ export default function MeClient({ config: initialConfig }: { config: MeConfig }
         };
     }, [config.music.audioUrl]);
 
-    // Handle initial mount effects
-    useEffect(() => {
-        if (config.music.autoPlay && isMounted) {
-            // Browser might block this
-            // togglePlay();
-        }
-    }, [isMounted]);
-
     const formatTimeAgo = (timestamp?: number) => {
         if (!timestamp) return 'Slightly earlier';
         const seconds = Math.floor((Date.now() - timestamp) / 1000);
@@ -242,6 +192,8 @@ export default function MeClient({ config: initialConfig }: { config: MeConfig }
         }
     };
 
+    const profileName = config.profile.handle.startsWith('@') ? config.profile.handle.slice(1) : config.profile.handle;
+
     return (
         <main className={cn(
             "min-h-screen bg-black text-white relative flex flex-col items-center select-none overflow-x-hidden pt-16 pb-12",
@@ -279,7 +231,7 @@ export default function MeClient({ config: initialConfig }: { config: MeConfig }
                         <div className="absolute inset-0 animate-pulse bg-emerald-500/20 blur-2xl rounded-full scale-110 opacity-30"></div>
                         <img 
                             src={config.profile.avatarUrl} 
-                            alt={config.profile.name}
+                            alt={config.profile.handle}
                             className="w-24 h-24 rounded-full border-2 border-white/10 relative z-10 shadow-2xl hover:scale-105 transition-transform duration-500"
                         />
                         {lanyardData?.discord_status && (
@@ -292,37 +244,39 @@ export default function MeClient({ config: initialConfig }: { config: MeConfig }
                         )}
                     </div>
                     <h1 className="text-3xl font-black tracking-tighter mb-1 uppercase italic">
-                        {config.profile.name}<span className="text-emerald-500">_</span>
+                        {profileName}<span className="text-emerald-500">_</span>
                     </h1>
                     <p className="text-[10px] font-mono text-zinc-500 tracking-[0.3em] uppercase mb-4">
-                        @{config.profile.username} // {config.profile.location}
+                        {config.profile.handle} // {config.profile.location || 'PLANET_EARTH'}
                     </p>
                     <div className="flex items-center justify-center gap-4 text-[9px] font-mono text-zinc-600 bg-white/5 py-1.5 px-4 rounded-full border border-white/5 backdrop-blur">
-                        <span className="flex items-center gap-1.5"><Cloud size={10} /> {weather?.temperature_2m}°C</span>
+                        <span className="flex items-center gap-1.5"><Cloud size={10} /> {weather?.temperature_2m || '??'}°C</span>
                         <span className="opacity-20">|</span>
-                        <span className="flex items-center gap-1.5"><Droplets size={10} /> {weather?.relative_humidity_2m}%</span>
+                        <span className="flex items-center gap-1.5"><Droplets size={10} /> {weather?.relative_humidity_2m || '??'}%</span>
                         <span className="opacity-20">|</span>
-                        <span className="flex items-center gap-1.5"><Wind size={10} /> {weather?.wind_speed_10m}km/h</span>
+                        <span className="flex items-center gap-1.5"><Wind size={10} /> {weather?.wind_speed_10m || '??'}km/h</span>
                     </div>
                 </Reveal>
 
                 {/* Status/Quote Widget */}
-                <Reveal className="w-full mb-8" direction="up" delay={0.2}>
-                    <div className="card-3d p-4 rounded-xl bg-white/[0.03] border border-white/10 backdrop-blur-xl group">
-                        <div className="flex items-center gap-2 mb-2">
-                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                            <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-widest">Inspirational_Feed</span>
-                        </div>
-                        {quote ? (
-                            <div className="space-y-1">
-                                <p className="text-[11px] leading-relaxed text-zinc-300 italic">&quot;{quote.content}&quot;</p>
-                                <p className="text-[9px] text-zinc-600 font-mono text-right">— {quote.author}</p>
+                {config.widgets?.quotesEnabled && (
+                    <Reveal className="w-full mb-8" direction="up" delay={0.2}>
+                        <div className="card-3d p-4 rounded-xl bg-white/[0.03] border border-white/10 backdrop-blur-xl group">
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                                <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-widest">Inspirational_Feed</span>
                             </div>
-                        ) : (
-                            <div className="h-10 w-full animate-pulse bg-white/5 rounded"></div>
-                        )}
-                    </div>
-                </Reveal>
+                            {quote ? (
+                                <div className="space-y-1">
+                                    <p className="text-[11px] leading-relaxed text-zinc-300 italic">&quot;{quote.content}&quot;</p>
+                                    <p className="text-[9px] text-zinc-600 font-mono text-right">— {quote.author}</p>
+                                </div>
+                            ) : (
+                                <div className="h-10 w-full animate-pulse bg-white/5 rounded"></div>
+                            )}
+                        </div>
+                    </Reveal>
+                )}
 
                 {/* Links Section */}
                 <div className="w-full mb-8">
@@ -384,9 +338,11 @@ export default function MeClient({ config: initialConfig }: { config: MeConfig }
                                             className="w-full h-full rounded-lg object-cover shadow-lg group-hover:scale-105 transition-transform duration-700" 
                                         />
                                     ) : (
-                                        <div className="w-full h-full rounded-lg bg-zinc-900 flex items-center justify-center border border-white/5">
-                                            <Play size={20} className="text-zinc-700" />
-                                        </div>
+                                        <img 
+                                            src={config.music.coverUrl} 
+                                            alt="Cover" 
+                                            className="w-full h-full rounded-lg object-cover shadow-lg opacity-50 group-hover:opacity-100 transition-opacity" 
+                                        />
                                     )}
                                     {isPlaying && (
                                         <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px] rounded-lg">
@@ -410,13 +366,12 @@ export default function MeClient({ config: initialConfig }: { config: MeConfig }
                                         </span>
                                     </div>
                                     <h5 className="text-[12px] font-bold text-white uppercase tracking-wider truncate mb-0.5">
-                                        {spotifyData?.title || (isPlaying ? "System Audio" : "No Signal Detected")}
+                                        {spotifyData?.title || config.music.title || "Standby"}
                                     </h5>
                                     <p className="text-[9px] font-mono text-zinc-500 uppercase tracking-tighter truncate">
-                                        {spotifyData?.artist || "Standby Mode"}
+                                        {spotifyData?.artist || config.music.artist || "No Signal"}
                                     </p>
                                     
-                                    {/* Small Progress Bar */}
                                     <div className="mt-3 relative h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
                                         <div 
                                             className="absolute top-0 left-0 h-full bg-emerald-500 transition-all duration-300 shadow-[0_0_10px_rgba(16,185,129,0.5)]" 
@@ -430,7 +385,7 @@ export default function MeClient({ config: initialConfig }: { config: MeConfig }
                                             min="0"
                                             max="100"
                                         />
-                                        <audio ref={audioRef} src={initialConfig.music.audioUrl} />
+                                        <audio ref={audioRef} src={config.music.audioUrl} />
                                     </div>
                                 </div>
 
@@ -452,7 +407,6 @@ export default function MeClient({ config: initialConfig }: { config: MeConfig }
                         </Tilt>
                     </Reveal>
 
-                    {/* Hidden YouTube iframe */}
                     {config.music.youtubeVideoId && (
                         <iframe
                             ref={ytIframeRef}
@@ -464,31 +418,6 @@ export default function MeClient({ config: initialConfig }: { config: MeConfig }
                         />
                     )}
                 </div>
-
-                {/* Recently Played Section */}
-                {config.music.spotifyEnabled && spotifyData?.title && !spotifyData?.isPlaying && (
-                    <Reveal className="w-full mb-8" direction="up" delay={0.4}>
-                        <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.2em] mb-3 ml-1 block">Recently_Synchronized</span>
-                        <Tilt intensity={8}>
-                            <div className="card-3d p-3 rounded-xl bg-gradient-to-br from-white/[0.03] to-transparent border border-white/[0.06] flex items-center gap-3 relative overflow-hidden group">
-                                <div className="absolute -top-24 -left-24 w-48 h-48 bg-white/5 blur-[60px] rounded-full pointer-events-none group-hover:bg-emerald-500/5 transition-colors duration-700" />
-                                <img
-                                    src={spotifyData.albumImageUrl}
-                                    alt="Last Played"
-                                    className="w-12 h-12 rounded-md object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500 shadow-lg"
-                                />
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-0.5">
-                                        <span className="text-[7px] font-mono text-zinc-500 px-1.5 py-0.5 rounded-sm bg-white/5 border border-white/5 tracking-widest uppercase">Last_Seen</span>
-                                        <span className="text-[7px] font-mono text-zinc-600 uppercase tracking-widest">{formatTimeAgo(spotifyData.playedAt)}</span>
-                                    </div>
-                                    <h5 className="text-[10px] font-bold text-white/80 uppercase tracking-wider truncate mb-0.5">{spotifyData.title}</h5>
-                                    <p className="text-[8px] font-mono text-zinc-500 uppercase tracking-tighter truncate">{spotifyData.artist}</p>
-                                </div>
-                            </div>
-                        </Tilt>
-                    </Reveal>
-                )}
 
                 {/* Gallery Section */}
                 {config.gallery && config.gallery.length > 0 && (
@@ -510,7 +439,7 @@ export default function MeClient({ config: initialConfig }: { config: MeConfig }
                                                 onMouseOut={e => e.currentTarget.pause()}
                                             />
                                         ) : (
-                                            <img src={item.url} alt={item.caption} className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-500 group-hover:scale-110" />
+                                            <img src={item.url} alt={item.caption || 'Gallery Image'} className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-500 group-hover:scale-110" />
                                         )}
                                         {item.caption && (
                                             <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
@@ -562,7 +491,10 @@ export default function MeClient({ config: initialConfig }: { config: MeConfig }
                                     type="submit" 
                                     disabled={isSubmitting}
                                     className="w-full py-3 bg-white text-black font-bold rounded-xl text-xs uppercase tracking-widest hover:opacity-90 transition-all font-mono disabled:opacity-50"
-                                    style={{ backgroundColor: config.profile.themeColor || '#ffffff', color: config.profile.themeColor ? (parseInt(config.profile.themeColor.replace('#', ''), 16) > 0xffffff / 2 ? '#000' : '#fff') : '#000' }}
+                                    style={{ 
+                                        backgroundColor: config.profile.themeColor || '#ffffff', 
+                                        color: config.profile.themeColor ? (parseInt(config.profile.themeColor.replace('#', ''), 16) > 0xffffff / 2 ? '#000' : '#fff') : '#000' 
+                                    }}
                                 >
                                     {isSubmitting ? 'CONNECTING...' : 'Subscribe_'}
                                 </button>
@@ -602,16 +534,18 @@ export default function MeClient({ config: initialConfig }: { config: MeConfig }
                                     </Link>
                                 ) : (
                                     <Link href={res.url} className="link-card block rounded-xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] transition-all group overflow-hidden">
-                                        <div className="relative h-28 overflow-hidden">
-                                            <img src={res.previewUrl} 
-                                                alt="Post Preview" 
-                                                className="w-full h-full object-cover opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-700" />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d0d] via-transparent to-transparent"></div>
-                                            <div className="absolute top-3 left-4">
-                                                <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-white/10 backdrop-blur-md text-zinc-300 uppercase tracking-tighter border border-white/5">Latest Post</span>
+                                        {res.previewUrl && (
+                                            <div className="relative h-28 overflow-hidden">
+                                                <img src={res.previewUrl} 
+                                                    alt="Post Preview" 
+                                                    className="w-full h-full object-cover opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-700" />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d0d] via-transparent to-transparent"></div>
+                                                <div className="absolute top-3 left-4">
+                                                    <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-white/10 backdrop-blur-md text-zinc-300 uppercase tracking-tighter border border-white/5">Latest Post</span>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div className="p-4 pt-0">
+                                        )}
+                                        <div className="p-4 pt-4">
                                             <h4 className="text-sm font-bold leading-tight text-white group-hover:text-zinc-300 transition-colors">{res.title}</h4>
                                             <div className="flex items-center justify-between mt-3">
                                                 <span className="text-[10px] text-zinc-500 font-mono">{res.meta}</span>
