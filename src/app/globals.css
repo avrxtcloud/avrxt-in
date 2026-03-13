@@ -1,11 +1,13 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Instrument+Serif:ital@0;1&display=swap');
 @import "tailwindcss";
 
 /* Premium Font Imports */
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Instrument+Serif:ital@0;1&display=swap');
 
 @theme {
   --font-sans: "Inter", sans-serif;
   --font-mono: "Space Mono", monospace;
+  --font-outfit: "Outfit", sans-serif;
+  --font-accent: "Instrument Serif", serif;
 
   --color-zinc-custom: #121212;
   --color-border-custom: #1f1f1f;

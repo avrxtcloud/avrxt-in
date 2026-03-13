@@ -15,6 +15,6 @@ export default async function MePage() {
     const config = await getMeConfigAction();
 
     return (
-        <MeClient initialConfig={config} />
+        <MeClient config={config} />
     );
 }
