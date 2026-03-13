@@ -1,13 +1,22 @@
 import { createClient } from '@/utils/supabase/server';
 import GuestbookClient from './GuestbookClient';
 import { getMessages } from '@/app/actions/guestbook';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
+import type { Metadata } from 'next';
 
-export const metadata = {
-    title: "@avrxt Link's And Profile",
-    description: 'Leave a permanent footprint in our community guestbook. Shared words from the digital frontier.',
-    keywords: ['guestbook', 'avrxt community', 'digital footprint', 'developer messages'],
+export const metadata: Metadata = {
+    title: 'Guestbook',
+    description: 'Leave Your Foot Print Here.',
+    keywords: ['guestbook', 'avrxt community', 'digital footprint', 'developer messages', 'Leave Your Foot Print Here'],
+    openGraph: {
+        title: 'Guestbook',
+        description: 'Leave Your Foot Print Here.',
+        type: 'website',
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: 'Guestbook',
+        description: 'Leave Your Foot Print Here.',
+    },
 };
 
 export default async function GuestbookPage() {

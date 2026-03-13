@@ -31,8 +31,12 @@ const instrumentSerif = Instrument_Serif({
 });
 
 const siteFavicon = "https://cdn.avrxt.in/icons/favicon.jpg";
+const metadataBase = process.env.NEXT_PUBLIC_SITE_URL
+  ? new URL(process.env.NEXT_PUBLIC_SITE_URL)
+  : new URL("https://avrxt.in");
 
 export const metadata: Metadata = {
+  metadataBase,
   title: "avrxt | Full Stack Developer & Tech Innovator",
   description: "avrxt: Full Stack Developer specializing in React, Node.js, API development, and AI automation. Building secure, scalable, and enterprise-ready web solutions.",
   icons: {
@@ -43,14 +47,13 @@ export const metadata: Metadata = {
   openGraph: {
     title: "avrxt | Full Stack Developer & Tech Innovator",
     description: "avrxt: Full Stack Developer specializing in React, Node.js, API development, and AI automation. Building secure, scalable, and enterprise-ready web solutions.",
-    images: [siteFavicon],
     type: "website",
+    siteName: "avrxt.in",
   },
   twitter: {
     card: "summary_large_image",
     title: "avrxt | Full Stack Developer & Tech Innovator",
     description: "avrxt: Full Stack Developer specializing in React, Node.js, API development, and AI automation. Building secure, scalable, and enterprise-ready web solutions.",
-    images: [siteFavicon],
   },
 };
 
