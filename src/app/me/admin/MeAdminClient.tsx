@@ -669,6 +669,7 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                                                                 title: item.title,
                                                                 artist: item.channelTitle,
                                                                 coverUrl: item.thumbnail,
+                                                                audioUrl: '',
                                                                 youtubeVideoId: item.videoId,
                                                             }
                                                         });

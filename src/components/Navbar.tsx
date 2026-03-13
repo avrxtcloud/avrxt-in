@@ -45,7 +45,7 @@ export default function Navbar() {
         }));
 
         return [...baseItems, ...cloudItems];
-    }, []);
+    }, [isHiddenRoute]);
 
     const filteredSearchItems = useMemo(() => {
         const query = searchQuery.trim().toLowerCase();
@@ -58,10 +58,7 @@ export default function Navbar() {
         });
     }, [searchQuery, searchItems]);
 
-    // Hide navbar on restricted/full-screen routes
-    if (pathname.startsWith('/me') || pathname.startsWith('/docs/admin')) {
-        return null;
-    }
+    const isHiddenRoute = pathname.startsWith('/me') || pathname.startsWith('/docs/admin');
 
     const navLinks = [
         { name: 'Home', href: '/' },
@@ -96,6 +93,7 @@ export default function Navbar() {
 
     // Keyboard listeners
     useEffect(() => {
+        if (isHiddenRoute) return;
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
                 setIsOpen(false);
@@ -110,6 +108,10 @@ export default function Navbar() {
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
+
+    if (isHiddenRoute) {
+        return null;
+    }
 
     return (
         <>

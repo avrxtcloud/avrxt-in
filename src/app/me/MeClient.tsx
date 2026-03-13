@@ -49,15 +49,38 @@ export default function MeClient({ config }: { config: MeConfig }) {
 
     const audioRef = useRef<HTMLAudioElement>(null);
     const ytIframeRef = useRef<HTMLIFrameElement>(null);
+    const [ytReady, setYtReady] = useState(false);
+    const [origin, setOrigin] = useState('');
 
     useEffect(() => {
         setIsMounted(true);
+        setOrigin(window.location.origin);
         fetchWeather();
         fetchQuote();
         const lanyardInterval = setInterval(fetchLanyard, 10000);
         fetchLanyard();
         return () => clearInterval(lanyardInterval);
     }, []);
+
+    const audioUrl = (config.music.audioUrl || '').trim();
+    const youtubeVideoId = (config.music.youtubeVideoId || '').trim();
+    const isUsingYouTube = Boolean(youtubeVideoId) && !audioUrl;
+
+    useEffect(() => {
+        setYtReady(false);
+    }, [youtubeVideoId]);
+
+    const postYouTubeCommand = (func: string, args: any[] = []) => {
+        const target = ytIframeRef.current?.contentWindow;
+        if (!target) return;
+        target.postMessage(JSON.stringify({ event: 'command', func, args }), '*');
+    };
+
+    useEffect(() => {
+        if (!isUsingYouTube || !ytReady) return;
+        postYouTubeCommand(isMuted ? 'mute' : 'unMute');
+        postYouTubeCommand(isPlaying ? 'playVideo' : 'pauseVideo');
+    }, [isUsingYouTube, ytReady, isMuted, isPlaying]);
 
     const fetchWeather = async () => {
         try {
@@ -96,22 +119,9 @@ export default function MeClient({ config }: { config: MeConfig }) {
             }
         } catch (e) { console.error(e); }
     };
-
     const togglePlay = () => {
-        if (!config.music.audioUrl && config.music.youtubeVideoId) {
-            const currentIsPlaying = !isPlaying;
-            setIsPlaying(currentIsPlaying);
-            if (ytIframeRef.current) {
-                // Ensure the video is unmuted when playing
-                ytIframeRef.current.contentWindow?.postMessage(
-                    JSON.stringify({ event: 'command', func: 'unMute' }),
-                    '*'
-                );
-                ytIframeRef.current.contentWindow?.postMessage(
-                    JSON.stringify({ event: 'command', func: currentIsPlaying ? 'playVideo' : 'pauseVideo' }),
-                    '*'
-                );
-            }
+        if (isUsingYouTube) {
+            setIsPlaying((prev) => !prev);
             return;
         }
 
@@ -124,17 +134,9 @@ export default function MeClient({ config }: { config: MeConfig }) {
             setIsPlaying(!isPlaying);
         }
     };
-
     const toggleMute = () => {
-        if (!config.music.audioUrl && config.music.youtubeVideoId) {
-            const currentIsMuted = !isMuted;
-            setIsMuted(currentIsMuted);
-            if (ytIframeRef.current) {
-                ytIframeRef.current.contentWindow?.postMessage(
-                    JSON.stringify({ event: 'command', func: currentIsMuted ? 'mute' : 'unMute' }),
-                    '*'
-                );
-            }
+        if (isUsingYouTube) {
+            setIsMuted((prev) => !prev);
             return;
         }
 
@@ -151,8 +153,8 @@ export default function MeClient({ config }: { config: MeConfig }) {
             audioRef.current.currentTime = (value / 100) * audioRef.current.duration;
         }
     };
-
     useEffect(() => {
+        if (isUsingYouTube) return;
         const audio = audioRef.current;
         if (!audio) return;
 
@@ -162,12 +164,15 @@ export default function MeClient({ config }: { config: MeConfig }) {
             }
         };
 
+        const handleEnded = () => setIsPlaying(false);
+
         audio.addEventListener('timeupdate', updateProgress);
-        audio.addEventListener('ended', () => setIsPlaying(false));
+        audio.addEventListener('ended', handleEnded);
         return () => {
             audio.removeEventListener('timeupdate', updateProgress);
+            audio.removeEventListener('ended', handleEnded);
         };
-    }, [config.music.audioUrl]);
+    }, [audioUrl, isUsingYouTube]);
 
     const formatTimeAgo = (timestamp?: number) => {
         if (!timestamp) return 'Slightly earlier';
@@ -418,7 +423,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
                                             min="0"
                                             max="100"
                                         />
-                                        <audio ref={audioRef} src={config.music.audioUrl} />
+                                        <audio ref={audioRef} src={audioUrl} preload="metadata" />
                                     </div>
                                 </div>
 
@@ -440,12 +445,14 @@ export default function MeClient({ config }: { config: MeConfig }) {
                         </Tilt>
                     </Reveal>
 
-                    {config.music.youtubeVideoId && (
+                    {isUsingYouTube && (
                         <iframe
+                            key={youtubeVideoId}
                             ref={ytIframeRef}
-                            src={`https://www.youtube-nocookie.com/embed/${config.music.youtubeVideoId}?enablejsapi=1&controls=0&rel=0&modestbranding=1&autoplay=0&mute=0`}
+                            onLoad={() => setYtReady(true)}
+                            src={`https://www.youtube-nocookie.com/embed/${youtubeVideoId}?enablejsapi=1&controls=0&rel=0&modestbranding=1&autoplay=0&mute=0${origin ? `&origin=${encodeURIComponent(origin)}` : ''}`}
                             title="yt-audio"
-                            allow="autoplay"
+                            allow="autoplay; encrypted-media"
                             style={{ position: 'absolute', width: '10px', height: '10px', opacity: 0.01, pointerEvents: 'none', left: '-9999px', top: '-9999px' }}
                             aria-hidden="true"
                         />
