@@ -85,31 +85,32 @@ export default function Navbar() {
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 h-px bg-white/5" />
             <div className="bg-black/80 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.4)]">
-                <nav className="max-w-6xl mx-auto px-6 h-16 sm:h-20 grid grid-cols-[auto,1fr,auto] items-center gap-6">
-                    <Link href="/" className="flex items-center gap-3 transition-transform hover:scale-[1.02] active:scale-[0.98] pt-2">
-                        <img src="https://cdn.avrxt.in/assets/logo.png" alt="avrxt" className="h-9 sm:h-10 md:h-12 w-auto drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]" />
+                <nav className="max-w-6xl mx-auto px-6 h-16 sm:h-20 flex items-center justify-between gap-4 relative z-[60]">
+                    <Link href="/" className="flex items-center gap-3 transition-transform hover:scale-[1.05] active:scale-95 group">
+                        <img
+                            src="https://cdn.avrxt.in/assets/logo.png"
+                            alt="avrxt"
+                            className="h-9 sm:h-10 md:h-12 w-auto drop-shadow-[0_0_15px_rgba(255,255,255,0.2)] translate-y-1.5 transition-transform duration-500 group-hover:translate-y-1"
+                        />
                         <div className="hidden md:block">
                             <div className="text-[10px] font-mono uppercase tracking-[0.4em] text-zinc-500">avrxt</div>
                             <div className="text-[11px] text-zinc-400">Premium Stack</div>
                         </div>
                     </Link>
 
-                    <div className="hidden sm:flex items-center justify-center gap-6 text-[12px] font-medium tracking-tight text-zinc-400">
-                        {navLinks.map((link) => {
+                    <div className="hidden sm:flex items-center gap-8 text-[11px] font-mono uppercase tracking-[0.2em] text-zinc-500">
+                        {navLinks.slice(0, 7).map((link) => {
                             const isActive = link.href === pathname || (link.href.startsWith('/#') && pathname === '/');
                             return (
                                 <Link
                                     key={link.href}
                                     href={link.href}
                                     className={cn(
-                                        "relative transition-colors hover:text-white",
+                                        "relative transition-all hover:text-white hover:tracking-[0.3em]",
                                         isActive && "text-white"
                                     )}
                                 >
                                     {link.name}
-                                    {isActive && (
-                                        <span className="absolute -bottom-2 left-0 h-[2px] w-full bg-gradient-to-r from-emerald-400 via-cyan-300 to-transparent" />
-                                    )}
                                 </Link>
                             );
                         })}
@@ -183,10 +184,10 @@ export default function Navbar() {
                         </button>
                         <button
                             type="button"
-                            className="relative z-50 rounded-full border border-white/10 bg-white/5 p-2 text-white transition-all hover:border-white/30 hover:bg-white/10 sm:hidden active:scale-95"
+                            className="relative z-[70] rounded-full border border-white/10 bg-white/5 p-2 text-white transition-all hover:border-white/30 hover:bg-white/10 sm:hidden active:scale-90"
                             onClick={handleToggleMenu}
                         >
-                            {isOpen ? <X className="w-5 h-5 text-emerald-400" /> : <Menu className="w-5 h-5" />}
+                            {isOpen ? <X className="w-5 h-5 text-emerald-400 stroke-[3]" /> : <Menu className="w-5 h-5" />}
                         </button>
                     </div>
                 </nav>
@@ -194,10 +195,9 @@ export default function Navbar() {
 
             <div
                 className={cn(
-                    "md:hidden bg-black/80 border-b border-white/5 px-6 overflow-hidden transition-all duration-400 backdrop-blur-2xl",
-                    isSearchOpen ? "max-h-[70vh] py-4 opacity-100" : "max-h-0 py-0 opacity-0"
+                    "md:hidden fixed inset-x-0 top-0 bg-black/95 backdrop-blur-3xl border-b border-white/5 px-6 pt-24 overflow-hidden transition-all duration-500 z-[55]",
+                    isSearchOpen ? "max-h-[85vh] py-8 opacity-100" : "max-h-0 py-0 opacity-0 pointer-events-none"
                 )}
-                style={{ paddingBottom: isSearchOpen ? "calc(env(safe-area-inset-bottom) + 20px)" : undefined }}
             >
                 <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-zinc-400">
                     <Search className="h-3.5 w-3.5 text-zinc-500" />
@@ -231,24 +231,27 @@ export default function Navbar() {
 
             <div
                 className={cn(
-                    "sm:hidden bg-black/80 border-b border-white/5 px-6 space-y-4 overflow-x-hidden overflow-y-auto transition-all duration-400 backdrop-blur-2xl",
-                    isOpen ? "max-h-[80vh] py-6 opacity-100" : "max-h-0 py-0 opacity-0"
+                    "sm:hidden fixed inset-x-0 top-0 bg-black/98 backdrop-blur-3xl border-b border-white/5 px-8 pt-24 space-y-6 overflow-x-hidden overflow-y-auto transition-all duration-500 z-[50]",
+                    isOpen ? "max-h-screen h-screen py-12 opacity-100" : "max-h-0 py-0 opacity-0 pointer-events-none"
                 )}
-                style={{ paddingBottom: isOpen ? "calc(env(safe-area-inset-bottom) + 24px)" : undefined }}
             >
-                {navLinks.map((link) => (
-                    <Link
-                        key={link.href}
-                        href={link.href}
-                        className="block text-zinc-300 py-2 transition-colors hover:text-white"
-                        onClick={() => setIsOpen(false)}
-                    >
-                        {link.name}
+                <div className="flex flex-col gap-4">
+                    {navLinks.map((link) => (
+                        <Link
+                            key={link.href}
+                            href={link.href}
+                            className="text-3xl font-black tracking-tighter text-zinc-600 hover:text-white transition-all hover:scale-105 origin-left"
+                            onClick={() => setIsOpen(false)}
+                        >
+                            {link.name}
+                        </Link>
+                    ))}
+                </div>
+                <div className="pt-8 space-y-4">
+                    <Link href="/contact" className="block w-full bg-white text-black text-center py-5 rounded-2xl font-black uppercase tracking-widest text-xs hover:scale-[1.02] transition-transform" onClick={() => setIsOpen(false)}>
+                        Initiate_Contact_
                     </Link>
-                ))}
-                <Link href="/contact" className="block bg-white text-black text-center py-3 rounded-lg font-bold" onClick={() => setIsOpen(false)}>
-                    Contact
-                </Link>
+                </div>
             </div>
         </header>
     );

@@ -114,62 +114,61 @@ export default function PortfolioClient() {
     });
 
     return (
-        <main className="min-h-screen bg-black text-white selection:bg-white/10 overflow-x-hidden pt-32 pb-20">
+        <main className="min-h-screen bg-black text-white selection:bg-white/10 overflow-x-hidden pt-24 sm:pt-32 pb-20">
             {/* Ambient Background */}
             <div className="fixed inset-0 pointer-events-none z-0">
-                <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-emerald-500/5 blur-[120px] rounded-full animate-pulse" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[70%] h-[70%] bg-blue-500/5 blur-[150px] rounded-full" />
-                <div className="absolute top-[30%] left-[40%] w-[40%] h-[40%] bg-purple-500/5 blur-[150px] rounded-full animate-pulse" />
-                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay"></div>
+                <div className="absolute top-[-10%] left-[-10%] w-[80%] h-[60%] bg-emerald-500/10 blur-[120px] rounded-full animate-pulse" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[90%] h-[70%] bg-blue-500/10 blur-[150px] rounded-full" />
+                <div className="absolute top-[30%] left-[40%] w-[40%] h-[40%] bg-purple-500/10 blur-[150px] rounded-full animate-pulse" />
+                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-overlay"></div>
             </div>
 
             <div className="max-w-6xl mx-auto px-6 relative z-10">
                 {/* Header */}
                 <Reveal className="mb-20">
-                    <div className="flex flex-wrap items-center gap-4 mb-8">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 text-[10px] font-mono uppercase tracking-[0.4em] text-zinc-500">
+                    <div className="flex flex-wrap items-center gap-4 mb-6">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 text-[9px] font-mono uppercase tracking-[0.3em] text-zinc-500">
                             <Layers className="w-3 h-3" /> System_Archive
                         </div>
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/5 text-[10px] font-mono uppercase tracking-[0.4em] text-emerald-400">
-                            <Briefcase className="w-3 h-3" /> Working on: Indigo Airlines (AME)
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-[9px] font-mono uppercase tracking-[0.3em] text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+                            <Briefcase className="w-3 h-3" /> Active: Indigo Airlines
                         </div>
                     </div>
-                    <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-8 gradient-heading">
+                    <h1 className="text-6xl md:text-9xl font-black tracking-tighter mb-8 gradient-heading leading-[0.8] py-2">
                         Portfolio.
                     </h1>
-                    <p className="max-w-2xl text-zinc-400 text-lg md:text-xl leading-relaxed mb-10">
+                    <p className="max-w-2xl text-zinc-400 text-base md:text-xl leading-relaxed mb-10 px-1 border-l-2 border-white/5">
                         Become a 10x engineer, learn to refactor and write clean code.
                         Architecture of high-performance digital ecosystems and premium design engineering.
                     </p>
 
-                    <div className="flex flex-wrap gap-6 items-center">
+                    <div className="flex flex-wrap gap-4 sm:gap-8 items-center">
                         <div className="flex items-center gap-3 group cursor-pointer" onClick={handleCopyEmail}>
-                            <div className="w-10 h-10 rounded-full border border-white/10 bg-white/5 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
-                                {copied ? <CheckCircle2 className="w-4 h-4" /> : <Mail className="w-4 h-4" />}
+                            <div className="w-10 h-10 rounded-full border border-white/10 bg-white/5 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all shadow-xl">
+                                {copied ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Mail className="w-4 h-4" />}
                             </div>
-                            <div>
-                                <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-600">Email Payload</div>
+                            <div className="hidden sm:block">
+                                <div className="text-[9px] font-mono uppercase tracking-widest text-zinc-600">Email Payload</div>
                                 <div className="text-sm font-bold text-zinc-300">dev@avrxt.in</div>
                             </div>
-                            {copied && <span className="text-[9px] font-mono text-emerald-500 animate-pulse">COPIED_</span>}
                         </div>
 
                         <Link href="https://github.com/aviorxt" target="_blank" className="flex items-center gap-3 group">
-                            <div className="w-10 h-10 rounded-full border border-white/10 bg-white/5 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
+                            <div className="w-10 h-10 rounded-full border border-white/10 bg-white/5 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all shadow-xl">
                                 <Github className="w-4 h-4" />
                             </div>
-                            <div>
-                                <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-600">Source Node</div>
+                            <div className="hidden sm:block">
+                                <div className="text-[9px] font-mono uppercase tracking-widest text-zinc-600">Source Node</div>
                                 <div className="text-sm font-bold text-zinc-300">github/aviorxt</div>
                             </div>
                         </Link>
 
                         <Link href="https://instagram.com/aviorxt" target="_blank" className="flex items-center gap-3 group">
-                            <div className="w-10 h-10 rounded-full border border-white/10 bg-white/5 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
+                            <div className="w-10 h-10 rounded-full border border-white/10 bg-white/5 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all shadow-xl">
                                 <Instagram className="w-4 h-4" />
                             </div>
-                            <div>
-                                <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-600">Visual Feed</div>
+                            <div className="hidden sm:block">
+                                <div className="text-[9px] font-mono uppercase tracking-widest text-zinc-600">Visual Feed</div>
                                 <div className="text-sm font-bold text-zinc-300">@aviorxt</div>
                             </div>
                         </Link>
@@ -177,24 +176,25 @@ export default function PortfolioClient() {
                 </Reveal>
 
                 {/* Personal Gallery */}
-                <Reveal className="mb-32">
-                    <div className="flex items-center gap-3 mb-8">
-                        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-                        <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.5em]">The_Engineer</span>
-                        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+                <Reveal className="mb-24">
+                    <div className="flex items-center gap-3 mb-10">
+                        <div className="h-px w-8 bg-emerald-500/50" />
+                        <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-[0.5em] whitespace-nowrap">The_Engineer_Visuals</span>
+                        <div className="h-px flex-1 bg-gradient-to-r from-emerald-500/50 via-white/5 to-transparent" />
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12">
                         {PERSONAL_PHOTOS.map((photo, i) => (
-                            <div key={i} className="relative aspect-[4/5] md:aspect-[16/10] rounded-[2.5rem] overflow-hidden border border-white/5 group">
+                            <div key={i} className="relative aspect-[4/5] md:aspect-[16/10] rounded-[2rem] md:rounded-[3rem] overflow-hidden border border-white/5 group shadow-2xl">
                                 <img
                                     src={photo}
                                     alt="avrxt"
-                                    className="w-full h-full object-cover grayscale-[40%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000"
+                                    loading="lazy"
+                                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000 ease-out"
                                 />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
-                                <div className="absolute bottom-8 left-8">
-                                    <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-2">// NODE_00{i + 1}</div>
-                                    <div className="text-xl font-bold tracking-tighter">Identity_Buffer_</div>
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80" />
+                                <div className="absolute bottom-6 left-6 md:bottom-10 md:left-10">
+                                    <div className="text-[9px] font-mono text-emerald-500/80 uppercase tracking-widest mb-1">// SEC_00{i + 1}</div>
+                                    <div className="text-xl md:text-3xl font-black tracking-tighter uppercase italic">Identity_V3</div>
                                 </div>
                             </div>
                         ))}
@@ -242,50 +242,51 @@ export default function PortfolioClient() {
                                     target="_blank"
                                     className="block h-full"
                                 >
-                                    <SpotlightBox className="h-full overflow-hidden rounded-[2.5rem] border border-white/5 bg-zinc-900/10 backdrop-blur-sm transition-all duration-500 group-hover:border-white/20 group-hover:translate-y-[-8px]">
-                                        <div className="relative aspect-[16/10] overflow-hidden">
+                                    <SpotlightBox className="h-full overflow-hidden rounded-[2rem] md:rounded-[3rem] border border-white/5 bg-zinc-950/20 backdrop-blur-xl transition-all duration-700 group-hover:border-emerald-500/30 group-hover:bg-zinc-900/40 group-hover:translate-y-[-10px] shadow-2xl">
+                                        <div className="relative aspect-[4/3] md:aspect-[16/10] overflow-hidden bg-zinc-900">
                                             <img
                                                 src={`https://s0.wp.com/mshots/v1/${encodeURIComponent(project.link)}?w=1280&h=800`}
                                                 alt={project.title}
-                                                className="w-full h-full object-cover grayscale-[60%] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000"
+                                                loading="lazy"
+                                                className="w-full h-full object-cover grayscale-[80%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000"
                                             />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-80" />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent" />
                                             <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
 
-                                            <div className="absolute top-6 left-6 flex gap-2">
-                                                <span className="px-3 py-1.5 rounded-full bg-black/80 backdrop-blur-md border border-white/10 text-[9px] font-mono text-white tracking-widest uppercase">
+                                            <div className="absolute top-4 left-4 md:top-8 md:left-8">
+                                                <span className="px-3 py-1.5 rounded-full bg-black/80 backdrop-blur-md border border-white/10 text-[8px] font-mono text-zinc-300 tracking-widest uppercase">
                                                     {project.category}
                                                 </span>
                                             </div>
 
-                                            <div className="absolute bottom-6 right-6 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
-                                                <div className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center hover:scale-110 shadow-2xl">
-                                                    <ArrowUpRight className="w-6 h-6" />
+                                            <div className="absolute bottom-4 right-4 md:bottom-8 md:right-8 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-700">
+                                                <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-white text-black flex items-center justify-center hover:scale-110 shadow-[0_0_30px_rgba(255,255,255,0.4)]">
+                                                    <ArrowUpRight className="w-6 h-6 md:w-8 md:h-8" />
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="p-10">
-                                            <div className="flex items-center justify-between mb-4">
-                                                <h3 className="text-3xl font-black tracking-tighter text-white group-hover:text-emerald-400 transition-colors">
+                                        <div className="p-6 md:p-12">
+                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                                                <h3 className="text-3xl md:text-5xl font-black tracking-tighter text-white group-hover:text-emerald-400 transition-colors uppercase italic">
                                                     {project.title}
                                                 </h3>
-                                                <div className="flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5">
+                                                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/5 bg-white/5 self-start">
                                                     <div className={cn(
                                                         "w-1.5 h-1.5 rounded-full",
-                                                        ['Operational', 'Live', 'Production', 'Team Backend Engineer'].includes(project.status) ? "bg-emerald-500 animate-pulse" : "bg-zinc-600"
+                                                        ['Operational', 'Live', 'Production', 'Team Backend Engineer'].includes(project.status) ? "bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" : "bg-zinc-600"
                                                     )} />
-                                                    <span className="text-[8px] font-mono text-zinc-400 uppercase tracking-widest">{project.status}</span>
+                                                    <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-widest">{project.status}</span>
                                                 </div>
                                             </div>
 
-                                            <p className="text-zinc-500 text-base leading-relaxed mb-10 line-clamp-3">
+                                            <p className="text-zinc-500 text-sm md:text-lg leading-relaxed mb-10 line-clamp-3 font-medium">
                                                 {project.description}
                                             </p>
 
                                             <div className="flex flex-wrap gap-4 pt-8 border-t border-white/5">
                                                 {project.tags.map(tag => (
-                                                    <span key={tag} className="text-[10px] font-mono text-zinc-700 uppercase tracking-[0.2em] group-hover:text-zinc-400 transition-colors">
+                                                    <span key={tag} className="text-[9px] font-mono text-zinc-700 uppercase tracking-[0.2em] group-hover:text-zinc-400 transition-colors">
                                                         #{tag}
                                                     </span>
                                                 ))}
