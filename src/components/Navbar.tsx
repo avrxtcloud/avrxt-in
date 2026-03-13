@@ -45,7 +45,7 @@ export default function Navbar() {
         }));
 
         return [...baseItems, ...cloudItems];
-    }, [isHiddenRoute]);
+    }, []);
 
     const filteredSearchItems = useMemo(() => {
         const query = searchQuery.trim().toLowerCase();
@@ -107,7 +107,7 @@ export default function Navbar() {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, []);
+    }, [isHiddenRoute]);
 
     if (isHiddenRoute) {
         return null;
