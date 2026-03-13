@@ -86,8 +86,8 @@ export default function Navbar() {
             <div className="absolute inset-x-0 bottom-0 h-px bg-white/5" />
             <div className="bg-black/80 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.4)]">
                 <nav className="max-w-6xl mx-auto px-6 h-16 sm:h-20 grid grid-cols-[auto,1fr,auto] items-center gap-6">
-                    <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-80 pt-1">
-                        <img src="https://cdn.avrxt.in/assets/logo.png" alt="avrxt" className="h-9 sm:h-10 md:h-12 w-auto" />
+                    <Link href="/" className="flex items-center gap-3 transition-transform hover:scale-[1.02] active:scale-[0.98] pt-2">
+                        <img src="https://cdn.avrxt.in/assets/logo.png" alt="avrxt" className="h-9 sm:h-10 md:h-12 w-auto drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]" />
                         <div className="hidden md:block">
                             <div className="text-[10px] font-mono uppercase tracking-[0.4em] text-zinc-500">avrxt</div>
                             <div className="text-[11px] text-zinc-400">Premium Stack</div>
@@ -183,10 +183,10 @@ export default function Navbar() {
                         </button>
                         <button
                             type="button"
-                            className="rounded-full border border-white/10 bg-white/5 p-2 text-white transition-colors hover:border-white/30 hover:bg-white/10 sm:hidden"
+                            className="relative z-50 rounded-full border border-white/10 bg-white/5 p-2 text-white transition-all hover:border-white/30 hover:bg-white/10 sm:hidden active:scale-95"
                             onClick={handleToggleMenu}
                         >
-                            {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                            {isOpen ? <X className="w-5 h-5 text-emerald-400" /> : <Menu className="w-5 h-5" />}
                         </button>
                     </div>
                 </nav>

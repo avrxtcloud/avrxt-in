@@ -25,6 +25,11 @@ import { cn } from '@/lib/utils';
 import Reveal from '@/components/Reveal';
 import SpotlightBox from '@/components/SpotlightBox';
 
+const PERSONAL_PHOTOS = [
+    'https://cdn.avrxt.in/images/14041223_125659207.jpg',
+    'https://cdn.avrxt.in/images/14041223_125715885.jpg'
+];
+
 const CATEGORIES = ['All', 'Web', 'Infrastructure', 'AI', 'Full-Stack'];
 
 const PROJECTS = [
@@ -34,7 +39,6 @@ const PROJECTS = [
         category: 'Web',
         description: 'A personal Web Engine designed for high-performance, modular content delivery.',
         tags: ['Next.js', 'Web Engine', 'Architecture'],
-        image: 'https://cdn.avrxt.in/images/14041223_125659207.jpg',
         link: 'https://www.ebnn.xyz/',
         github: '#',
         status: 'Production'
@@ -45,7 +49,6 @@ const PROJECTS = [
         category: 'Web',
         description: 'A comprehensive Fivem Roleplay community platform with integrated stats and management.',
         tags: ['React', 'Gaming', 'Community'],
-        image: 'https://cdn.avrxt.in/images/14041223_125715885.jpg',
         link: 'https://www.axtcity.online/',
         github: '#',
         status: 'Live'
@@ -56,7 +59,6 @@ const PROJECTS = [
         category: 'Infrastructure',
         description: 'Premium hosting solutions engineered for speed, security, and developer productivity.',
         tags: ['Cloud', 'Hosting', 'Infrastructure'],
-        image: 'https://objects.avrxt.in/assets/banner_02.webp',
         link: 'https://www.goaxt.cloud/',
         github: '#',
         status: 'Operational'
@@ -67,7 +69,6 @@ const PROJECTS = [
         category: 'Infrastructure',
         description: 'High-availability S3 compatible object storage with global edge distribution.',
         tags: ['Storage', 'S3', 'Cloudflare'],
-        image: 'https://cdn.avrxt.in/icons/favicon.jpg',
         link: 'https://s3.goaxt.cloud/',
         github: '#',
         status: 'Production'
@@ -78,7 +79,6 @@ const PROJECTS = [
         category: 'AI',
         description: 'Advanced backend engineering for Relume AI, optimizing high-scale neural workflows.',
         tags: ['AI', 'Backend', 'Relume'],
-        image: 'https://objects.avrxt.in/assets/screenshot-zoom-analytics.webp',
         link: 'https://www.relume.io/',
         github: '#',
         status: 'Team Backend Engineer'
@@ -89,7 +89,6 @@ const PROJECTS = [
         category: 'AI',
         description: 'Next-generation aero-designed web ecosystem powered by intelligent automation.',
         tags: ['Aero', 'Design', 'AI'],
-        image: 'https://objects.avrxt.in/images/aviorxt_01.jpg',
         link: 'https://aviorxt.aero',
         github: '#',
         status: 'Live'
@@ -118,8 +117,9 @@ export default function PortfolioClient() {
         <main className="min-h-screen bg-black text-white selection:bg-white/10 overflow-x-hidden pt-32 pb-20">
             {/* Ambient Background */}
             <div className="fixed inset-0 pointer-events-none z-0">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-white/5 blur-[120px] rounded-full animate-pulse" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-zinc-800/20 blur-[150px] rounded-full" />
+                <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-emerald-500/5 blur-[120px] rounded-full animate-pulse" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[70%] h-[70%] bg-blue-500/5 blur-[150px] rounded-full" />
+                <div className="absolute top-[30%] left-[40%] w-[40%] h-[40%] bg-purple-500/5 blur-[150px] rounded-full animate-pulse" />
                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay"></div>
             </div>
 
@@ -176,6 +176,31 @@ export default function PortfolioClient() {
                     </div>
                 </Reveal>
 
+                {/* Personal Gallery */}
+                <Reveal className="mb-32">
+                    <div className="flex items-center gap-3 mb-8">
+                        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+                        <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.5em]">The_Engineer</span>
+                        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {PERSONAL_PHOTOS.map((photo, i) => (
+                            <div key={i} className="relative aspect-[4/5] md:aspect-[16/10] rounded-[2.5rem] overflow-hidden border border-white/5 group">
+                                <img
+                                    src={photo}
+                                    alt="avrxt"
+                                    className="w-full h-full object-cover grayscale-[40%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
+                                <div className="absolute bottom-8 left-8">
+                                    <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-2">// NODE_00{i + 1}</div>
+                                    <div className="text-xl font-bold tracking-tighter">Identity_Buffer_</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </Reveal>
+
                 {/* Filters */}
                 <Reveal className="mb-12 flex flex-col md:flex-row gap-6 md:items-center justify-between">
                     <div className="flex flex-wrap gap-2">
@@ -212,55 +237,62 @@ export default function PortfolioClient() {
                     {filteredProjects.length > 0 ? (
                         filteredProjects.map((project, idx) => (
                             <Reveal key={project.id} className="group" style={{ transitionDelay: `${idx * 0.1}s` }}>
-                                <SpotlightBox className="h-full overflow-hidden rounded-3xl">
-                                    <div className="relative aspect-[16/10] overflow-hidden">
-                                        <img
-                                            src={project.image}
-                                            alt={project.title}
-                                            className="w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700"
-                                        />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
+                                <Link
+                                    href={project.link}
+                                    target="_blank"
+                                    className="block h-full"
+                                >
+                                    <SpotlightBox className="h-full overflow-hidden rounded-[2.5rem] border border-white/5 bg-zinc-900/10 backdrop-blur-sm transition-all duration-500 group-hover:border-white/20 group-hover:translate-y-[-8px]">
+                                        <div className="relative aspect-[16/10] overflow-hidden">
+                                            <img
+                                                src={`https://s0.wp.com/mshots/v1/${encodeURIComponent(project.link)}?w=1280&h=800`}
+                                                alt={project.title}
+                                                className="w-full h-full object-cover grayscale-[60%] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000"
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-80" />
+                                            <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
 
-                                        <div className="absolute top-4 left-4 flex gap-2">
-                                            <span className="px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-[8px] font-mono text-white tracking-widest uppercase">
-                                                {project.category}
-                                            </span>
-                                        </div>
+                                            <div className="absolute top-6 left-6 flex gap-2">
+                                                <span className="px-3 py-1.5 rounded-full bg-black/80 backdrop-blur-md border border-white/10 text-[9px] font-mono text-white tracking-widest uppercase">
+                                                    {project.category}
+                                                </span>
+                                            </div>
 
-                                        <div className="absolute top-4 right-4 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
-                                            <Link href={project.link} target={project.link.startsWith('http') ? "_blank" : undefined} className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center hover:scale-110 transition-transform shadow-2xl">
-                                                <ArrowUpRight className="w-5 h-5" />
-                                            </Link>
-                                        </div>
-                                    </div>
-
-                                    <div className="p-8">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <h3 className="text-2xl font-bold tracking-tighter text-white group-hover:text-emerald-400 transition-colors">
-                                                {project.title}
-                                            </h3>
-                                            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md border border-white/10 bg-white/5">
-                                                <div className={cn(
-                                                    "w-1 h-1 rounded-full",
-                                                    ['Operational', 'Live', 'Production', 'Team Backend Engineer'].includes(project.status) ? "bg-emerald-500 animate-pulse" : "bg-zinc-600"
-                                                )} />
-                                                <span className="text-[7px] font-mono text-zinc-400 uppercase tracking-widest">{project.status}</span>
+                                            <div className="absolute bottom-6 right-6 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+                                                <div className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center hover:scale-110 shadow-2xl">
+                                                    <ArrowUpRight className="w-6 h-6" />
+                                                </div>
                                             </div>
                                         </div>
 
-                                        <p className="text-zinc-500 text-sm leading-relaxed mb-8 line-clamp-2">
-                                            {project.description}
-                                        </p>
+                                        <div className="p-10">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <h3 className="text-3xl font-black tracking-tighter text-white group-hover:text-emerald-400 transition-colors">
+                                                    {project.title}
+                                                </h3>
+                                                <div className="flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5">
+                                                    <div className={cn(
+                                                        "w-1.5 h-1.5 rounded-full",
+                                                        ['Operational', 'Live', 'Production', 'Team Backend Engineer'].includes(project.status) ? "bg-emerald-500 animate-pulse" : "bg-zinc-600"
+                                                    )} />
+                                                    <span className="text-[8px] font-mono text-zinc-400 uppercase tracking-widest">{project.status}</span>
+                                                </div>
+                                            </div>
 
-                                        <div className="flex flex-wrap gap-2 pt-6 border-t border-white/5">
-                                            {project.tags.map(tag => (
-                                                <span key={tag} className="text-[9px] font-mono text-zinc-600 uppercase tracking-wider">
-                                                    #{tag}
-                                                </span>
-                                            ))}
+                                            <p className="text-zinc-500 text-base leading-relaxed mb-10 line-clamp-3">
+                                                {project.description}
+                                            </p>
+
+                                            <div className="flex flex-wrap gap-4 pt-8 border-t border-white/5">
+                                                {project.tags.map(tag => (
+                                                    <span key={tag} className="text-[10px] font-mono text-zinc-700 uppercase tracking-[0.2em] group-hover:text-zinc-400 transition-colors">
+                                                        #{tag}
+                                                    </span>
+                                                ))}
+                                            </div>
                                         </div>
-                                    </div>
-                                </SpotlightBox>
+                                    </SpotlightBox>
+                                </Link>
                             </Reveal>
                         ))
                     ) : (
