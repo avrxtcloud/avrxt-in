@@ -58,8 +58,8 @@ export default function Navbar() {
         });
     }, [searchQuery, searchItems]);
 
-    // Hide navbar on /me routes
-    if (pathname.startsWith('/me')) {
+    // Hide navbar on restricted/full-screen routes
+    if (pathname.startsWith('/me') || pathname.startsWith('/docs/admin')) {
         return null;
     }
 

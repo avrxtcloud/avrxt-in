@@ -58,6 +58,15 @@ export async function GET(request: Request) {
           console.error(`[AUTH_CALLBACK] FAILED to tag user ${data.user.email} as admin:`, updateError);
         } else {
           console.log(`[AUTH_CALLBACK] User ${data.user.email} is now a VERIFIED ADMIN in the database.`);
+          // CRITICAL: Refresh the session so the JWT is re-issued with the new app_metadata.
+          // Without this, the browser has the OLD JWT (without role:'admin'), causing the
+          // protectAdminPage() check to fail and redirect back to login (the "login loop").
+          const { error: refreshError } = await supabase.auth.refreshSession();
+          if (refreshError) {
+            console.error(`[AUTH_CALLBACK] Session refresh failed:`, refreshError);
+          } else {
+            console.log(`[AUTH_CALLBACK] Session refreshed — new JWT now includes admin role.`);
+          }
         }
       }
 

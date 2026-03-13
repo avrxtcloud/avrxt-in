@@ -17,7 +17,7 @@ function LoginContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const source = searchParams.get('source');
-    const next = searchParams.get('next') || (source === 'guestbook' ? '/guestbook' : '/docs/admin');
+    const next = searchParams.get('next') || (source === 'guestbook' ? '/guestbook' : source === 'admin' ? '/me/admin' : '/docs/admin');
     const supabase = createClient();
 
     useEffect(() => {

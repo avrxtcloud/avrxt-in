@@ -102,6 +102,11 @@ export default function MeClient({ config }: { config: MeConfig }) {
             const currentIsPlaying = !isPlaying;
             setIsPlaying(currentIsPlaying);
             if (ytIframeRef.current) {
+                // Ensure the video is unmuted when playing
+                ytIframeRef.current.contentWindow?.postMessage(
+                    JSON.stringify({ event: 'command', func: 'unMute' }),
+                    '*'
+                );
                 ytIframeRef.current.contentWindow?.postMessage(
                     JSON.stringify({ event: 'command', func: currentIsPlaying ? 'playVideo' : 'pauseVideo' }),
                     '*'
@@ -114,13 +119,25 @@ export default function MeClient({ config }: { config: MeConfig }) {
             if (isPlaying) {
                 audioRef.current.pause();
             } else {
-                audioRef.current.play();
+                audioRef.current.play().catch(e => console.log("Autoplay blocked", e));
             }
             setIsPlaying(!isPlaying);
         }
     };
 
     const toggleMute = () => {
+        if (!config.music.audioUrl && config.music.youtubeVideoId) {
+            const currentIsMuted = !isMuted;
+            setIsMuted(currentIsMuted);
+            if (ytIframeRef.current) {
+                ytIframeRef.current.contentWindow?.postMessage(
+                    JSON.stringify({ event: 'command', func: currentIsMuted ? 'mute' : 'unMute' }),
+                    '*'
+                );
+            }
+            return;
+        }
+
         if (audioRef.current) {
             audioRef.current.muted = !isMuted;
             setIsMuted(!isMuted);
@@ -192,7 +209,24 @@ export default function MeClient({ config }: { config: MeConfig }) {
         }
     };
 
+    // Hydration guard for everything that depends on isMounted
+    if (!isMounted) return null;
+
     const profileName = config.profile.handle.startsWith('@') ? config.profile.handle.slice(1) : config.profile.handle;
+
+    // Presence Logic
+    const isManual = config.profile.presence?.mode === 'manual';
+    const displayStatus = isManual ? config.profile.status?.text || 'Online' : lanyardData?.discord_status || 'offline';
+    const statusColor = isManual ? config.profile.status?.color || 'green' : (lanyardData?.discord_status || 'offline');
+    
+    const getStatusBg = (color: string) => {
+        if (color === 'online' || color === 'green') return 'bg-emerald-500';
+        if (color === 'idle' || color === 'yellow') return 'bg-yellow-500';
+        if (color === 'dnd' || color === 'red') return 'bg-red-500';
+        if (color === 'blue') return 'bg-blue-500';
+        if (color === 'purple') return 'bg-purple-500';
+        return 'bg-zinc-600';
+    };
 
     return (
         <main className={cn(
@@ -234,14 +268,10 @@ export default function MeClient({ config }: { config: MeConfig }) {
                             alt={config.profile.handle}
                             className="w-24 h-24 rounded-full border-2 border-white/10 relative z-10 shadow-2xl hover:scale-105 transition-transform duration-500"
                         />
-                        {lanyardData?.discord_status && (
-                            <div className={cn(
-                                "absolute bottom-1 right-1 w-5 h-5 rounded-full border-4 border-black z-20",
-                                lanyardData.discord_status === 'online' ? 'bg-emerald-500' : 
-                                lanyardData.discord_status === 'idle' ? 'bg-yellow-500' :
-                                lanyardData.discord_status === 'dnd' ? 'bg-red-500' : 'bg-zinc-600'
-                            )} />
-                        )}
+                        <div className={cn(
+                            "absolute bottom-1 right-1 w-5 h-5 rounded-full border-4 border-black z-20 transition-colors duration-500",
+                            getStatusBg(statusColor)
+                        )} />
                     </div>
                     <h1 className="text-3xl font-black tracking-tighter mb-1 uppercase italic">
                         {profileName}<span className="text-emerald-500">_</span>
@@ -255,6 +285,9 @@ export default function MeClient({ config }: { config: MeConfig }) {
                         <span className="flex items-center gap-1.5"><Droplets size={10} /> {weather?.relative_humidity_2m || '??'}%</span>
                         <span className="opacity-20">|</span>
                         <span className="flex items-center gap-1.5"><Wind size={10} /> {weather?.wind_speed_10m || '??'}km/h</span>
+                    </div>
+                    <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
+                         <span className="text-[8px] font-mono text-emerald-500 uppercase tracking-widest">{displayStatus}</span>
                     </div>
                 </Reveal>
 
@@ -410,10 +443,10 @@ export default function MeClient({ config }: { config: MeConfig }) {
                     {config.music.youtubeVideoId && (
                         <iframe
                             ref={ytIframeRef}
-                            src={`https://www.youtube-nocookie.com/embed/${config.music.youtubeVideoId}?enablejsapi=1&controls=0&rel=0&modestbranding=1`}
+                            src={`https://www.youtube-nocookie.com/embed/${config.music.youtubeVideoId}?enablejsapi=1&controls=0&rel=0&modestbranding=1&autoplay=0&mute=0`}
                             title="yt-audio"
                             allow="autoplay"
-                            style={{ position: 'absolute', width: '1px', height: '1px', opacity: 0, pointerEvents: 'none', left: '-9999px', top: '-9999px' }}
+                            style={{ position: 'absolute', width: '10px', height: '10px', opacity: 0.01, pointerEvents: 'none', left: '-9999px', top: '-9999px' }}
                             aria-hidden="true"
                         />
                     )}
