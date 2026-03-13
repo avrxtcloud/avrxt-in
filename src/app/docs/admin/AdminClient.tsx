@@ -124,12 +124,14 @@ export default function AdminClient({ initialDocs, userEmail }: AdminClientProps
                         <Link
                             href="/docs"
                             target="_blank"
+                            prefetch={false}
                             className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 hover:bg-zinc-700 text-zinc-400 hover:text-white rounded-full text-[10px] font-bold font-mono transition-all border border-white/5"
                         >
                             <Eye size={12} /> PREVIEW
                         </Link>
                         <Link
                             href="/me/admin"
+                            prefetch={false}
                             className="flex items-center gap-2 px-4 py-2 bg-purple-900/20 hover:bg-purple-900/40 text-purple-400 hover:text-purple-300 rounded-full text-[10px] font-bold font-mono transition-all border border-purple-500/20"
                         >
                             PROFILE

@@ -14,7 +14,12 @@ import {
     Smartphone,
     Search,
     ChevronRight,
-    Filter
+    Filter,
+    Mail,
+    Instagram,
+    Copy,
+    CheckCircle2,
+    Briefcase
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Reveal from '@/components/Reveal';
@@ -25,56 +30,67 @@ const CATEGORIES = ['All', 'Web', 'Infrastructure', 'AI', 'Full-Stack'];
 const PROJECTS = [
     {
         id: 1,
-        title: 'Zenith Cloud Infrastructure',
+        title: 'ebnn.xyz',
+        category: 'Web',
+        description: 'A personal Web Engine designed for high-performance, modular content delivery.',
+        tags: ['Next.js', 'Web Engine', 'Architecture'],
+        image: 'https://cdn.avrxt.in/images/14041223_125659207.jpg',
+        link: 'https://www.ebnn.xyz/',
+        github: '#',
+        status: 'Production'
+    },
+    {
+        id: 2,
+        title: 'axtcity.online',
+        category: 'Web',
+        description: 'A comprehensive Fivem Roleplay community platform with integrated stats and management.',
+        tags: ['React', 'Gaming', 'Community'],
+        image: 'https://cdn.avrxt.in/images/14041223_125715885.jpg',
+        link: 'https://www.axtcity.online/',
+        github: '#',
+        status: 'Live'
+    },
+    {
+        id: 3,
+        title: 'AxtCloud Hosting',
         category: 'Infrastructure',
-        description: 'Next-gen monitoring with real-time health pulse and automated failover orchestration.',
-        tags: ['React', 'Next.js', 'Cloudflare', 'D1'],
-        image: 'https://objects.avrxt.in/images/aviorxt_01.jpg',
-        link: 'https://ping.avrxt.in',
+        description: 'Premium hosting solutions engineered for speed, security, and developer productivity.',
+        tags: ['Cloud', 'Hosting', 'Infrastructure'],
+        image: 'https://objects.avrxt.in/assets/banner_02.webp',
+        link: 'https://www.goaxt.cloud/',
         github: '#',
         status: 'Operational'
     },
     {
-        id: 2,
-        title: 'Aura AI Agentic Core',
-        category: 'AI',
-        description: 'Multi-agent neural workflow system designed for high-throughput task automation.',
-        tags: ['Python', 'OpenAI', 'FastAPI', 'Redis'],
-        image: 'https://objects.avrxt.in/assets/screenshot-zoom-analytics.webp',
-        link: '#',
-        github: '#',
-        status: 'Beta'
-    },
-    {
-        id: 3,
-        title: 'Ghost Node Proxy',
-        category: 'Infrastructure',
-        description: 'Privacy-focused API gateway with built-in geofencing and anti-ISP filtering.',
-        tags: ['Go', 'TypeScript', 'Workers', 'Redis'],
-        image: 'https://cdn.avrxt.in/icons/favicon.jpg',
-        link: '#',
-        github: '#',
-        status: 'Private'
-    },
-    {
         id: 4,
-        title: 'Nexus Enterprise Stack',
-        category: 'Web',
-        description: 'Comprehensive ERP layer for enterprise management with high-performance dashboarding.',
-        tags: ['React', 'Supabase', 'Tailwind', 'PostgreSQL'],
-        image: 'https://objects.avrxt.in/assets/logo.png',
-        link: '#',
+        title: 'AxtCloud S3 Storage',
+        category: 'Infrastructure',
+        description: 'High-availability S3 compatible object storage with global edge distribution.',
+        tags: ['Storage', 'S3', 'Cloudflare'],
+        image: 'https://cdn.avrxt.in/icons/favicon.jpg',
+        link: 'https://s3.goaxt.cloud/',
         github: '#',
         status: 'Production'
     },
     {
         id: 5,
-        title: 'Core Portfolio V2',
-        category: 'Full-Stack',
-        description: 'Minimalist, performant, and aero-designed personal ecosystem Hub.',
-        tags: ['Next.js', 'TypeScript', 'Motion', 'Vercel'],
-        image: 'https://objects.avrxt.in/assets/banner_02.webp',
-        link: '/me',
+        title: 'Relume AI Core',
+        category: 'AI',
+        description: 'Advanced backend engineering for Relume AI, optimizing high-scale neural workflows.',
+        tags: ['AI', 'Backend', 'Relume'],
+        image: 'https://objects.avrxt.in/assets/screenshot-zoom-analytics.webp',
+        link: 'https://www.relume.io/',
+        github: '#',
+        status: 'Team Backend Engineer'
+    },
+    {
+        id: 6,
+        title: 'aviorxt.aero',
+        category: 'AI',
+        description: 'Next-generation aero-designed web ecosystem powered by intelligent automation.',
+        tags: ['Aero', 'Design', 'AI'],
+        image: 'https://objects.avrxt.in/images/aviorxt_01.jpg',
+        link: 'https://aviorxt.aero',
         github: '#',
         status: 'Live'
     }
@@ -83,6 +99,13 @@ const PROJECTS = [
 export default function PortfolioClient() {
     const [activeCategory, setActiveCategory] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');
+    const [copied, setCopied] = useState(false);
+
+    const handleCopyEmail = () => {
+        navigator.clipboard.writeText('dev@avrxt.in');
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
 
     const filteredProjects = PROJECTS.filter(project => {
         const matchesCategory = activeCategory === 'All' || project.category === activeCategory;
@@ -103,16 +126,54 @@ export default function PortfolioClient() {
             <div className="max-w-6xl mx-auto px-6 relative z-10">
                 {/* Header */}
                 <Reveal className="mb-20">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 text-[10px] font-mono uppercase tracking-[0.4em] text-zinc-500 mb-6">
-                        <Layers className="w-3 h-3" /> System_Archive
+                    <div className="flex flex-wrap items-center gap-4 mb-8">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 text-[10px] font-mono uppercase tracking-[0.4em] text-zinc-500">
+                            <Layers className="w-3 h-3" /> System_Archive
+                        </div>
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/5 text-[10px] font-mono uppercase tracking-[0.4em] text-emerald-400">
+                            <Briefcase className="w-3 h-3" /> Working on: Indigo Airlines (AME)
+                        </div>
                     </div>
                     <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-8 gradient-heading">
                         Portfolio.
                     </h1>
-                    <p className="max-w-2xl text-zinc-400 text-lg md:text-xl leading-relaxed">
-                        A collection of high-performance digital infrastructure,
-                        automated architectures, and premium design engineering.
+                    <p className="max-w-2xl text-zinc-400 text-lg md:text-xl leading-relaxed mb-10">
+                        Become a 10x engineer, learn to refactor and write clean code.
+                        Architecture of high-performance digital ecosystems and premium design engineering.
                     </p>
+
+                    <div className="flex flex-wrap gap-6 items-center">
+                        <div className="flex items-center gap-3 group cursor-pointer" onClick={handleCopyEmail}>
+                            <div className="w-10 h-10 rounded-full border border-white/10 bg-white/5 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
+                                {copied ? <CheckCircle2 className="w-4 h-4" /> : <Mail className="w-4 h-4" />}
+                            </div>
+                            <div>
+                                <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-600">Email Payload</div>
+                                <div className="text-sm font-bold text-zinc-300">dev@avrxt.in</div>
+                            </div>
+                            {copied && <span className="text-[9px] font-mono text-emerald-500 animate-pulse">COPIED_</span>}
+                        </div>
+
+                        <Link href="https://github.com/aviorxt" target="_blank" className="flex items-center gap-3 group">
+                            <div className="w-10 h-10 rounded-full border border-white/10 bg-white/5 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
+                                <Github className="w-4 h-4" />
+                            </div>
+                            <div>
+                                <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-600">Source Node</div>
+                                <div className="text-sm font-bold text-zinc-300">github/aviorxt</div>
+                            </div>
+                        </Link>
+
+                        <Link href="https://instagram.com/aviorxt" target="_blank" className="flex items-center gap-3 group">
+                            <div className="w-10 h-10 rounded-full border border-white/10 bg-white/5 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
+                                <Instagram className="w-4 h-4" />
+                            </div>
+                            <div>
+                                <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-600">Visual Feed</div>
+                                <div className="text-sm font-bold text-zinc-300">@aviorxt</div>
+                            </div>
+                        </Link>
+                    </div>
                 </Reveal>
 
                 {/* Filters */}
@@ -181,7 +242,7 @@ export default function PortfolioClient() {
                                             <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md border border-white/10 bg-white/5">
                                                 <div className={cn(
                                                     "w-1 h-1 rounded-full",
-                                                    project.status === 'Operational' || project.status === 'Live' || project.status === 'Production' ? "bg-emerald-500 animate-pulse" : "bg-zinc-600"
+                                                    ['Operational', 'Live', 'Production', 'Team Backend Engineer'].includes(project.status) ? "bg-emerald-500 animate-pulse" : "bg-zinc-600"
                                                 )} />
                                                 <span className="text-[7px] font-mono text-zinc-400 uppercase tracking-widest">{project.status}</span>
                                             </div>
@@ -214,20 +275,28 @@ export default function PortfolioClient() {
 
                 {/* CTA */}
                 <Reveal className="mt-32 p-12 rounded-[2.5rem] border border-white/5 bg-gradient-to-br from-white/[0.03] to-transparent text-center relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 blur-[100px] rounded-full -mr-32 -mt-32 group-hover:bg-emerald-500/10 transition-colors duration-700" />
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-[100px] rounded-full -mr-32 -mt-32 group-hover:bg-emerald-500/20 transition-colors duration-700" />
+                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/10 blur-[100px] rounded-full -ml-32 -mb-32 group-hover:bg-blue-500/20 transition-colors duration-700" />
 
-                    <h2 className="text-4xl md:text-5xl font-bold tracking-tighter text-white mb-6">Want to initiate a <br />new build?</h2>
-                    <p className="text-zinc-500 mb-10 max-w-xl mx-auto leading-relaxed">
-                        I&apos;m currently accepting premium commissions for enterprise infrastructure,
-                        advanced AI systems, and high-performance Web apps.
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                        <Link href="/hireme" className="inline-flex items-center gap-3 bg-white text-black px-10 py-4 rounded-2xl font-black text-sm uppercase tracking-widest hover:scale-105 transition-transform shadow-[0_0_30px_rgba(255,255,255,0.1)]">
-                            Initiate Hire <ArrowRight className="w-4 h-4 ml-2" />
-                        </Link>
-                        <Link href="/contact" className="inline-flex items-center gap-3 border border-white/10 hover:bg-white/5 px-10 py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all">
-                            Consultation <ChevronRight className="w-4 h-4 ml-2" />
-                        </Link>
+                    <div className="relative z-10">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 text-[10px] font-mono uppercase tracking-widest text-zinc-400 mb-8">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Available For Freelance Web Development
+                        </div>
+                        <h2 className="text-4xl md:text-6xl font-black tracking-tighter text-white mb-6">
+                            Initiate a <span className="text-zinc-500">New_Build_</span>
+                        </h2>
+                        <p className="text-zinc-500 mb-12 max-w-xl mx-auto leading-relaxed text-lg">
+                            Accepting premium commissions for enterprise infrastructure,
+                            advanced AI systems, and high-performance Web apps.
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+                            <Link href="/hireme" className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-white text-black px-12 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:scale-105 hover:shadow-[0_0_50px_rgba(255,255,255,0.2)] transition-all">
+                                Initiate Hire <ArrowRight className="w-4 h-4" />
+                            </Link>
+                            <Link href="/contact" className="w-full sm:w-auto inline-flex items-center justify-center gap-3 border border-white/10 hover:bg-white/5 px-12 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all backdrop-blur-sm">
+                                Consultation <ChevronRight className="w-4 h-4" />
+                            </Link>
+                        </div>
                     </div>
                 </Reveal>
             </div>

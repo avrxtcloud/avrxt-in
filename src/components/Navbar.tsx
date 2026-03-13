@@ -86,7 +86,7 @@ export default function Navbar() {
             <div className="absolute inset-x-0 bottom-0 h-px bg-white/5" />
             <div className="bg-black/80 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.4)]">
                 <nav className="max-w-6xl mx-auto px-6 h-16 sm:h-20 grid grid-cols-[auto,1fr,auto] items-center gap-6">
-                    <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-80">
+                    <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-80 pt-1">
                         <img src="https://cdn.avrxt.in/assets/logo.png" alt="avrxt" className="h-9 sm:h-10 md:h-12 w-auto" />
                         <div className="hidden md:block">
                             <div className="text-[10px] font-mono uppercase tracking-[0.4em] text-zinc-500">avrxt</div>
@@ -126,7 +126,7 @@ export default function Navbar() {
                                 onClick={handleToggleSearch}
                                 className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-zinc-400 transition-colors hover:border-white/30 hover:text-white"
                             >
-                                <Search className="h-4 w-4 text-zinc-500" />
+                                <Search className="h-3.5 w-3.5 text-zinc-500" />
                                 Search
                             </button>
 
@@ -136,7 +136,7 @@ export default function Navbar() {
                                         Search Pages
                                     </div>
                                     <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-zinc-400">
-                                        <Search className="h-4 w-4 text-zinc-500" />
+                                        <Search className="h-3.5 w-3.5 text-zinc-500" />
                                         <input
                                             value={searchQuery}
                                             onChange={(event) => setSearchQuery(event.target.value)}
@@ -179,14 +179,14 @@ export default function Navbar() {
                             className="md:hidden rounded-full border border-white/10 bg-white/5 p-2 text-white transition-colors hover:border-white/30 hover:bg-white/10"
                             onClick={handleToggleSearch}
                         >
-                            <Search className="w-5 h-5" />
+                            <Search className="w-4 h-4" />
                         </button>
                         <button
                             type="button"
-                            className="sm:hidden rounded-full border border-white/10 bg-white/5 p-2 text-white transition-colors hover:border-white/30 hover:bg-white/10"
+                            className="rounded-full border border-white/10 bg-white/5 p-2 text-white transition-colors hover:border-white/30 hover:bg-white/10 sm:hidden"
                             onClick={handleToggleMenu}
                         >
-                            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                            {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                         </button>
                     </div>
                 </nav>
@@ -200,7 +200,7 @@ export default function Navbar() {
                 style={{ paddingBottom: isSearchOpen ? "calc(env(safe-area-inset-bottom) + 20px)" : undefined }}
             >
                 <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-zinc-400">
-                    <Search className="h-4 w-4 text-zinc-500" />
+                    <Search className="h-3.5 w-3.5 text-zinc-500" />
                     <input
                         value={searchQuery}
                         onChange={(event) => setSearchQuery(event.target.value)}
