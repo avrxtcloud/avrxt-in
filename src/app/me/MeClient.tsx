@@ -236,7 +236,7 @@ export default function MeClient({ initialConfig }: MeClientProps) {
 
             ws.onmessage = (event) => {
                 const message = JSON.parse(event.data);
-                console.log(`Lanyard Op:${message.op} Type:${message.t}`, message.d);
+                // console.log(`Lanyard Op:${message.op} Type:${message.t}`, message.d);
 
                 // Initial Hello (Receive Heartbeat Interval)
                 if (message.op === 1) {
@@ -301,7 +301,7 @@ export default function MeClient({ initialConfig }: MeClientProps) {
                     filter: 'key=eq.main_config'
                 },
                 (payload) => {
-                    console.log('Me Config Synchronized:', payload.new);
+                    // console.log('Me Config Synchronized:', payload.new);
                     if (payload.new && (payload.new as any).data) {
                         setConfig((payload.new as any).data as MeConfig);
                     }
@@ -411,11 +411,11 @@ export default function MeClient({ initialConfig }: MeClientProps) {
             {/* Background Decor */}
             <div className={cn(
                 "fixed inset-0 z-0 transition-all duration-1000",
-                isImmersive ? "blur-2xl brightness-[0.3]" : ""
+                isImmersive ? "blur-xl brightness-[0.3]" : ""
             )}>
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,#1a1a1a_0%,#000_70%)]"></div>
-                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.12] mix-blend-overlay"></div>
+                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.08] mix-blend-overlay pointer-events-none"></div>
             </div>
 
             <div className="relative z-20 w-full max-w-md px-6 flex flex-col items-center [perspective:1000px]">

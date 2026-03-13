@@ -22,6 +22,7 @@ export default function Navbar() {
         { name: '/about', href: '/#about' },
         { name: '/skills', href: '/#expertise' },
         { name: '/projects', href: '/#projects' },
+        { name: '/portfolio', href: '/portfolio' },
         { name: '/uses', href: '/uses' },
         { name: '/me', href: '/me' },
         { name: '/cloud', href: '/cloud' },
@@ -33,6 +34,7 @@ export default function Navbar() {
         const baseItems = [
             { name: '/', href: '/', description: 'Home and overview' },
             { name: '/me', href: '/me', description: "Profile and Link's" },
+            { name: '/portfolio', href: '/portfolio', description: 'Showcase of work' },
             { name: '/uses', href: '/uses', description: 'Tools, apps, and gear' },
             { name: '/subscribe', href: '/subscribe', description: 'Newsletter Subscription' },
             { name: '/contact', href: '/contact', description: 'Contact @avrxt' },
@@ -82,8 +84,8 @@ export default function Navbar() {
         <header className="fixed top-0 w-full z-50 text-white">
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 h-px bg-white/5" />
-            <div className="bg-black/80 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.4)]" style={{ paddingTop: "env(safe-area-inset-top)" }}>
-                <nav className="max-w-6xl mx-auto px-6 py-2 sm:py-0 sm:h-20 grid grid-cols-[auto,1fr,auto] items-start sm:items-center gap-6">
+            <div className="bg-black/80 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.4)]">
+                <nav className="max-w-6xl mx-auto px-6 h-16 sm:h-20 grid grid-cols-[auto,1fr,auto] items-center gap-6">
                     <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-80">
                         <img src="https://cdn.avrxt.in/assets/logo.png" alt="avrxt" className="h-9 sm:h-10 md:h-12 w-auto" />
                         <div className="hidden md:block">
