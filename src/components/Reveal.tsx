@@ -8,9 +8,11 @@ interface RevealProps {
     className?: string;
     id?: string;
     style?: React.CSSProperties;
+    delay?: number;
+    direction?: 'up' | 'down' | 'left' | 'right';
 }
 
-export default function Reveal({ children, className, id, style }: RevealProps) {
+export default function Reveal({ children, className, id, style, delay = 0, direction = 'up' }: RevealProps) {
     const [isVisible, setIsVisible] = useState(false);
     const [isOut, setIsOut] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
@@ -48,8 +50,17 @@ export default function Reveal({ children, className, id, style }: RevealProps) 
         <div
             id={id}
             ref={ref}
-            style={style}
-            className={cn("reveal", isVisible && "active", isOut && "out", className)}
+            style={{
+                ...style,
+                transitionDelay: `${delay}s`
+            }}
+            className={cn(
+                "reveal",
+                `reveal-${direction}`,
+                isVisible && "active",
+                isOut && "out",
+                className
+            )}
         >
             {children}
         </div>

@@ -11,6 +11,8 @@ import { cn } from '@/lib/utils';
 import { DocArticle } from '@/lib/docs-config';
 import { createDocAction, updateDocAction, deleteDocAction } from '@/app/actions/docs';
 import { logout } from '@/app/actions/auth';
+import Reveal from '@/components/Reveal';
+import Tilt from '@/components/Tilt';
 
 interface AdminClientProps {
     initialDocs: DocArticle[];
@@ -203,43 +205,44 @@ export default function AdminClient({ initialDocs, userEmail }: AdminClientProps
                         <div className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest mb-3">
                             {filteredDocs.length} Document{filteredDocs.length !== 1 ? 's' : ''}
                         </div>
-                        {filteredDocs.map((doc) => (
-                            <button
-                                key={doc.id}
-                                onClick={() => {
-                                    setSelectedDoc(doc);
-                                    setIsEditing(false);
-                                }}
-                                className={cn(
-                                    "w-full p-4 rounded-xl text-left transition-all border group",
-                                    selectedDoc?.id === doc.id
-                                        ? "bg-blue-600/20 border-blue-500/50"
-                                        : "bg-zinc-900/40 border-white/5 hover:bg-zinc-800/60 hover:border-white/10"
-                                )}
-                            >
-                                <div className="flex items-start justify-between mb-2">
-                                    <h3 className="text-sm font-bold text-white line-clamp-1 flex-1">{doc.title}</h3>
-                                    {doc.published ? (
-                                        <Globe className="w-3 h-3 text-emerald-500 flex-shrink-0 ml-2" />
-                                    ) : (
-                                        <Lock className="w-3 h-3 text-orange-500 flex-shrink-0 ml-2" />
+                        {filteredDocs.map((doc, idx) => (
+                            <Reveal key={doc.id} delay={idx * 0.05} direction="right">
+                                <button
+                                    onClick={() => {
+                                        setSelectedDoc(doc);
+                                        setIsEditing(false);
+                                    }}
+                                    className={cn(
+                                        "w-full p-4 rounded-xl text-left transition-all border group",
+                                        selectedDoc?.id === doc.id
+                                            ? "bg-blue-600/20 border-blue-500/50 shadow-[0_0_20px_rgba(59,130,246,0.1)]"
+                                            : "bg-zinc-900/40 border-white/5 hover:bg-zinc-800/60 hover:border-white/10"
                                     )}
-                                </div>
-                                <p className="text-[10px] text-zinc-500 line-clamp-2 mb-2">{doc.description}</p>
-                                <div className="flex items-center gap-2">
-                                    <span className={cn(
-                                        "text-[8px] px-2 py-0.5 rounded-full font-mono uppercase",
-                                        doc.color === 'blue' && "bg-blue-900/30 text-blue-400 border border-blue-500/30",
-                                        doc.color === 'cyan' && "bg-cyan-900/30 text-cyan-400 border border-cyan-500/30",
-                                        doc.color === 'purple' && "bg-purple-900/30 text-purple-400 border border-purple-500/30",
-                                        doc.color === 'green' && "bg-green-900/30 text-green-400 border border-green-500/30",
-                                        doc.color === 'orange' && "bg-orange-900/30 text-orange-400 border border-orange-500/30",
-                                        doc.color === 'pink' && "bg-pink-900/30 text-pink-400 border border-pink-500/30"
-                                    )}>
-                                        {doc.category}
-                                    </span>
-                                </div>
-                            </button>
+                                >
+                                    <div className="flex items-start justify-between mb-2">
+                                        <h3 className="text-sm font-bold text-white line-clamp-1 flex-1 font-mono tracking-tight">{doc.title}</h3>
+                                        {doc.published ? (
+                                            <Globe className="w-3 h-3 text-emerald-500 flex-shrink-0 ml-2" />
+                                        ) : (
+                                            <Lock className="w-3 h-3 text-orange-500 flex-shrink-0 ml-2" />
+                                        )}
+                                    </div>
+                                    <p className="text-[10px] text-zinc-500 line-clamp-2 mb-2 font-mono uppercase tracking-tighter">{doc.description}</p>
+                                    <div className="flex items-center gap-2">
+                                        <span className={cn(
+                                            "text-[8px] px-2 py-0.5 rounded-full font-mono uppercase",
+                                            doc.color === 'blue' && "bg-blue-900/30 text-blue-400 border border-blue-500/30",
+                                            doc.color === 'cyan' && "bg-cyan-900/30 text-cyan-400 border border-cyan-500/30",
+                                            doc.color === 'purple' && "bg-purple-900/30 text-purple-400 border border-purple-500/30",
+                                            doc.color === 'green' && "bg-green-900/30 text-green-400 border border-green-500/30",
+                                            doc.color === 'orange' && "bg-orange-900/30 text-orange-400 border border-orange-500/30",
+                                            doc.color === 'pink' && "bg-pink-900/30 text-pink-400 border border-pink-500/30"
+                                        )}>
+                                            {doc.category}
+                                        </span>
+                                    </div>
+                                </button>
+                            </Reveal>
                         ))}
                     </div>
                 </aside>

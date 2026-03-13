@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Github, Mail, Instagram } from 'lucide-react';
@@ -8,6 +9,12 @@ import StatusBadge from './StatusBadge';
 
 export default function Footer() {
     const pathname = usePathname();
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
     const year = new Date().getFullYear();
     const isMeRoute = pathname.startsWith('/me');
 
@@ -20,12 +27,13 @@ export default function Footer() {
             <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 items-center gap-4 text-center">
                 <div className="md:text-left order-2 md:order-1">
                     <p className="text-zinc-500 text-xs tracking-[0.4em] uppercase font-mono mb-1">
-                        &copy; {year} avrxt.in
+                        &copy; {isMounted ? year : '2026'} avrxt.in
                     </p>
                     <p className="text-zinc-700 text-[10px] tracking-widest uppercase">
                         Infrastructure Layer Active
                     </p>
                 </div>
+{/* ... remaining code ... */}
 
                 <div className="footer-status-blend flex justify-center order-1 md:order-2">
                     <StatusBadge />
