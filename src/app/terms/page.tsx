@@ -1,11 +1,12 @@
 import Reveal from '@/components/Reveal';
-import { Metadata } from 'next';
+import { buildPageMetadata } from '@/lib/page-metadata';
 
-export const metadata: Metadata = {
-    title: 'Terms of Service | avrxt.in',
-    description: 'The formal Terms and Conditions for accessing avrxt.in and using our Cloud architecture. Review our rules on API usage, liability, and conduct.',
+export const metadata = buildPageMetadata({
+    title: 'Terms of Service',
+    description:
+        'The formal Terms and Conditions for accessing avrxt.in and using our Cloud architecture. Review our rules on API usage, liability, and conduct.',
     keywords: ['terms of service', 'legal terms', 'avrxt terms', 'API usage rules', 'user conduct', 'legal jurisdiction'],
-};
+});
 
 export default function Terms() {
     const lastUpdated = "January 15, 2026";

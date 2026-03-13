@@ -4,9 +4,14 @@ import TypingText from '@/components/TypingText';
 import Reveal from '@/components/Reveal';
 import SpotlightBox from '@/components/SpotlightBox';
 import Tilt from '@/components/Tilt';
-import { Metadata } from 'next';
+import { buildPageMetadata } from '@/lib/page-metadata';
 
-// ... (metadata omitted)
+export const metadata = buildPageMetadata({
+  title: 'avrxt | Full Stack Developer & Tech Innovator',
+  description:
+    'avrxt: Full Stack Developer specializing in React, Node.js, API development, and AI automation. Building secure, scalable, and enterprise-ready web solutions.',
+  keywords: ['avrxt', 'full stack developer', 'react', 'node.js', 'api development', 'ai automation', 'cloud engineering'],
+});
 
 export default function Home() {
   return (

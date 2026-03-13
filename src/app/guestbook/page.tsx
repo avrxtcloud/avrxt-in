@@ -1,23 +1,13 @@
 import { createClient } from '@/utils/supabase/server';
 import GuestbookClient from './GuestbookClient';
 import { getMessages } from '@/app/actions/guestbook';
-import type { Metadata } from 'next';
+import { buildPageMetadata } from '@/lib/page-metadata';
 
-export const metadata: Metadata = {
+export const metadata = buildPageMetadata({
     title: 'Guestbook',
     description: 'Leave Your Foot Print Here.',
     keywords: ['guestbook', 'avrxt community', 'digital footprint', 'developer messages', 'Leave Your Foot Print Here'],
-    openGraph: {
-        title: 'Guestbook',
-        description: 'Leave Your Foot Print Here.',
-        type: 'website',
-    },
-    twitter: {
-        card: 'summary_large_image',
-        title: 'Guestbook',
-        description: 'Leave Your Foot Print Here.',
-    },
-};
+});
 
 export default async function GuestbookPage() {
     const supabase = await createClient();

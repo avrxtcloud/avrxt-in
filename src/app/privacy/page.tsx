@@ -1,11 +1,12 @@
 import Reveal from '@/components/Reveal';
-import { Metadata } from 'next';
+import { buildPageMetadata } from '@/lib/page-metadata';
 
-export const metadata: Metadata = {
-    title: 'Privacy Policy | avrxt.in',
-    description: 'Our Data Governance and Privacy Policy. Learn how we handle your data, logging, and security in accordance with DPDP Act and GDPR.',
+export const metadata = buildPageMetadata({
+    title: 'Privacy Policy',
+    description:
+        'Our Data Governance and Privacy Policy. Learn how we handle your data, logging, and security in accordance with DPDP Act and GDPR.',
     keywords: ['privacy policy', 'data governance', 'avrxt privacy', 'GDPR compliance', 'DPDP Act', 'data security'],
-};
+});
 
 export default function Privacy() {
     const lastUpdated = "January 15, 2026";

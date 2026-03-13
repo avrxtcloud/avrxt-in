@@ -1,4 +1,4 @@
-import { Metadata } from 'next';
+import { buildPageMetadata } from '@/lib/page-metadata';
 import { Heart, User, Clock } from 'lucide-react';
 import { getRecentTips } from '@/app/actions/cupcake';
 import Reveal from '@/components/Reveal';
@@ -6,11 +6,12 @@ import SpotlightBox from '@/components/SpotlightBox';
 import CupcakeForm from './CupcakeForm';
 import { cn } from '@/lib/utils';
 
-export const metadata: Metadata = {
-  title: 'Support avrxt | Buy Me a Cupcake',
-  description: 'Fuel the next iteration of open digital frontiers. Support avrxt by buying a cupcake and contributing to innovative tech projects.',
+export const metadata = buildPageMetadata({
+  title: 'Buy Me a Cupcake',
+  description:
+    'Fuel the next iteration of open digital frontiers. Support avrxt by buying a cupcake and contributing to innovative tech projects.',
   keywords: ['support developer', 'buy me a coffee', 'buy me a cupcake', 'avrxt support', 'tech innovation funding'],
-};
+});
 
 type Tip = {
   user_name: string;

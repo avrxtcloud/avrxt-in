@@ -4,6 +4,8 @@ import Reveal from '@/components/Reveal';
 import SpotlightBox from '@/components/SpotlightBox';
 import BookingForm from './BookingForm';
 import { CheckCircle2, ShieldCheck, Zap, Globe, Layers, Bot, Code2, Cloud } from 'lucide-react';
+import type { Metadata } from 'next';
+import { buildPageMetadata } from '@/lib/page-metadata';
 
 const iconMap = {
     Globe, Layers, Bot, Code2, Zap, Cloud, ShieldCheck
@@ -13,6 +15,29 @@ export async function generateStaticParams() {
     return CLOUD_SERVICES.map((service) => ({
         service: service.id,
     }));
+}
+
+export async function generateMetadata({
+    params,
+}: {
+    params: Promise<{ service: string }>;
+}): Promise<Metadata> {
+    const { service: serviceId } = await params;
+    const service = CLOUD_SERVICES.find((s) => s.id === serviceId);
+
+    if (!service) {
+        return buildPageMetadata({
+            title: 'Cloud Service',
+            description: 'Service details not found.',
+            noIndex: true,
+        });
+    }
+
+    return buildPageMetadata({
+        title: service.title,
+        description: service.description || `Premium ${service.title.toLowerCase()} service built for scale and performance.`,
+        keywords: ['cloud services', 'avrxt', service.id, service.title],
+    });
 }
 
 export default async function ServicePage({ params }: { params: Promise<{ service: string }> }) {

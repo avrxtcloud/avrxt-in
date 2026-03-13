@@ -1,11 +1,12 @@
 import Reveal from '@/components/Reveal';
-import { Metadata } from 'next';
+import { buildPageMetadata } from '@/lib/page-metadata';
 
-export const metadata: Metadata = {
-    title: 'Refund Policy | avrxt.in',
-    description: 'Our transparent Refund Policy for digital services, cloud solutions, and contributions. Understand your rights and our processing timelines.',
+export const metadata = buildPageMetadata({
+    title: 'Refund Policy',
+    description:
+        'Our transparent Refund Policy for digital services, cloud solutions, and contributions. Understand your rights and our processing timelines.',
     keywords: ['refund policy', 'cancellation policy', 'avrxt refunds', 'digital service refund', 'payment processing', 'customer trust'],
-};
+});
 
 export default function Refund() {
     const lastUpdated = "January 15, 2026";

@@ -1,11 +1,12 @@
 import Reveal from '@/components/Reveal';
-import { Metadata } from 'next';
+import { buildPageMetadata } from '@/lib/page-metadata';
 
-export const metadata: Metadata = {
-    title: 'Security Protocol | avrxt.in',
-    description: 'Explore our multi-layered Security Protocol. Learn how we secure your data with TLS 1.3, encrypted storage, and proactive vulnerability audits.',
+export const metadata = buildPageMetadata({
+    title: 'Security Protocol',
+    description:
+        'Explore our multi-layered Security Protocol. Learn how we secure your data with TLS 1.3, encrypted storage, and proactive vulnerability audits.',
     keywords: ['security protocol', 'data security', 'encryption', 'TLS 1.3', 'infrastructure security', 'vulnerability reporting', 'bug bounty'],
-};
+});
 
 export default function Security() {
     const lastUpdated = "January 15, 2026";

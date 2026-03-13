@@ -1,5 +1,5 @@
 import Reveal from '@/components/Reveal';
-import type { Metadata } from 'next';
+import { buildPageMetadata } from '@/lib/page-metadata';
 
 const sections = [
     {
@@ -174,10 +174,10 @@ const sections = [
     },
 ];
 
-export const metadata: Metadata = {
-    title: 'Uses | avrxt',
+export const metadata = buildPageMetadata({
+    title: 'Uses',
     description: "Tools, apps, and gear that power avrxt's daily workflow.",
-};
+});
 
 export default function UsesPage() {
     return (

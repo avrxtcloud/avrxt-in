@@ -1,14 +1,13 @@
 import Link from 'next/link';
 import { CheckCircle, ArrowRight } from 'lucide-react';
 import Reveal from '@/components/Reveal';
-import { Metadata } from 'next';
+import { buildPageMetadata } from '@/lib/page-metadata';
 
-export const metadata: Metadata = {
-    robots: {
-        index: false,
-        follow: false,
-    },
-};
+export const metadata = buildPageMetadata({
+    title: 'Payment Verified',
+    description: "Your project has been registered. Check your email for confirmation. I'll reach out within 24 hours.",
+    noIndex: true,
+});
 
 export default function SuccessPage() {
     return (
