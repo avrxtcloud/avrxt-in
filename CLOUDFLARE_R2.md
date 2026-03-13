@@ -1,4 +1,4 @@
-# ☁️ Cloudflare R2 Asset Management System
+# ☁️  Cloudflare R2 Asset Management System
 
 This document outlines the high-performance asset storage architecture implemented for **avrxt.in**, migrating from Supabase Storage to Cloudflare R2 for better latency, cost-efficiency, and edge delivery.
 
