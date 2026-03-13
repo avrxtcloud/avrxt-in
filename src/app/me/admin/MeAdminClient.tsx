@@ -139,7 +139,7 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
             } else if (target === 'music.coverUrl') {
                 setConfig({ ...config, music: { ...config.music, coverUrl: publicUrl } });
             } else if (target === 'music.audioUrl') {
-                setConfig({ ...config, music: { ...config.music, audioUrl: publicUrl } });
+                setConfig({ ...config, music: { ...config.music, audioUrl: publicUrl, youtubeVideoId: '' } });
             } else if (target.startsWith('profile.')) {
                 const field = target.split('.')[1] as keyof typeof config.profile;
                 setConfig({ ...config, profile: { ...config.profile, [field]: publicUrl } });

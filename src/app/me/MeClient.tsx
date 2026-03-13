@@ -115,7 +115,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
 
     const audioUrl = (config.music.audioUrl || '').trim();
     const youtubeVideoId = (config.music.youtubeVideoId || '').trim();
-    const isUsingYouTube = Boolean(youtubeVideoId) && !audioUrl;
+    const isUsingYouTube = Boolean(youtubeVideoId);
 
     const isMutedRef = useRef(isMuted);
     const isPlayingRef = useRef(isPlaying);
