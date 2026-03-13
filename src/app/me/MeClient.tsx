@@ -93,6 +93,9 @@ export default function MeClient({ config }: { config: MeConfig }) {
     const [weather, setWeather] = useState<any>(null);
     const [quote, setQuote] = useState<any>(null);
     const [spotifyData, setSpotifyData] = useState<any>(null);
+    const [spotifyLast, setSpotifyLast] = useState<any>(null);
+    const [spotifyProgress, setSpotifyProgress] = useState(0);
+    const spotifyEnabled = Boolean(config.music.spotifyEnabled);
     const [lanyardData, setLanyardData] = useState<any>(null);
     const [isMounted, setIsMounted] = useState(false);
     const [subscribeStatus, setSubscribeStatus] = useState<{ type: 'success' | 'error' | null, message: string }>({ type: null, message: '' });
@@ -112,6 +115,78 @@ export default function MeClient({ config }: { config: MeConfig }) {
         fetchLanyard();
         return () => clearInterval(lanyardInterval);
     }, []);
+
+    useEffect(() => {
+        if (!spotifyEnabled) {
+            setSpotifyData(null);
+            setSpotifyLast(null);
+            return;
+        }
+
+        let cancelled = false;
+
+        const fetchSpotify = async () => {
+            try {
+                const res = await fetch('/api/spotify/now-playing', { cache: 'no-store' });
+                const data = await res.json();
+
+                if (cancelled) return;
+
+                if (data?.isPlaying) {
+                    setSpotifyData({ ...data, fetchedAt: Date.now() });
+                    setSpotifyLast(null);
+                } else {
+                    setSpotifyData(null);
+                    if (data?.title && data?.artist) {
+                        setSpotifyLast(data);
+                    } else {
+                        setSpotifyLast(null);
+                    }
+                }
+            } catch (e) {
+                console.error('Spotify fetch failed', e);
+                if (cancelled) return;
+                setSpotifyData(null);
+            }
+        };
+
+        fetchSpotify();
+        const id = window.setInterval(fetchSpotify, 15000);
+        return () => {
+            cancelled = true;
+            window.clearInterval(id);
+        };
+    }, [spotifyEnabled]);
+
+    useEffect(() => {
+        if (!spotifyData?.isPlaying || !spotifyData?.durationMs) {
+            setSpotifyProgress(0);
+            return;
+        }
+
+        const base = spotifyData.progressMs || 0;
+        const duration = spotifyData.durationMs;
+        const fetchedAt = spotifyData.fetchedAt || Date.now();
+
+        const tick = () => {
+            const elapsed = Date.now() - fetchedAt;
+            const pct = Math.min(100, Math.max(0, ((base + elapsed) / duration) * 100));
+            setSpotifyProgress(pct);
+        };
+
+        tick();
+        const id = window.setInterval(tick, 500);
+        return () => window.clearInterval(id);
+    }, [spotifyData?.isPlaying, spotifyData?.durationMs, spotifyData?.progressMs, spotifyData?.fetchedAt]);
+
+    useEffect(() => {
+        if (!spotifyData?.isPlaying) return;
+
+        // Prevent double-audio if local player was active
+        setIsPlaying(false);
+        try { audioRef.current?.pause(); } catch { }
+        try { ytPlayerRef.current?.pauseVideo?.(); } catch { }
+    }, [spotifyData?.isPlaying]);
 
     const audioUrl = (config.music.audioUrl || '').trim();
     const youtubeVideoId = (config.music.youtubeVideoId || '').trim();
@@ -241,15 +316,6 @@ export default function MeClient({ config }: { config: MeConfig }) {
             const data = await res.json();
             if (data.success) {
                 setLanyardData(data.data);
-                if (data.data.spotify) {
-                    setSpotifyData({
-                        isPlaying: true,
-                        title: data.data.spotify.song,
-                        artist: data.data.spotify.artist,
-                        albumImageUrl: data.data.spotify.album_art_url,
-                        playedAt: Date.now()
-                    });
-                }
             }
         } catch (e) { console.error(e); }
     };
@@ -317,6 +383,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
     };
 
     const handleProgressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (spotifyData?.isPlaying) return;
         const value = parseFloat(e.target.value);
         setProgress(value);
 
@@ -564,7 +631,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
                                             className="w-full h-full rounded-lg object-cover shadow-lg opacity-50 group-hover:opacity-100 transition-opacity" 
                                         />
                                     )}
-                                    {isPlaying && (
+                                    {(spotifyData?.isPlaying || isPlaying) && (
                                         <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px] rounded-lg">
                                             <div className="flex gap-1">
                                                 <div className="w-1 h-3 bg-white rounded-full animate-[bounce_0.6s_infinite] delay-100"></div>
@@ -582,7 +649,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
                                             spotifyData?.isPlaying ? "bg-emerald-500" : "bg-zinc-800"
                                         )}></div>
                                         <span className="text-[7px] font-mono text-zinc-600 uppercase tracking-widest">
-                                            {spotifyData?.isPlaying ? "Synchronized" : "Local_Stream"}
+                                            {spotifyData?.isPlaying ? "Spotify_Live" : "Local_Stream"}
                                         </span>
                                     </div>
                                     <h5 className="text-[12px] font-bold text-white uppercase tracking-wider truncate mb-0.5">
@@ -591,19 +658,25 @@ export default function MeClient({ config }: { config: MeConfig }) {
                                     <p className="text-[9px] font-mono text-zinc-500 uppercase tracking-tighter truncate">
                                         {spotifyData?.artist || config.music.artist || "No Signal"}
                                     </p>
+                                    {spotifyEnabled && !spotifyData?.isPlaying && spotifyLast?.title && spotifyLast?.artist && (
+                                        <p className="text-[8px] font-mono text-zinc-700 uppercase tracking-tighter truncate">
+                                            Last_Played: {spotifyLast.title} // {spotifyLast.artist}
+                                        </p>
+                                    )}
                                     
                                     <div className="mt-3 relative h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
                                         <div 
                                             className="absolute top-0 left-0 h-full bg-emerald-500 transition-all duration-300 shadow-[0_0_10px_rgba(16,185,129,0.5)]" 
-                                            style={{ width: `${progress}%` }}
+                                            style={{ width: `${spotifyData?.isPlaying ? spotifyProgress : progress}%` }}
                                         />
                                         <input 
                                             type="range" 
                                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                            value={progress}
+                                            value={spotifyData?.isPlaying ? spotifyProgress : progress}
                                             onChange={handleProgressChange}
                                             min="0"
                                             max="100"
+                                            disabled={spotifyData?.isPlaying}
                                         />
                                         <audio ref={audioRef} src={audioUrl || undefined} preload="metadata" />
                                     </div>
@@ -611,13 +684,20 @@ export default function MeClient({ config }: { config: MeConfig }) {
 
                                 <div className="flex flex-col gap-2">
                                     <button 
-                                        onClick={togglePlay}
+                                        onClick={() => {
+                                            if (spotifyData?.isPlaying && spotifyData?.songUrl) {
+                                                window.open(spotifyData.songUrl, '_blank', 'noopener,noreferrer');
+                                                return;
+                                            }
+                                            togglePlay();
+                                        }}
                                         className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white hover:text-black transition-all shadow-xl"
                                     >
                                         {isPlaying ? <Pause size={14} /> : <Play size={14} className="ml-0.5" />}
                                     </button>
                                     <button 
                                         onClick={toggleMute}
+                                        disabled={spotifyData?.isPlaying}
                                         className="w-10 h-10 rounded-full bg-white/0 flex items-center justify-center text-zinc-700 hover:text-white transition-all"
                                     >
                                         {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
