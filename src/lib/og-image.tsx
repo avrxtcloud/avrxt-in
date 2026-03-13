@@ -13,7 +13,17 @@ type OgImageInput = {
   eyebrow?: string;
 };
 
-export function renderOgImage({ title, description, eyebrow }: OgImageInput) {
+type OgFont = {
+  name: string;
+  data: ArrayBuffer;
+  weight?: 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900;
+  style?: 'normal' | 'italic';
+};
+
+export function renderOgImage(
+  { title, description, eyebrow }: OgImageInput,
+  options?: { fonts?: OgFont[] }
+) {
   return new ImageResponse(
     (
       <div
@@ -23,9 +33,10 @@ export function renderOgImage({ title, description, eyebrow }: OgImageInput) {
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          padding: 72,
+          padding: 64,
           color: 'white',
           backgroundColor: '#050505',
+          fontFamily: 'Outfit',
           backgroundImage: [
             'radial-gradient(circle at 20% 20%, rgba(16,185,129,0.20), transparent 55%)',
             'radial-gradient(circle at 85% 25%, rgba(59,130,246,0.18), transparent 55%)',
@@ -34,9 +45,78 @@ export function renderOgImage({ title, description, eyebrow }: OgImageInput) {
           ].join(', '),
         }}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+        {/* Grid overlay */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundImage:
+              'linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px)',
+            backgroundSize: '72px 72px',
+            opacity: 0.18,
+          }}
+        />
+
+        {/* Floating 3D orbs */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 70,
+            right: 90,
+            width: 220,
+            height: 220,
+            borderRadius: 999,
+            background:
+              'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.92), rgba(255,255,255,0.06) 55%, rgba(0,0,0,0) 72%)',
+            filter: 'blur(0.2px)',
+            boxShadow: '0 45px 120px rgba(59,130,246,0.18)',
+            opacity: 0.55,
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 85,
+            left: 80,
+            width: 180,
+            height: 180,
+            borderRadius: 999,
+            background:
+              'radial-gradient(circle at 30% 30%, rgba(16,185,129,0.95), rgba(16,185,129,0.10) 55%, rgba(0,0,0,0) 72%)',
+            boxShadow: '0 55px 140px rgba(16,185,129,0.12)',
+            opacity: 0.45,
+          }}
+        />
+
+        {/* Main glass card */}
+        <div
+          style={{
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 20,
+            padding: 56,
+            borderRadius: 40,
+            border: '1px solid rgba(255,255,255,0.12)',
+            background:
+              'linear-gradient(135deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03) 45%, rgba(255,255,255,0.02))',
+            boxShadow: '0 60px 160px rgba(0,0,0,0.75)',
+            overflow: 'hidden',
+          }}
+        >
           <div
             style={{
+              position: 'absolute',
+              inset: 0,
+              background:
+                'radial-gradient(circle at 15% 25%, rgba(255,255,255,0.18), rgba(255,255,255,0) 55%), linear-gradient(to bottom, rgba(255,255,255,0.08), rgba(255,255,255,0))',
+              opacity: 0.65,
+            }}
+          />
+
+          <div
+            style={{
+              position: 'relative',
               display: 'flex',
               flexDirection: 'row',
               alignItems: 'center',
@@ -44,31 +124,25 @@ export function renderOgImage({ title, description, eyebrow }: OgImageInput) {
               width: '100%',
             }}
           >
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 14,
-              }}
-            >
+            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 14 }}>
               <div
                 style={{
-                  width: 12,
-                  height: 12,
+                  width: 14,
+                  height: 14,
                   borderRadius: 999,
                   background: 'rgba(16,185,129,0.95)',
-                  boxShadow: '0 0 24px rgba(16,185,129,0.45)',
+                  boxShadow: '0 0 32px rgba(16,185,129,0.40)',
                 }}
               />
-              <div style={{ fontSize: 22, letterSpacing: 2, opacity: 0.9 }}>avrxt.in</div>
+              <div style={{ fontSize: 20, letterSpacing: 3, opacity: 0.9, fontFamily: 'Space Mono' }}>avrxt.in</div>
             </div>
             <div
               style={{
-                fontSize: 16,
-                letterSpacing: 3,
+                fontSize: 14,
+                letterSpacing: 4,
                 textTransform: 'uppercase',
-                opacity: 0.6,
+                opacity: 0.65,
+                fontFamily: 'Space Mono',
               }}
             >
               {eyebrow || 'Premium Preview'}
@@ -77,21 +151,31 @@ export function renderOgImage({ title, description, eyebrow }: OgImageInput) {
 
           <div
             style={{
-              fontSize: 72,
+              position: 'relative',
+              fontSize: 78,
               fontWeight: 800,
               letterSpacing: -2,
-              lineHeight: 1.05,
+              lineHeight: 1.02,
               textTransform: 'uppercase',
-              textShadow: '0 12px 80px rgba(0,0,0,0.8)',
               maxWidth: 980,
+              textShadow: '0 18px 90px rgba(0,0,0,0.85)',
             }}
           >
-            {title}
+            <span
+              style={{
+                backgroundImage: 'linear-gradient(90deg, rgba(167,243,208,1), rgba(165,243,252,1), rgba(254,202,202,1))',
+                backgroundClip: 'text',
+                color: 'transparent',
+              }}
+            >
+              {title}
+            </span>
           </div>
 
           {description ? (
             <div
               style={{
+                position: 'relative',
                 fontSize: 26,
                 lineHeight: 1.35,
                 color: 'rgba(255,255,255,0.78)',
@@ -109,7 +193,7 @@ export function renderOgImage({ title, description, eyebrow }: OgImageInput) {
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
-            paddingTop: 28,
+            paddingTop: 26,
             borderTop: '1px solid rgba(255,255,255,0.10)',
           }}
         >
@@ -123,17 +207,21 @@ export function renderOgImage({ title, description, eyebrow }: OgImageInput) {
                 opacity: 0.7,
               }}
             />
-            <div style={{ fontSize: 18, opacity: 0.7, letterSpacing: 1 }}>Full Stack • AI • Cloud</div>
+            <div style={{ fontSize: 18, opacity: 0.7, letterSpacing: 1, fontFamily: 'Space Mono' }}>
+              Full Stack • AI • Cloud
+            </div>
           </div>
 
-          <div style={{ fontSize: 18, opacity: 0.7, letterSpacing: 1 }}>share-ready • og:image</div>
+          <div style={{ fontSize: 18, opacity: 0.7, letterSpacing: 1, fontFamily: 'Space Mono' }}>
+            share-ready • og:image
+          </div>
         </div>
       </div>
     ),
     {
       width: ogSize.width,
       height: ogSize.height,
+      fonts: options?.fonts,
     }
   );
 }
-
