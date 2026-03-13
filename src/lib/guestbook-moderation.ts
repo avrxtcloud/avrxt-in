@@ -43,10 +43,26 @@ const MODERATION_TIMEOUT_MS = 8000;
 const CACHE_TABLE = 'guestbook_moderation_cache';
 const BLOCKED_TERMS_TABLE = 'guestbook_blocked_terms';
 const BLOCKED_TERMS_TTL_MS = 1000 * 60 * 5;
-const MODERATION_DEGRADED_MODE: ModerationDegradedMode =
-  (process.env.GUESTBOOK_MODERATION_DEGRADED_MODE || 'block').toLowerCase() === 'heuristic_allow'
-    ? 'heuristic_allow'
-    : 'block';
+
+function parseDegradedMode(value: string | undefined): ModerationDegradedMode {
+  const normalized = (value ?? 'heuristic_allow').trim().toLowerCase();
+
+  if (normalized === 'block') return 'block';
+  if (
+    normalized === 'heuristic_allow' ||
+    normalized === 'heuristic-allow' ||
+    normalized === 'heuristic' ||
+    normalized === 'allow'
+  ) {
+    return 'heuristic_allow';
+  }
+
+  return 'heuristic_allow';
+}
+
+const MODERATION_DEGRADED_MODE: ModerationDegradedMode = parseDegradedMode(
+  process.env.GUESTBOOK_MODERATION_DEGRADED_MODE
+);
 
 const HEURISTIC_RULES: Array<{ reason: string; terms: string[]; pattern: RegExp }> = [
   {

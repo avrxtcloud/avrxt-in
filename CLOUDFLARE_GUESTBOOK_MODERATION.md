@@ -31,7 +31,7 @@ CLOUDFLARE_GUESTBOOK_MODERATION_URL=https://your-worker-url.workers.dev
 CLOUDFLARE_GUESTBOOK_MODERATION_SECRET=<same secret used in Cloudflare>
 CLOUDFLARE_GUESTBOOK_MODERATION_MODEL=@cf/meta/llama-3.1-8b-instruct
 SUPABASE_SERVICE_ROLE_KEY=<existing required key for moderation cache>
-GUESTBOOK_MODERATION_DEGRADED_MODE=block
+GUESTBOOK_MODERATION_DEGRADED_MODE=block|heuristic_allow
 ```
 
 `CLOUDFLARE_GUESTBOOK_MODERATION_MODEL` is optional in Vercel. It is only used for cache metadata in this app. The Worker itself uses `MODERATION_MODEL` from `wrangler.jsonc`.
@@ -44,5 +44,5 @@ GUESTBOOK_MODERATION_DEGRADED_MODE=block
 - Apply both Supabase migrations before production use:
   - `supabase/migrations/20260307_guestbook_moderation_cache.sql`
   - `supabase/migrations/20260308_guestbook_blocked_terms.sql`
-- If the Worker is unavailable and `GUESTBOOK_MODERATION_DEGRADED_MODE=block`, guestbook writes fail closed.
-- If you set `GUESTBOOK_MODERATION_DEGRADED_MODE=heuristic_allow`, the app falls back to local regex heuristics when the Worker is unavailable.
+- If `GUESTBOOK_MODERATION_DEGRADED_MODE=block`, guestbook writes fail closed when the Worker is unavailable.
+- If `GUESTBOOK_MODERATION_DEGRADED_MODE=heuristic_allow` (the default), the app falls back to local regex heuristics when the Worker is unavailable.
