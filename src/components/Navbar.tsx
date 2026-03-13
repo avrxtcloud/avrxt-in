@@ -117,7 +117,7 @@ export default function Navbar() {
         <>
             <header 
                 className={cn(
-                    "fixed top-6 left-0 right-0 flex justify-center px-6 pointer-events-none transition-all duration-500",
+                    "absolute top-6 left-0 right-0 flex justify-center px-6 pointer-events-none transition-all duration-500",
                     (isOpen || isSearchOpen) ? "z-[300]" : "z-[100]"
                 )}
             >
