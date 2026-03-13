@@ -13,23 +13,6 @@ export default function Navbar() {
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const pathname = usePathname();
 
-    // Hide navbar on /me routes
-    if (pathname.startsWith('/me')) {
-        return null;
-    }
-
-    const navLinks = [
-        { name: '/about', href: '/#about' },
-        { name: '/skills', href: '/#expertise' },
-        { name: '/projects', href: '/#projects' },
-        { name: '/portfolio', href: '/portfolio' },
-        { name: '/uses', href: '/uses' },
-        { name: '/me', href: '/me' },
-        { name: '/cloud', href: '/cloud' },
-        { name: '/cupcake', href: '/cupcake' },
-        { name: '/biz', href: '/#solutions' },
-    ];
-
     const searchItems = useMemo(() => {
         const baseItems = [
             { name: '/', href: '/', description: 'Home and overview' },
@@ -69,6 +52,23 @@ export default function Navbar() {
             return name.includes(query) || description.includes(query) || href.includes(query);
         });
     }, [searchQuery, searchItems]);
+
+    // Hide navbar on /me routes - MOVE TO AFTER HOOKS
+    if (pathname.startsWith('/me')) {
+        return null;
+    }
+
+    const navLinks = [
+        { name: '/about', href: '/#about' },
+        { name: '/skills', href: '/#expertise' },
+        { name: '/projects', href: '/#projects' },
+        { name: '/portfolio', href: '/portfolio' },
+        { name: '/uses', href: '/uses' },
+        { name: '/me', href: '/me' },
+        { name: '/cloud', href: '/cloud' },
+        { name: '/cupcake', href: '/cupcake' },
+        { name: '/biz', href: '/#solutions' },
+    ];
 
     const handleToggleMenu = () => {
         setIsOpen((prev) => !prev);

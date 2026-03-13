@@ -9,9 +9,9 @@ import StatusBadge from './StatusBadge';
 export default function Footer() {
     const pathname = usePathname();
     const year = new Date().getFullYear();
+    const isMeRoute = pathname.startsWith('/me');
 
-    // Hide footer on /me routes
-    if (pathname.startsWith('/me')) {
+    if (isMeRoute) {
         return null;
     }
 
