@@ -34,6 +34,57 @@ const iconMap: Record<string, any> = {
     Github, Twitter, Instagram, Linkedin, LinkedinIcon, Youtube, ExternalLink, Mail
 };
 
+
+const LOCAL_QUOTES = [
+    { content: 'Innovation distinguishes between a leader and a follower.', author: 'Steve Jobs' },
+    { content: 'Simplicity is the ultimate sophistication.', author: 'Leonardo da Vinci' },
+    { content: 'Move fast, but don\'t break trust.', author: 'Unknown' },
+    { content: 'Make it work, make it right, make it fast.', author: 'Kent Beck' },
+    { content: 'Stay hungry. Stay foolish.', author: 'Steve Jobs' },
+];
+
+const pickQuote = () => LOCAL_QUOTES[Math.floor(Math.random() * LOCAL_QUOTES.length)];
+
+
+const ensureYouTubeIframeApi = () => {
+    if (typeof window === 'undefined') return Promise.resolve();
+
+    const w = window as any;
+    if (w.YT?.Player) return Promise.resolve();
+    if (w.__ytIframeApiPromise) return w.__ytIframeApiPromise as Promise<void>;
+
+    w.__ytIframeApiPromise = new Promise<void>((resolve, reject) => {
+        const existing = document.getElementById('youtube-iframe-api');
+        if (existing) {
+            const check = () => {
+                if (w.YT?.Player) resolve();
+                else setTimeout(check, 50);
+            };
+            check();
+            return;
+        }
+
+        const tag = document.createElement('script');
+        tag.id = 'youtube-iframe-api';
+        tag.src = 'https://www.youtube.com/iframe_api';
+        tag.async = true;
+        tag.onerror = () => reject(new Error('Failed to load YouTube IFrame API'));
+
+        const prev = w.onYouTubeIframeAPIReady;
+        w.onYouTubeIframeAPIReady = () => {
+            try {
+                if (typeof prev === 'function') prev();
+            } finally {
+                resolve();
+            }
+        };
+
+        document.head.appendChild(tag);
+    });
+
+    return w.__ytIframeApiPromise as Promise<void>;
+};
+
 export default function MeClient({ config }: { config: MeConfig }) {
     const [isPlaying, setIsPlaying] = useState(false);
     const [isMuted, setIsMuted] = useState(false);
@@ -48,15 +99,15 @@ export default function MeClient({ config }: { config: MeConfig }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const audioRef = useRef<HTMLAudioElement>(null);
-    const ytIframeRef = useRef<HTMLIFrameElement>(null);
+    const ytContainerRef = useRef<HTMLDivElement>(null);
+    const ytPlayerRef = useRef<any>(null);
+    const ytPendingPlayRef = useRef(false);
     const [ytReady, setYtReady] = useState(false);
-    const [origin, setOrigin] = useState('');
 
     useEffect(() => {
         setIsMounted(true);
-        setOrigin(window.location.origin);
         fetchWeather();
-        fetchQuote();
+        setQuote(pickQuote());
         const lanyardInterval = setInterval(fetchLanyard, 10000);
         fetchLanyard();
         return () => clearInterval(lanyardInterval);
@@ -66,21 +117,114 @@ export default function MeClient({ config }: { config: MeConfig }) {
     const youtubeVideoId = (config.music.youtubeVideoId || '').trim();
     const isUsingYouTube = Boolean(youtubeVideoId) && !audioUrl;
 
-    useEffect(() => {
-        setYtReady(false);
-    }, [youtubeVideoId]);
+    const isMutedRef = useRef(isMuted);
+    const isPlayingRef = useRef(isPlaying);
 
-    const postYouTubeCommand = (func: string, args: any[] = []) => {
-        const target = ytIframeRef.current?.contentWindow;
-        if (!target) return;
-        target.postMessage(JSON.stringify({ event: 'command', func, args }), '*');
-    };
+    useEffect(() => {
+        isMutedRef.current = isMuted;
+    }, [isMuted]);
+
+    useEffect(() => {
+        isPlayingRef.current = isPlaying;
+    }, [isPlaying]);
+
+    useEffect(() => {
+        if (!isUsingYouTube) {
+            setYtReady(false);
+            ytPendingPlayRef.current = false;
+            if (ytPlayerRef.current?.destroy) ytPlayerRef.current.destroy();
+            ytPlayerRef.current = null;
+            return;
+        }
+
+        let cancelled = false;
+
+        (async () => {
+            try {
+                await ensureYouTubeIframeApi();
+                if (cancelled) return;
+
+                const w = window as any;
+                if (!ytContainerRef.current) return;
+
+                if (ytPlayerRef.current?.destroy) ytPlayerRef.current.destroy();
+                ytPlayerRef.current = null;
+
+                const player = new w.YT.Player(ytContainerRef.current, {
+                    host: 'https://www.youtube-nocookie.com',
+                    videoId: youtubeVideoId,
+                    playerVars: {
+                        autoplay: 0,
+                        controls: 0,
+                        rel: 0,
+                        modestbranding: 1,
+                        playsinline: 1,
+                    },
+                    events: {
+                        onReady: () => {
+                            if (cancelled) return;
+                            setYtReady(true);
+
+                            try {
+                                if (isMutedRef.current) {
+                                    player.mute();
+                                } else {
+                                    player.unMute();
+                                    player.setVolume(100);
+                                }
+                            } catch { }
+
+                            if (ytPendingPlayRef.current || isPlayingRef.current) {
+                                try {
+                                    player.unMute();
+                                    player.setVolume(100);
+                                    player.playVideo();
+                                } catch { }
+                                ytPendingPlayRef.current = false;
+                                setIsPlaying(true);
+                            }
+                        },
+                        onStateChange: (e: any) => {
+                            if (cancelled) return;
+                            // 0 = ended
+                            if (e?.data === 0) {
+                                setIsPlaying(false);
+                            }
+                        },
+                    },
+                });
+
+                ytPlayerRef.current = player;
+            } catch (err) {
+                console.error(err);
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [isUsingYouTube, youtubeVideoId]);
 
     useEffect(() => {
         if (!isUsingYouTube || !ytReady) return;
-        postYouTubeCommand(isMuted ? 'mute' : 'unMute');
-        postYouTubeCommand(isPlaying ? 'playVideo' : 'pauseVideo');
-    }, [isUsingYouTube, ytReady, isMuted, isPlaying]);
+        const player = ytPlayerRef.current;
+        if (!player) return;
+
+        const id = window.setInterval(() => {
+            try {
+                const duration = player.getDuration?.() || 0;
+                const current = player.getCurrentTime?.() || 0;
+                if (duration > 0) setProgress((current / duration) * 100);
+            } catch { }
+        }, 250);
+
+        return () => window.clearInterval(id);
+    }, [isUsingYouTube, ytReady]);
+
+
+    useEffect(() => {
+        setYtReady(false);
+    }, [youtubeVideoId]);
 
     const fetchWeather = async () => {
         try {
@@ -88,16 +232,6 @@ export default function MeClient({ config }: { config: MeConfig }) {
             const data = await res.json();
             setWeather(data.current);
         } catch (e) { console.error(e); }
-    };
-
-    const fetchQuote = async () => {
-        try {
-            const res = await fetch('https://api.quotable.io/random?tags=technology,inspiration');
-            const data = await res.json();
-            setQuote(data);
-        } catch (e) {
-            setQuote({ content: "Innovation distinguishes between a leader and a follower.", author: "Steve Jobs" });
-        }
     };
 
     const fetchLanyard = async () => {
@@ -119,24 +253,60 @@ export default function MeClient({ config }: { config: MeConfig }) {
             }
         } catch (e) { console.error(e); }
     };
+
     const togglePlay = () => {
         if (isUsingYouTube) {
-            setIsPlaying((prev) => !prev);
+            const player = ytPlayerRef.current;
+
+            if (!player || !ytReady) {
+                setIsPlaying((prev) => {
+                    const next = !prev;
+                    ytPendingPlayRef.current = next;
+                    return next;
+                });
+                return;
+            }
+
+            if (isPlaying) {
+                try { player.pauseVideo(); } catch { }
+                setIsPlaying(false);
+            } else {
+                try {
+                    player.unMute();
+                    player.setVolume(100);
+                    player.playVideo();
+                } catch { }
+                setIsPlaying(true);
+            }
             return;
         }
 
-        if (audioRef.current && audioRef.current.src) {
+        if (audioRef.current && audioUrl) {
             if (isPlaying) {
                 audioRef.current.pause();
             } else {
-                audioRef.current.play().catch(e => console.log("Autoplay blocked", e));
+                audioRef.current.play().catch(e => console.log("Playback failed", e));
             }
             setIsPlaying(!isPlaying);
         }
     };
+
     const toggleMute = () => {
         if (isUsingYouTube) {
-            setIsMuted((prev) => !prev);
+            const player = ytPlayerRef.current;
+            const nextMuted = !isMuted;
+            setIsMuted(nextMuted);
+
+            if (player && ytReady) {
+                try {
+                    if (nextMuted) {
+                        player.mute();
+                    } else {
+                        player.unMute();
+                        player.setVolume(100);
+                    }
+                } catch { }
+            }
             return;
         }
 
@@ -149,12 +319,24 @@ export default function MeClient({ config }: { config: MeConfig }) {
     const handleProgressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = parseFloat(e.target.value);
         setProgress(value);
+
+        if (isUsingYouTube) {
+            const player = ytPlayerRef.current;
+            if (player && ytReady) {
+                try {
+                    const duration = player.getDuration?.() || 0;
+                    if (duration > 0) player.seekTo((value / 100) * duration, true);
+                } catch { }
+            }
+            return;
+        }
         if (audioRef.current) {
             audioRef.current.currentTime = (value / 100) * audioRef.current.duration;
         }
     };
     useEffect(() => {
         if (isUsingYouTube) return;
+        if (!audioUrl) return;
         const audio = audioRef.current;
         if (!audio) return;
 
@@ -423,7 +605,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
                                             min="0"
                                             max="100"
                                         />
-                                        <audio ref={audioRef} src={audioUrl} preload="metadata" />
+                                        <audio ref={audioRef} src={audioUrl || undefined} preload="metadata" />
                                     </div>
                                 </div>
 
@@ -446,14 +628,10 @@ export default function MeClient({ config }: { config: MeConfig }) {
                     </Reveal>
 
                     {isUsingYouTube && (
-                        <iframe
+                        <div
                             key={youtubeVideoId}
-                            ref={ytIframeRef}
-                            onLoad={() => setYtReady(true)}
-                            src={`https://www.youtube-nocookie.com/embed/${youtubeVideoId}?enablejsapi=1&controls=0&rel=0&modestbranding=1&autoplay=0&mute=0${origin ? `&origin=${encodeURIComponent(origin)}` : ''}`}
-                            title="yt-audio"
-                            allow="autoplay; encrypted-media"
-                            style={{ position: 'absolute', width: '10px', height: '10px', opacity: 0.01, pointerEvents: 'none', left: '-9999px', top: '-9999px' }}
+                            ref={ytContainerRef}
+                            style={{ position: 'absolute', width: '200px', height: '200px', opacity: 0.01, pointerEvents: 'none', left: '-9999px', top: '-9999px' }}
                             aria-hidden="true"
                         />
                     )}
