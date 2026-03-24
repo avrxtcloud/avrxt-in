@@ -10,7 +10,6 @@ export default function robots(): MetadataRoute.Robots {
                 '/docs/admin',
                 '/api/',
                 '/auth/',
-                '/cloud/success',
                 '/login',
                 '/_next/',
                 '/private/',

@@ -48,7 +48,7 @@ To provide a sovereign, high-fidelity digital identity that acts as both a profe
 
 ### 4.4 Admin Command Center (Multi-Dashboard)
 - **Centralized Orchestration**: Management of profile links, docs, and cloud service metadata.
-- **Lead Management**: Integration with Google Sheets API for real-time lead tracking.
+- **Lead Management**: Intelligent lead capture through high-fidelity email protocols.
 - **Media Vault**: Secure management of bio assets and documentation images.
 
 ---
@@ -60,7 +60,7 @@ To provide a sovereign, high-fidelity digital identity that acts as both a profe
 - **Backend/Database**: Next.js Server Actions, Supabase (PostgreSQL), Realtime.
 - **Edge Services**: Vercel Edge Network, Cloudflare WAF (Firewall Filtering).
 - **External Pipes**: 
-    - **Communications**: Resend API, Google Sheets API.
+    - **Communications**: Resend API.
     - **Auth**: Supabase Auth (Email + GitHub OAuth).
     - **Payments**: Razorpay SDK (Non-refundable deposit logic).
     - **Observability**: Vercel Analytics & Speed Insights.

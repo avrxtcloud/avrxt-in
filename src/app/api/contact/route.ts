@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
-import { google } from 'googleapis';
-import { getGooglePrivateKey } from '@/lib/google-key';
 
 function escapeHtml(value: string): string {
   return value
@@ -40,33 +38,7 @@ export async function POST(request: NextRequest) {
     const safeEmail = escapeHtml(userEmail);
     const safeMessage = escapeHtml(message.trim());
 
-    try {
-      const privateKey = getGooglePrivateKey(process.env.GOOGLE_PRIVATE_KEY);
-      const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-      const sheetId = process.env.GOOGLE_SHEET_ID;
-
-      if (privateKey && clientEmail && sheetId) {
-        const auth = new google.auth.GoogleAuth({
-          credentials: {
-            client_email: clientEmail,
-            private_key: privateKey,
-          },
-          scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-        });
-
-        const sheets = google.sheets({ version: 'v4', auth });
-        await sheets.spreadsheets.values.append({
-          spreadsheetId: sheetId,
-          range: 'Sheet1!A:D',
-          valueInputOption: 'USER_ENTERED',
-          requestBody: {
-            values: [[new Date().toISOString(), name.trim(), userEmail, message.trim()]],
-          },
-        });
-      }
-    } catch (sheetError) {
-      console.error('GOOGLE_SHEETS_ERROR:', sheetError);
-    }
+    // Removed Google Sheets logic as per user request.
 
     if (process.env.GMAIL_APP_PASSWORD) {
       const transporter = nodemailer.createTransport({

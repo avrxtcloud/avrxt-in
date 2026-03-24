@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X, Search, Command } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { CLOUD_SERVICES } from '@/lib/cloud-services';
 import Magnetic from '@/components/Magnetic';
 
 export default function Navbar() {
@@ -19,7 +18,7 @@ export default function Navbar() {
     const navRef = useRef<HTMLDivElement>(null);
 
     const searchItems = useMemo(() => {
-        const baseItems = [
+        return [
             { name: '/', href: '/', description: 'Home and overview' },
             { name: '/me', href: '/me', description: "Profile and Link's" },
             { name: '/portfolio', href: '/portfolio', description: 'Showcase of work' },
@@ -27,7 +26,6 @@ export default function Navbar() {
             { name: '/subscribe', href: '/subscribe', description: 'Newsletter Subscription' },
             { name: '/contact', href: '/contact', description: 'Contact @avrxt' },
             { name: '/guestbook', href: '/guestbook', description: 'Leave a footprint' },
-            { name: '/cloud', href: '/cloud', description: 'Cloud services' },
             { name: '/gallery', href: '/gallery', description: 'Visual gallery' },
             { name: '/docs', href: '/docs', description: 'Docs and resources' },
             { name: '/hireme', href: '/hireme', description: 'Work with avrxt' },
@@ -37,14 +35,6 @@ export default function Navbar() {
             { name: '/refund', href: '/refund', description: 'Refund policy' },
             { name: '/security', href: '/security', description: 'Security policy' },
         ];
-
-        const cloudItems = CLOUD_SERVICES.map((service) => ({
-            name: service.title,
-            href: `/cloud/${service.id}`,
-            description: service.description,
-        }));
-
-        return [...baseItems, ...cloudItems];
     }, []);
 
     const filteredSearchItems = useMemo(() => {
@@ -64,8 +54,8 @@ export default function Navbar() {
         { name: 'Home', href: '/' },
         { name: 'About', href: '/#about' },
         { name: 'Works', href: '/portfolio' },
-        { name: 'Cloud', href: '/cloud' },
         { name: 'Docs', href: '/docs' },
+        { name: 'Support', href: '/cupcake' },
     ];
 
     const handleMouseEnter = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -115,13 +105,13 @@ export default function Navbar() {
 
     return (
         <>
-            <header 
+            <header
                 className={cn(
                     "absolute top-6 left-0 right-0 flex justify-center px-6 pointer-events-none transition-all duration-500",
                     (isOpen || isSearchOpen) ? "z-[300]" : "z-[100]"
                 )}
             >
-                <nav 
+                <nav
                     ref={navRef}
                     className="relative flex items-center bg-zinc-900/80 backdrop-blur-2xl border border-white/10 rounded-full px-2 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-500 hover:border-white/20 pointer-events-auto"
                 >
@@ -137,7 +127,7 @@ export default function Navbar() {
                     </Magnetic>
 
                     {/* Sliding Highlight */}
-                    <div 
+                    <div
                         className="absolute h-[32px] bg-white/10 rounded-full transition-all duration-300 ease-out pointer-events-none"
                         style={{
                             left: `${hoverStyle.left}px`,
@@ -185,7 +175,7 @@ export default function Navbar() {
                     {/* Mobile Icons */}
                     <div className="flex sm:hidden items-center gap-1">
                         <Magnetic>
-                            <button 
+                            <button
                                 onClick={handleToggleSearch}
                                 className="p-2 text-zinc-400 hover:text-white transition-colors"
                             >
@@ -193,8 +183,8 @@ export default function Navbar() {
                             </button>
                         </Magnetic>
                         <Magnetic>
-                            <button 
-                                onClick={handleToggleMenu} 
+                            <button
+                                onClick={handleToggleMenu}
                                 className="p-2.5 rounded-full bg-white/5 hover:bg-white/10 hover:scale-110 active:scale-95 transition-all flex items-center gap-2 group"
                             >
                                 {isOpen && (
@@ -270,7 +260,7 @@ export default function Navbar() {
                 <div className="fixed inset-0 z-[200] bg-[#050505] flex flex-col pt-32 px-10 animate-in fade-in duration-500 overflow-hidden">
                     <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[radial-gradient(#fff_1px,transparent_1px)] bg-[size:32px_32px]"></div>
                     <div className="absolute top-0 right-0 w-full h-[50vh] bg-gradient-to-b from-emerald-500/[0.03] to-transparent pointer-events-none" />
-                    
+
                     <div className="relative z-10 space-y-3">
                         <div className="flex items-center gap-3 mb-8">
                             <div className="h-px w-6 bg-zinc-800" />
@@ -289,8 +279,8 @@ export default function Navbar() {
                                 </span>
                             </Link>
                         ))}
-                        <Link 
-                            href="/me" 
+                        <Link
+                            href="/me"
                             onClick={() => setIsOpen(false)}
                             className="group block text-5xl sm:text-6xl font-black tracking-tighter text-emerald-500/10 hover:text-emerald-400 transition-all transform hover:translate-x-4 active:scale-95 origin-left"
                         >
@@ -299,8 +289,8 @@ export default function Navbar() {
                     </div>
 
                     <div className="relative z-10 mt-auto pb-12 sm:pb-20">
-                        <Link 
-                            href="/contact" 
+                        <Link
+                            href="/contact"
                             onClick={() => setIsOpen(false)}
                             className="block w-full bg-white text-black text-center py-6 rounded-2xl font-black uppercase tracking-widest text-xs active:scale-95 transition-all shadow-[0_30px_60px_rgba(255,255,255,0.05)] border border-white"
                         >

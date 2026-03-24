@@ -1,4 +1,3 @@
-import { SERVICES } from './cloud/page';
 import { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -11,6 +10,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
         '/docs',
         '/hireme',
         '/contact',
+        '/portfolio',
         '/privacy',
         '/terms',
         '/refund',
@@ -18,7 +18,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
         '/cupcake',
         '/guestbook',
         '/gallery',
-        '/cloud',
         '/subscribe',
         '/uses',
     ];
@@ -30,13 +29,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
         priority: route === '' ? 1 : 0.8,
     }));
 
-    // Dynamic service pages
-    const serviceSitemap = SERVICES.map((service) => ({
-        url: `${baseUrl}/cloud/${service.id}`,
-        lastModified: new Date(),
-        changeFrequency: 'weekly' as const,
-        priority: 0.7,
-    }));
-
-    return [...staticSitemap, ...serviceSitemap];
+    return staticSitemap;
 }

@@ -62,10 +62,8 @@ graph TD
         ACT_R2["actions/r2.ts"]
         ACT_SPOTIFY["actions/spotify.ts"]
         ACT_CUPCAKE["actions/cupcake.ts"]
-        ACT_CLOUD["actions/cloud.ts"]
         AUTH_CHECKS["verifyAdmin and protectAdminPage"]
         MOD_PIPE["guestbook moderation pipeline"]
-        PRICE_MAP["lib/cloud-services.ts trusted variant pricing"]
     end
 
     P_GUEST --> ACT_GUEST
@@ -83,9 +81,6 @@ graph TD
     P_CUPCAKE --> ACT_CUPCAKE
     P_AUTH_CB --> AUTH_CHECKS
 
-    CLOUD_UI["Cloud booking form from SSG service page"] --> ACT_CLOUD
-    ACT_CLOUD --> PRICE_MAP
-
     API_SPOTIFY_AUTH --> AUTH_CHECKS
     API_SPOTIFY_CB --> AUTH_CHECKS
     ACT_SPOTIFY --> API_SPOTIFY_AUTH
@@ -99,7 +94,6 @@ graph TD
         DB_SPOT_TOKENS["Supabase table spotify_tokens"]
         DB_SPOT_HISTORY["Supabase table spotify_history"]
         DB_TIPS["Supabase table cupcake_tips"]
-        DB_CLOUD["Supabase table cloud_bookings"]
         R2["Cloudflare R2 bucket"]
         CDN_I["i.cdn.avrxt.in image CDN"]
         CDN_V["v.cdn.avrxt.in media CDN"]
@@ -113,7 +107,6 @@ graph TD
     API_NOW_PLAYING --> DB_SPOT_HISTORY
     API_SPOTIFY_CB --> DB_SPOT_TOKENS
     ACT_CUPCAKE --> DB_TIPS
-    ACT_CLOUD --> DB_CLOUD
     ACT_R2 --> R2
     R2 --> CDN_I
     R2 --> CDN_V
@@ -127,7 +120,6 @@ graph TD
         RAZORPAY["Razorpay orders and payment verification"]
         RESEND["Resend contacts and email"]
         GMAIL["Gmail SMTP"]
-        SHEETS["Google Sheets API"]
         MAILCHECK["mailcheck.ai disposable email check"]
         DNS_MX["DNS MX resolution"]
         BETTERSTACK["Betterstack status API"]
@@ -146,12 +138,7 @@ graph TD
     ACT_CUPCAKE --> RAZORPAY
     ACT_CUPCAKE --> RESEND
     ACT_CUPCAKE --> GMAIL
-    ACT_CLOUD --> RAZORPAY
-    ACT_CLOUD --> RESEND
-    ACT_CLOUD --> GMAIL
-    API_CONTACT --> SHEETS
     API_CONTACT --> GMAIL
-    API_HIREME --> SHEETS
     API_HIREME --> GMAIL
     API_SUBSCRIBE --> MAILCHECK
     API_SUBSCRIBE --> DNS_MX
@@ -352,15 +339,6 @@ sequenceDiagram
 
 ```
 
-### ☁️ Cloud Engineering (`/cloud`)
-
-Premium tier-based service architecture for:
-
-- **Discord Bot Development**: Moderation, AI Dashboards, and Custom Neural Architectures.
-
-- **Website Re-Design**: UI/UX overhauls and performance refactoring.
-
-- **Infrastructure Maintenance**: 24/7 monitoring and security hardening.
 
 ### 🔐 Security & Privacy (Harden Layer)
 
@@ -374,7 +352,7 @@ Premium tier-based service architecture for:
 
 ### 📈 Pro-Level SEO
 
-- **Dynamic Sitemap**: Automatically generated `sitemap.ts` that crawls base routes and dynamic Cloud services.
+- **Dynamic Sitemap**: Automatically generated `sitemap.ts` that crawls base routes and dynamic content.
 
 - **Metadata Objects**: Server-side metadata injection for high-fidelity social sharing and search ranking.
 
@@ -402,7 +380,7 @@ Premium tier-based service architecture for:
 
 | **Auth** | Supabase Auth, GitHub OAuth |
 
-| **Communications** | Resend API, Google Sheets API |
+| **Communications** | Resend API |
 
 | **Payments** | Razorpay SDK |
 
@@ -424,10 +402,7 @@ src/
 
 │   │   ├── subscribe/     # Hardened Newsletter API Node (New)
 
-│   ├── actions/           # Secured Server Actions (Cloud, Cupcake, Docs)
-
-│   ├── cloud/          # Cloud services & payment infrastructure
-
+│   ├── action/           # Secured Server Actions (Cupcake, Docs)
 │   ├── me/                # Personalized profile & bio terminal
 
 │   ├── robots.ts       # Dynamic Robots configuration
@@ -458,7 +433,7 @@ src/
 
    ```
 
-2. **Environment**: Configure `.env.local` with Supabase, Resend, Razorpay, and Google Service Account credentials.
+2. **Environment**: Configure `.env.local` with Supabase, Resend, and Razorpay credentials.
 
 3. **Guestbook Moderation (Required for v4 core)**:
    - Add environment variables:
@@ -499,7 +474,6 @@ The system follows a **"Dark Mesh"** design language:
   - `src/app/actions/guestbook.ts`
 
 ### [March 7, 2026] - Security Hardening v4 & Payment Integrity Patch
-- **CRITICAL FIX**: Removed client-side trust for cloud pricing by validating `serviceId + variantId` server-side before Razorpay order creation.
 - **CRITICAL FIX**: Added strict payment verification against Razorpay `order.amount` and `payment.order_id` before marking bookings as paid.
 - **FIX**: Repaired "Price on Request" flow with dedicated lead capture path for non-paid tiers (no fake signature path).
 - **FIX**: Hardened Spotify OAuth with admin-gated access plus CSRF `state` cookie validation on auth callback.

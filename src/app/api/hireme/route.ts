@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { google } from 'googleapis';
 import nodemailer from 'nodemailer';
-import { getGooglePrivateKey } from '@/lib/google-key';
 
 function escapeHtml(value: string): string {
   return value
@@ -45,43 +43,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Invalid email format.' }, { status: 400 });
     }
 
-    const privateKey = getGooglePrivateKey(process.env.GOOGLE_PRIVATE_KEY);
-    const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-    const sheetId = process.env.INTAKE_SHEET_ID;
     const gmailPassword = process.env.GMAIL_APP_PASSWORD;
     const adminEmail = process.env.ADMIN_GMAIL_ID || process.env.ADMIN_EMAIL;
 
     const warnings: string[] = [];
-    let sheetSuccess = false;
     let emailSuccess = false;
 
-    if (privateKey && clientEmail && sheetId) {
-      try {
-        const auth = new google.auth.GoogleAuth({
-          credentials: {
-            client_email: clientEmail,
-            private_key: privateKey,
-          },
-          scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-        });
-
-        const sheets = google.sheets({ version: 'v4', auth });
-        await sheets.spreadsheets.values.append({
-          spreadsheetId: sheetId,
-          range: 'Sheet1!A:G',
-          valueInputOption: 'USER_ENTERED',
-          requestBody: {
-            values: [[new Date().toISOString(), name.trim(), userEmail, projectType.trim(), budget.trim(), timeline.trim(), description.trim()]],
-          },
-        });
-        sheetSuccess = true;
-      } catch (sheetError) {
-        console.error('HIREME_GOOGLE_SHEETS_ERROR:', sheetError);
-        warnings.push('SHEETS_UNAVAILABLE');
-      }
-    } else {
-      warnings.push('SHEETS_CONFIG_MISSING');
-    }
+    // Removed Google Sheets logic as per user request.
 
     if (gmailPassword && adminEmail) {
       try {
@@ -122,7 +90,7 @@ export async function POST(request: NextRequest) {
       warnings.push('EMAIL_CONFIG_MISSING');
     }
 
-    if (sheetSuccess || emailSuccess) {
+    if (emailSuccess) {
       return NextResponse.json({
         message: 'Intake successful.',
         warning: warnings.length ? warnings.join(',') : undefined,
