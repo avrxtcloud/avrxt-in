@@ -1,14 +1,13 @@
 import { createClient } from '@/utils/supabase/server';
 import GuestbookClient from './GuestbookClient';
 import { getMessages } from '@/app/actions/guestbook';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
+import { buildPageMetadata } from '@/lib/page-metadata';
 
-export const metadata = {
-    title: 'Guestbook | avrxt Node',
-    description: 'Leave a permanent footprint in our community guestbook. Shared words from the digital frontier.',
-    keywords: ['guestbook', 'avrxt community', 'digital footprint', 'developer messages'],
-};
+export const metadata = buildPageMetadata({
+    title: 'Guestbook',
+    description: 'Leave Your Foot Print Here.',
+    keywords: ['guestbook', 'avrxt community', 'digital footprint', 'developer messages', 'Leave Your Foot Print Here'],
+});
 
 export default async function GuestbookPage() {
     const supabase = await createClient();

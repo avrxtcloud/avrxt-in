@@ -2,6 +2,8 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Calendar, FileText, User } from 'lucide-react';
 import { getDocBySlug } from '@/app/actions/docs';
+import type { Metadata } from 'next';
+import { buildPageMetadata } from '@/lib/page-metadata';
 
 // Revalidate every 60 seconds ensuring fresh content
 export const revalidate = 60;
@@ -10,6 +12,26 @@ export const revalidate = 60;
 type Props = {
     params: Promise<{ slug: string }>;
 };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+    const { slug } = await params;
+    const doc = await getDocBySlug(slug);
+
+    if (!doc) {
+        return buildPageMetadata({
+            title: 'Docs',
+            description: 'Browse engineering docs, playbooks, and technical resources authored by avrxt.',
+            noIndex: true,
+        });
+    }
+
+    return buildPageMetadata({
+        title: doc.title,
+        description: doc.description || 'Technical documentation by avrxt.',
+        keywords: ['docs', 'avrxt', doc.category, doc.slug, doc.title],
+        noIndex: !doc.published,
+    });
+}
 
 export default async function DocPage({ params }: Props) {
     const { slug } = await params;

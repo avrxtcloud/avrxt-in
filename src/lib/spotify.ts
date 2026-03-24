@@ -92,3 +92,33 @@ export async function getNowPlaying() {
         durationMs: song.item.duration_ms,
     };
 }
+export async function searchSpotify(query: string) {
+    const tokens = await getSpotifyTokens();
+    if (!tokens) return null;
+
+    let accessToken = tokens.access_token;
+    const expiresAt = new Date(tokens.expires_at).getTime();
+
+    if (Date.now() > expiresAt - 60000) {
+        accessToken = await refreshAccessToken(tokens.refresh_token);
+    }
+
+    const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=10`, {
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+        },
+    });
+
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    return data.tracks.items.map((track: any) => ({
+        id: track.id,
+        name: track.name,
+        artist: track.artists.map((a: any) => a.name).join(', '),
+        album: track.album.name,
+        coverUrl: track.album.images[0]?.url,
+        previewUrl: track.preview_url,
+        spotifyUrl: track.external_urls.spotify,
+    }));
+}

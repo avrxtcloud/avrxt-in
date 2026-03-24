@@ -9,12 +9,15 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1000.0",
+    "@aws-sdk/s3-request-presigner": "^3.1000.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.90.1",
     "clsx": "^2.1.1",
-    "googleapis": "^170.0.0",
+    "framer-motion": "^12.36.0",
+    "lru-cache": "^11.2.6",
     "lucide-react": "^0.562.0",
-    "next": "16.1.1",
+    "next": "16.1.6",
     "nodemailer": "^7.0.12",
     "razorpay": "^2.9.6",
     "react": "19.2.3",
@@ -29,7 +32,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.1.1",
+    "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

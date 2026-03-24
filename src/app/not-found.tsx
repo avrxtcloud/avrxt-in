@@ -8,14 +8,16 @@ export default function NotFound() {
     const [path, setPath] = useState('');
 
     useEffect(() => {
-        setPath(window.location.pathname);
-        const chars = '0123456789ABCDEF';
-        let id = '';
-        for (let i = 0; i < 12; i++) {
-            if (i > 0 && i % 4 === 0) id += ':';
-            id += chars.charAt(Math.floor(Math.random() * chars.length));
+        if (typeof window !== 'undefined') {
+            setPath(window.location.pathname);
+            const chars = '0123456789ABCDEF';
+            let id = '';
+            for (let i = 0; i < 12; i++) {
+                if (i > 0 && i % 4 === 0) id += ':';
+                id += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            setRequestId(id);
         }
-        setRequestId(id);
     }, []);
 
     return (

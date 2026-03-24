@@ -1,11 +1,12 @@
 import Reveal from '@/components/Reveal';
-import { Metadata } from 'next';
+import { buildPageMetadata } from '@/lib/page-metadata';
 
-export const metadata: Metadata = {
-    title: 'Refund Policy | avrxt.in',
-    description: 'Our transparent Refund Policy for digital services, cloud solutions, and contributions. Understand your rights and our processing timelines.',
+export const metadata = buildPageMetadata({
+    title: 'Refund Policy',
+    description:
+        'Our transparent Refund Policy for digital services, cloud solutions, and contributions. Understand your rights and our processing timelines.',
     keywords: ['refund policy', 'cancellation policy', 'avrxt refunds', 'digital service refund', 'payment processing', 'customer trust'],
-};
+});
 
 export default function Refund() {
     const lastUpdated = "January 15, 2026";
@@ -14,7 +15,7 @@ export default function Refund() {
     return (
         <main className="max-w-3xl mx-auto px-6 pt-40 pb-32">
             <Reveal className="active">
-                <p className="text-[10px] uppercase tracking-[0.4em] text-zinc-500 mb-4 font-mono">// Refund Policy v1.1</p>
+                <p className="text-[10px] uppercase tracking-[0.4em] text-zinc-500 mb-4 font-mono">{"// Refund Policy v1.1"}</p>
                 <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-12 text-white">Refund Policy_</h1>
 
                 <div className="space-y-12">

@@ -1,8 +1,32 @@
-'use server'
+'use server';
 
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { MeConfig, defaultMeConfig } from '@/lib/me-config';
+import { verifyAdmin } from '@/lib/auth-checks';
+
+
+function normalizeMeConfig(config: MeConfig): MeConfig {
+    const normalized: MeConfig = {
+        ...config,
+        profile: { ...config.profile },
+        music: { ...config.music },
+        links: Array.isArray(config.links) ? config.links : [],
+        gallery: Array.isArray(config.gallery) ? config.gallery : [],
+        resources: Array.isArray(config.resources) ? config.resources : [],
+        widgets: config.widgets ? { ...config.widgets } : config.widgets,
+    };
+
+    normalized.music.audioUrl = (normalized.music.audioUrl || '').trim();
+    normalized.music.youtubeVideoId = (normalized.music.youtubeVideoId || '').trim();
+
+    // Prefer YouTube when a videoId is set (avoids stale audioUrl breaking playback)
+    if (normalized.music.youtubeVideoId) {
+        normalized.music.audioUrl = '';
+    }
+
+    return normalized;
+}
 
 export async function getMeConfigAction(): Promise<MeConfig> {
     const supabase = await createClient();
@@ -18,17 +42,22 @@ export async function getMeConfigAction(): Promise<MeConfig> {
         return defaultMeConfig;
     }
 
-    return data.data as MeConfig;
+    return normalizeMeConfig(data.data as MeConfig);
 }
 
 export async function saveMeConfigAction(config: MeConfig) {
+    const { authorized, error: authError } = await verifyAdmin();
+    if (!authorized) {
+        return { error: `Unauthorized: ${authError}` };
+    }
+
     const supabase = await createClient();
 
     const { error } = await supabase
         .from('me_config')
         .upsert({
             key: 'main_config',
-            data: config,
+            data: normalizeMeConfig(config),
             updated_at: new Date().toISOString()
         }, { onConflict: 'key' });
 

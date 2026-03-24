@@ -1,11 +1,12 @@
 import Reveal from '@/components/Reveal';
-import { Metadata } from 'next';
+import { buildPageMetadata } from '@/lib/page-metadata';
 
-export const metadata: Metadata = {
-    title: 'Security Protocol | avrxt.in',
-    description: 'Explore our multi-layered Security Protocol. Learn how we secure your data with TLS 1.3, encrypted storage, and proactive vulnerability audits.',
+export const metadata = buildPageMetadata({
+    title: 'Security Protocol',
+    description:
+        'Explore our multi-layered Security Protocol. Learn how we secure your data with TLS 1.3, encrypted storage, and proactive vulnerability audits.',
     keywords: ['security protocol', 'data security', 'encryption', 'TLS 1.3', 'infrastructure security', 'vulnerability reporting', 'bug bounty'],
-};
+});
 
 export default function Security() {
     const lastUpdated = "January 15, 2026";
@@ -14,7 +15,7 @@ export default function Security() {
     return (
         <main className="max-w-3xl mx-auto px-6 pt-40 pb-32">
             <Reveal className="active">
-                <p className="text-[10px] uppercase tracking-[0.4em] text-zinc-500 mb-4 font-mono">// Security Protocol v2.5</p>
+                <p className="text-[10px] uppercase tracking-[0.4em] text-zinc-500 mb-4 font-mono">{"// Security Protocol v2.5"}</p>
                 <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-12 text-white">Security_</h1>
 
                 <div className="space-y-12">

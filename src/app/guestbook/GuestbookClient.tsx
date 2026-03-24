@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { User } from '@supabase/supabase-js';
-import { Github, Send, Trash2, Edit3, X, Check } from 'lucide-react';
+import { Github, Send, Trash2, Edit3, X, Check, ShieldAlert, TriangleAlert } from 'lucide-react';
 import { signInWithGithub, postMessage, deleteMessage, updateMessage } from '@/app/actions/guestbook';
 import { cn } from '@/lib/utils';
 
@@ -15,12 +15,35 @@ interface Message {
     created_at: string;
 }
 
+type DialogState =
+    | {
+        type: 'error';
+        title: string;
+        description: string;
+    }
+    | {
+        type: 'confirm-delete';
+        title: string;
+        description: string;
+        messageId: string;
+    }
+    | null;
+
 export default function GuestbookClient({ user, initialMessages }: { user: User | null, initialMessages: Message[] }) {
     const [messages, setMessages] = useState<Message[]>(initialMessages);
     const [input, setInput] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editInput, setEditInput] = useState('');
+    const [dialog, setDialog] = useState<DialogState>(null);
+
+    const openErrorDialog = (title: string, description: string) => {
+        setDialog({
+            type: 'error',
+            title,
+            description,
+        });
+    };
 
     const handleSignIn = () => {
         window.location.href = '/auth/login?source=guestbook';
@@ -42,7 +65,7 @@ export default function GuestbookClient({ user, initialMessages }: { user: User 
 
         const result = await postMessage(input, name, avatar);
         if (result.error) {
-            alert(result.error);
+            openErrorDialog('Transmission blocked', result.error);
         } else {
             setInput('');
             window.location.reload();
@@ -51,16 +74,22 @@ export default function GuestbookClient({ user, initialMessages }: { user: User 
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this message?')) return;
         const result = await deleteMessage(id);
-        if (result.error) alert(result.error);
-        else window.location.reload();
+        if (result.error) {
+            openErrorDialog('Delete failed', result.error);
+            return;
+        }
+
+        setDialog(null);
+        window.location.reload();
     };
 
     const handleUpdate = async (id: string) => {
         if (!editInput.trim()) return;
         const result = await updateMessage(id, editInput);
-        if (result.error) alert(result.error);
+        if (result.error) {
+            openErrorDialog('Update blocked', result.error);
+        }
         else {
             setEditingId(null);
             window.location.reload();
@@ -69,6 +98,78 @@ export default function GuestbookClient({ user, initialMessages }: { user: User 
 
     return (
         <div className="space-y-12">
+            {dialog && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-4 backdrop-blur-md">
+                    <div className="relative w-full max-w-md overflow-hidden rounded-[28px] border border-white/10 bg-zinc-950 shadow-[0_24px_80px_rgba(0,0,0,0.55)]">
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.12),transparent_55%)]" />
+                        <div className="relative space-y-6 p-6 sm:p-7">
+                            <div className="flex items-start justify-between gap-4">
+                                <div className="flex items-center gap-3">
+                                    <div className={cn(
+                                        'flex h-11 w-11 items-center justify-center rounded-2xl border',
+                                        dialog.type === 'confirm-delete'
+                                            ? 'border-red-500/20 bg-red-500/10 text-red-300'
+                                            : 'border-amber-500/20 bg-amber-500/10 text-amber-200'
+                                    )}>
+                                        {dialog.type === 'confirm-delete' ? <Trash2 size={18} /> : <ShieldAlert size={18} />}
+                                    </div>
+                                    <div>
+                                        <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-zinc-500">
+                                            {dialog.type === 'confirm-delete' ? 'Message Control' : 'Safety Filter'}
+                                        </p>
+                                        <h3 className="mt-1 text-lg font-semibold text-white">{dialog.title}</h3>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setDialog(null)}
+                                    className="rounded-full border border-white/10 p-2 text-zinc-500 transition-colors hover:border-white/20 hover:text-white"
+                                >
+                                    <X size={16} />
+                                </button>
+                            </div>
+
+                            <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                                <div className="mb-2 flex items-center gap-2 text-[11px] font-mono uppercase tracking-[0.3em] text-zinc-500">
+                                    <TriangleAlert size={14} />
+                                    System Notice
+                                </div>
+                                <p className="text-sm leading-7 text-zinc-300">{dialog.description}</p>
+                            </div>
+
+                            <div className="flex gap-3">
+                                {dialog.type === 'confirm-delete' ? (
+                                    <>
+                                        <button
+                                            type="button"
+                                            onClick={() => setDialog(null)}
+                                            className="flex-1 rounded-2xl border border-white/10 px-4 py-3 text-sm font-semibold text-zinc-300 transition-colors hover:border-white/20 hover:text-white"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleDelete(dialog.messageId)}
+                                            className="flex-1 rounded-2xl bg-red-500 px-4 py-3 text-sm font-semibold text-white transition-transform hover:scale-[1.01]"
+                                        >
+                                            Delete message
+                                        </button>
+                                    </>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={() => setDialog(null)}
+                                        className="w-full rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-black transition-transform hover:scale-[1.01]"
+                                    >
+                                        Understood
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Auth/Post Section */}
             {!user ? (
                 <div className="p-8 rounded-2xl bg-zinc-900/40 border border-white/5 backdrop-blur-md text-center">
@@ -157,7 +258,7 @@ export default function GuestbookClient({ user, initialMessages }: { user: User 
 
                                     {/* Actions for owner */}
                                     {user?.id === msg.user_id && editingId !== msg.id && (
-                                        <div className="flex gap-3 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className="flex gap-3 mt-4 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                                             <button
                                                 onClick={() => {
                                                     setEditingId(msg.id);
@@ -168,7 +269,12 @@ export default function GuestbookClient({ user, initialMessages }: { user: User 
                                                 <Edit3 size={10} /> Edit
                                             </button>
                                             <button
-                                                onClick={() => handleDelete(msg.id)}
+                                                onClick={() => setDialog({
+                                                    type: 'confirm-delete',
+                                                    title: 'Delete this transmission?',
+                                                    description: 'This action permanently removes your guestbook message from the public feed.',
+                                                    messageId: msg.id,
+                                                })}
                                                 className="text-[10px] font-mono uppercase text-zinc-500 hover:text-red-500 flex items-center gap-1"
                                             >
                                                 <Trash2 size={10} /> Delete

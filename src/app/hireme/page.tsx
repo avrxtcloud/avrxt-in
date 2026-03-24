@@ -47,11 +47,13 @@ export default function HireMe() {
         const data = Object.fromEntries(formData);
 
         try {
-            const response = await fetch('https://api.avrxt.in/api/hireme', {
+            const response = await fetch('/api/hireme', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
             });
+
+            const result = await response.json().catch(() => ({}));
 
             if (response.ok) {
                 setFormStatus({ type: 'success', message: '// SUCCESS: INTAKE_COMPLETE' });
@@ -60,7 +62,7 @@ export default function HireMe() {
                 setTotalPrice(0);
                 setTotalWeeks(0);
             } else {
-                setFormStatus({ type: 'error', message: '// ERROR: TRANSMISSION_DENIED' });
+                setFormStatus({ type: 'error', message: `// ERROR: ${result.message || result.error || 'TRANSMISSION_DENIED'}` });
             }
         } catch (error) {
             console.error('Fetch error:', error);
@@ -189,3 +191,4 @@ export default function HireMe() {
         </main>
     );
 }
+

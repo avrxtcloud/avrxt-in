@@ -1,8 +1,13 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Instrument+Serif:ital@0;1&display=swap');
 @import "tailwindcss";
+
+/* Premium Font Imports */
 
 @theme {
   --font-sans: "Inter", sans-serif;
   --font-mono: "Space Mono", monospace;
+  --font-outfit: "Outfit", sans-serif;
+  --font-accent: "Instrument Serif", serif;
 
   --color-zinc-custom: #121212;
   --color-border-custom: #1f1f1f;
@@ -26,6 +31,26 @@
     color: var(--foreground);
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
+    cursor: none; /* Hide default cursor for premium custom cursor */
+  }
+
+  @media (max-width: 768px) {
+    body {
+      cursor: auto; /* Show default cursor on mobile */
+    }
+  }
+
+  /* Parallax Background Layers */
+  .parallax-bg {
+    position: fixed;
+    inset: -10%;
+    z-index: -2;
+    background: 
+      radial-gradient(circle at 20% 30%, rgba(16, 185, 129, 0.03) 0%, transparent 40%),
+      radial-gradient(circle at 80% 70%, rgba(59, 130, 246, 0.03) 0%, transparent 40%);
+    pointer-events: none;
+    transform: translateZ(0);
+    will-change: transform;
   }
 
   ::-webkit-scrollbar {
@@ -82,30 +107,28 @@
 
   .reveal {
     opacity: 0;
-    transform: translateY(40px) scale(0.95);
     transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
+  .reveal-up { transform: translateY(40px) scale(0.98); }
+  .reveal-down { transform: translateY(-40px) scale(0.98); }
+  .reveal-left { transform: translateX(40px) scale(0.98); }
+  .reveal-right { transform: translateX(-40px) scale(0.98); }
+
   .reveal.active {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translate(0, 0) scale(1);
   }
 
   .reveal.out {
     opacity: 0;
-    transform: translateY(-20px) scale(0.98);
   }
 
-  .footer-status-blend iframe {
-    filter: grayscale(1) brightness(1.4) contrast(1.1);
-    mix-blend-mode: screen;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    transform: translate(38px, 6px);
-  }
-
-  .footer-status-blend:hover iframe {
-    filter: grayscale(0) brightness(1.1) drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
-    transform: translate(25px, 6px) scale(1.05);
+  /* Custom Status Badge overrides if needed */
+  .footer-status-blend {
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 
@@ -161,6 +184,7 @@
   backdrop-filter: blur(12px);
   transform-style: preserve-3d;
   transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  will-change: transform, border-color, background;
 }
 
 .card-3d:hover {
@@ -170,4 +194,52 @@
   box-shadow:
     -10px 10px 20px rgba(0, 0, 0, 0.5),
     0 0 20px rgba(16, 185, 129, 0.05);
+}
+
+.link-card {
+  will-change: transform, background, border-color;
+}
+
+/* Premium Reveal Animations */
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(30px) rotateX(10deg);
+  transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.reveal-on-scroll.visible {
+  opacity: 1;
+  transform: translateY(0) rotateX(0deg);
+}
+
+/* Micro Interactions */
+button:active, a:active {
+  transform: scale(0.96) !important;
+}
+
+.magnetic-item {
+  transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Section Transitions */
+.section-transition {
+  view-transition-name: section;
+}
+
+::view-transition-old(section) {
+  animation: 0.4s cubic-bezier(0.4, 0, 0.2, 1) both fade-out;
+}
+
+::view-transition-new(section) {
+  animation: 0.6s cubic-bezier(0.4, 0, 0.2, 1) both fade-in;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; transform: translateY(-20px); }
 }

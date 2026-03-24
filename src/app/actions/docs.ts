@@ -1,11 +1,15 @@
-'use server'
+'use server';
 
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
-import { DocArticle } from '@/lib/docs-config'; // Importing the type
+import { DocArticle } from '@/lib/docs-config';
+import { verifyAdmin } from '@/lib/auth-checks';
 
 // Fetch all docs (Admin view - sees drafts too)
 export async function getAdminDocs() {
+    const { authorized } = await verifyAdmin();
+    if (!authorized) return [];
+
     const supabase = await createClient();
     const { data, error } = await supabase
         .from('documents')
@@ -54,6 +58,11 @@ export async function getDocBySlug(slug: string) {
 }
 
 export async function createDocAction(doc: Partial<DocArticle>) {
+    const { authorized, error: authError } = await verifyAdmin();
+    if (!authorized) {
+        return { error: `Unauthorized: ${authError}` };
+    }
+
     const supabase = await createClient();
 
     // Remove ID if present to let Supabase generate UUID
@@ -79,6 +88,11 @@ export async function createDocAction(doc: Partial<DocArticle>) {
 }
 
 export async function updateDocAction(id: string, updates: Partial<DocArticle>) {
+    const { authorized, error: authError } = await verifyAdmin();
+    if (!authorized) {
+        return { error: `Unauthorized: ${authError}` };
+    }
+
     const supabase = await createClient();
 
     const { data, error } = await supabase
@@ -101,6 +115,11 @@ export async function updateDocAction(id: string, updates: Partial<DocArticle>) 
 }
 
 export async function deleteDocAction(id: string) {
+    const { authorized, error: authError } = await verifyAdmin();
+    if (!authorized) {
+        return { error: `Unauthorized: ${authError}` };
+    }
+
     const supabase = await createClient();
     const { error } = await supabase.from('documents').delete().eq('id', id);
 

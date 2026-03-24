@@ -2,6 +2,7 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { moderateGuestbookMessage } from '@/lib/guestbook-moderation';
 
 export async function getMessages() {
     const supabase = await createClient();
@@ -20,10 +21,20 @@ export async function postMessage(message: string, userName: string, userAvatar:
 
     if (!user) return { error: 'You must be logged in to post.' };
 
+    const normalizedMessage = message.trim();
+    if (!normalizedMessage) return { error: 'Message cannot be empty.' };
+
+    const moderation = await moderateGuestbookMessage(normalizedMessage);
+    if (moderation.blocked) {
+        return {
+            error: `Message blocked by safety policy (${moderation.reasons.join(', ')}).`
+        };
+    }
+
     const { error } = await supabase
         .from('guestbook')
         .insert({
-            message,
+            message: normalizedMessage,
             user_id: user.id,
             user_name: userName,
             user_avatar: userAvatar
@@ -40,9 +51,19 @@ export async function updateMessage(id: string, message: string) {
 
     if (!user) return { error: 'Unauthorized' };
 
+    const normalizedMessage = message.trim();
+    if (!normalizedMessage) return { error: 'Message cannot be empty.' };
+
+    const moderation = await moderateGuestbookMessage(normalizedMessage);
+    if (moderation.blocked) {
+        return {
+            error: `Message blocked by safety policy (${moderation.reasons.join(', ')}).`
+        };
+    }
+
     const { error } = await supabase
         .from('guestbook')
-        .update({ message, updated_at: new Date().toISOString() })
+        .update({ message: normalizedMessage, updated_at: new Date().toISOString() })
         .eq('id', id)
         .eq('user_id', user.id);
 

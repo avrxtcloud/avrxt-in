@@ -18,12 +18,19 @@ export interface MeConfig {
             text: string; // "Busy", "Free", "Coding"
             color: 'green' | 'yellow' | 'red' | 'blue' | 'purple';
         };
+        presence?: {
+            mode: 'manual' | 'auto';
+            discordId?: string;
+        };
+        location?: string;
+        weatherEnabled?: boolean;
     };
     music: {
         title: string;
         artist: string;
         coverUrl: string;
         audioUrl: string;
+        youtubeVideoId?: string;
         spotifyEnabled?: boolean;
     };
     links: MeLink[];
@@ -41,6 +48,14 @@ export interface MeConfig {
         previewUrl?: string; // for posts
         meta?: string; // e.g. "avrxt-resend-2025"
     }[];
+    widgets?: {
+        quotesEnabled: boolean;
+        notesEnabled: boolean;
+        note?: {
+            text: string;
+            createdAt: string;
+        };
+    };
 }
 
 export const defaultMeConfig: MeConfig = {
@@ -51,13 +66,15 @@ export const defaultMeConfig: MeConfig = {
         logoUrl: "https://cdn.avrxt.in/assets/logo-02.png",
         bannerUrl: "https://objects.avrxt.in/images/aviorxt_01.jpg",
         themeColor: "#10b981",
-        status: { text: 'Online', color: 'green' }
+        status: { text: 'Online', color: 'green' },
+        presence: { mode: 'manual', discordId: '1269352892146384957' }
     },
     music: {
         title: "her",
         artist: "JVKE",
         coverUrl: "https://objects.avrxt.in/assets/ab67616d0000b273a0934c15232680a3afc9da6e.jpeg",
         audioUrl: "https://objects.avrxt.in/assets/SpotiDownloader.com%20-%20her%20-%20JVKE.mp3",
+        youtubeVideoId: "",
         spotifyEnabled: false
     },
     links: [
@@ -71,5 +88,10 @@ export const defaultMeConfig: MeConfig = {
         { id: 'r1', title: 'Visual Gallery', url: '/gallery', type: 'gallery' },
         { id: 'r2', title: 'Documentation Portal', url: '/docs', type: 'doc' },
         { id: 'r3', title: 'Rethinking Email Infrastructure', url: '/docs/avrxt-resend-2025', type: 'post', previewUrl: 'https://www.avrxt.in/assets/screenshot-zoom-analytics.webp', meta: 'avrxt-resend-2025' }
-    ]
+    ],
+    widgets: {
+        quotesEnabled: true,
+        notesEnabled: true,
+        note: { text: "Hello! Check out my work.", createdAt: new Date().toISOString() }
+    }
 };
