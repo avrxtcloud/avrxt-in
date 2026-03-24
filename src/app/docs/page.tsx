@@ -1,5 +1,4 @@
-import Link from 'next/link';
-import { BookOpen, Settings } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 import { getPublishedDocs } from '@/app/actions/docs';
 import DocsClient from './DocsClient';
 import Reveal from '@/components/Reveal';
@@ -24,22 +23,6 @@ export default async function Docs() {
                 <div className="absolute bottom-[-10%] left-[-10%] w-[70%] h-[50%] bg-purple-500/5 blur-[120px] rounded-full" />
                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay"></div>
             </div>
-
-            <header className="sticky top-16 z-40 bg-[#050505]/80 backdrop-blur-md border-b border-white/5 h-16 flex items-center">
-                <nav className="max-w-7xl mx-auto px-6 w-full flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                        <span className="text-sm font-bold tracking-[0.3em] font-mono text-white">LIBRARY_NODE_01</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <Link href="/docs/admin" className="text-[10px] border border-white/10 px-4 py-1.5 rounded-full hover:bg-white hover:text-black transition-all duration-500 font-mono uppercase tracking-tighter flex items-center gap-2">
-                            <Settings size={12} /> /admin
-                        </Link>
-                        <Link href="/" className="text-[10px] border border-white/10 px-4 py-1.5 rounded-full hover:bg-white/10 transition-all duration-500 font-mono uppercase tracking-tighter">
-                            /exit
-                        </Link>
-                    </div>
-                </nav>
-            </header>
 
             <main className="max-w-7xl mx-auto px-6 py-24 relative z-10">
                 <section className="mb-24">

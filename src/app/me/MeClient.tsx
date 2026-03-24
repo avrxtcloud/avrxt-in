@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import React from 'react';
 import Link from 'next/link';
+import { createClient } from '@/utils/supabase/client';
 import {
     ExternalLink,
     Play,
@@ -116,48 +118,94 @@ export default function MeClient({ config }: { config: MeConfig }) {
         return () => clearInterval(lanyardInterval);
     }, []);
 
+    // 2. Spotify Listeners (Realtime & Local Progress)
     useEffect(() => {
-        if (!spotifyEnabled) {
-            setSpotifyData(null);
-            setSpotifyLast(null);
-            return;
-        }
+        if (!spotifyEnabled) return;
 
-        let cancelled = false;
+        const supabase = createClient();
+        let syncTimeout: any;
 
-        const fetchSpotify = async () => {
+        // Fetch initial state
+        const triggerSync = async () => {
             try {
-                const spotifyApiUrl = process.env.NEXT_PUBLIC_SPOTIFY_API_URL || '/api/spotify/now-playing';
+                const baseUrl = window.location.origin;
+                const spotifyApiUrl = process.env.NEXT_PUBLIC_SPOTIFY_API_URL || "https://jirohobyxsihzbpopsse.supabase.co/functions/v1/v2-now-playing";
                 const res = await fetch(spotifyApiUrl, { cache: 'no-store' });
                 const data = await res.json();
-
-                if (cancelled) return;
-
-                if (data?.isPlaying) {
-                    setSpotifyData({ ...data, fetchedAt: Date.now() });
-                    setSpotifyLast(null);
-                } else {
-                    setSpotifyData(null);
-                    if (data?.title && data?.artist) {
-                        setSpotifyLast(data);
-                    } else {
+                if (data?.title) {
+                    if (data.isPlaying) {
+                        setSpotifyData({ ...data, fetchedAt: Date.now() });
                         setSpotifyLast(null);
+                    } else {
+                        setSpotifyData(null);
+                        setSpotifyLast(data);
                     }
                 }
             } catch (e) {
-                console.error('Spotify fetch failed', e);
-                if (cancelled) return;
-                setSpotifyData(null);
+                console.error('Initial Spotify sync failed', e);
             }
         };
 
-        fetchSpotify();
-        const id = window.setInterval(fetchSpotify, 15000);
+        triggerSync();
+
+        // Subscribe to Realtime Updates (Directly from status table)
+        const channel = supabase
+            .channel('spotify_realtime_v2')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'spotify_status' },
+                (payload) => {
+                    const data = payload.new as any;
+                    if (!data) return;
+
+                    const mapped = {
+                        isPlaying: data.is_playing,
+                        title: data.title,
+                        artist: data.artist,
+                        albumImageUrl: data.album_image_url,
+                        songUrl: data.song_url,
+                        progressMs: data.progress_ms,
+                        durationMs: data.duration_ms,
+                        updatedAt: data.updated_at
+                    };
+
+                    if (mapped.isPlaying) {
+                        setSpotifyData({ ...mapped, fetchedAt: Date.now() });
+                        setSpotifyLast(null);
+                    } else {
+                        setSpotifyData(null);
+                        setSpotifyLast(mapped);
+                    }
+                }
+            )
+            .subscribe();
+
         return () => {
-            cancelled = true;
-            window.clearInterval(id);
+            supabase.removeChannel(channel);
+            clearTimeout(syncTimeout);
         };
     }, [spotifyEnabled]);
+
+    // 3. Smooth Progress Interpolation (60fps)
+    useEffect(() => {
+        if (!spotifyData?.isPlaying || !spotifyData?.durationMs) return;
+
+        let frame: number;
+        const startTimestamp = Date.now();
+        const startProgress = spotifyData.progressMs;
+
+        const animate = () => {
+            const elapsed = Date.now() - startTimestamp;
+            const currentProgress = Math.min(startProgress + elapsed, spotifyData.durationMs);
+            const percentage = (currentProgress / spotifyData.durationMs) * 100;
+
+            setSpotifyProgress(percentage);
+            frame = requestAnimationFrame(animate);
+        };
+
+        frame = requestAnimationFrame(animate);
+        return () => cancelAnimationFrame(frame);
+    }, [spotifyData?.isPlaying, spotifyData?.progressMs, spotifyData?.title]);
 
     useEffect(() => {
         if (!spotifyData?.isPlaying || !spotifyData?.durationMs) {
