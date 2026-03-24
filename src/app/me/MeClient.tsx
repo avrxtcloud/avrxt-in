@@ -127,7 +127,8 @@ export default function MeClient({ config }: { config: MeConfig }) {
 
         const fetchSpotify = async () => {
             try {
-                const res = await fetch('/api/spotify/now-playing', { cache: 'no-store' });
+                const spotifyApiUrl = process.env.NEXT_PUBLIC_SPOTIFY_API_URL || '/api/spotify/now-playing';
+                const res = await fetch(spotifyApiUrl, { cache: 'no-store' });
                 const data = await res.json();
 
                 if (cancelled) return;
@@ -472,7 +473,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
     const isManual = config.profile.presence?.mode === 'manual';
     const displayStatus = isManual ? config.profile.status?.text || 'Online' : lanyardData?.discord_status || 'offline';
     const statusColor = isManual ? config.profile.status?.color || 'green' : (lanyardData?.discord_status || 'offline');
-    
+
     const getStatusBg = (color: string) => {
         if (color === 'online' || color === 'green') return 'bg-emerald-500';
         if (color === 'idle' || color === 'yellow') return 'bg-yellow-500';
@@ -494,7 +495,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
             )}>
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,#1a1a1a_0%,#000_70%)]"></div>
-                
+
                 {/* Immersive Glows */}
                 <div className={cn(
                     "absolute top-1/4 left-1/4 w-[50%] h-[50%] bg-blue-500/10 blur-[120px] rounded-full transition-opacity duration-1000",
@@ -517,8 +518,8 @@ export default function MeClient({ config }: { config: MeConfig }) {
                 <Reveal className="text-center mb-10" direction="down" delay={0.1}>
                     <div className="mb-6 relative inline-block">
                         <div className="absolute inset-0 animate-pulse bg-emerald-500/20 blur-2xl rounded-full scale-110 opacity-30"></div>
-                        <img 
-                            src={config.profile.avatarUrl} 
+                        <img
+                            src={config.profile.avatarUrl}
                             alt={config.profile.handle}
                             className="w-24 h-24 rounded-full border-2 border-white/10 relative z-10 shadow-2xl hover:scale-105 transition-transform duration-500"
                         />
@@ -541,7 +542,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
                         <span className="flex items-center gap-1.5"><Wind size={10} /> {weather?.wind_speed_10m || '??'}km/h</span>
                     </div>
                     <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
-                         <span className="text-[8px] font-mono text-emerald-500 uppercase tracking-widest">{displayStatus}</span>
+                        <span className="text-[8px] font-mono text-emerald-500 uppercase tracking-widest">{displayStatus}</span>
                     </div>
                 </Reveal>
 
@@ -576,7 +577,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
                             return (
                                 <Reveal key={link.id} delay={idx * 0.05} direction="up">
                                     <Tilt intensity={5}>
-                                        <Link 
+                                        <Link
                                             href={link.url}
                                             target="_blank"
                                             className="link-card flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/20 transition-all group"
@@ -613,22 +614,22 @@ export default function MeClient({ config }: { config: MeConfig }) {
                             </button>
                         </div>
                     </div>
-                    
+
                     <Reveal direction="up" delay={0.3}>
                         <Tilt intensity={10}>
                             <div className="card-3d p-4 rounded-xl flex items-center gap-4 bg-white/[0.02] border border-white/[0.08] backdrop-blur-xl relative overflow-hidden group">
                                 <div className="relative w-16 h-16 shrink-0">
                                     {spotifyData?.isPlaying ? (
-                                        <img 
-                                            src={spotifyData.albumImageUrl} 
-                                            alt="Cover" 
-                                            className="w-full h-full rounded-lg object-cover shadow-lg group-hover:scale-105 transition-transform duration-700" 
+                                        <img
+                                            src={spotifyData.albumImageUrl}
+                                            alt="Cover"
+                                            className="w-full h-full rounded-lg object-cover shadow-lg group-hover:scale-105 transition-transform duration-700"
                                         />
                                     ) : (
-                                        <img 
-                                            src={config.music.coverUrl} 
-                                            alt="Cover" 
-                                            className="w-full h-full rounded-lg object-cover shadow-lg opacity-50 group-hover:opacity-100 transition-opacity" 
+                                        <img
+                                            src={config.music.coverUrl}
+                                            alt="Cover"
+                                            className="w-full h-full rounded-lg object-cover shadow-lg opacity-50 group-hover:opacity-100 transition-opacity"
                                         />
                                     )}
                                     {(spotifyData?.isPlaying || isPlaying) && (
@@ -641,7 +642,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
                                         </div>
                                     )}
                                 </div>
-                                
+
                                 <div className="flex-1 min-w-0 pr-2">
                                     <div className="flex items-center gap-2 mb-1">
                                         <div className={cn(
@@ -663,14 +664,14 @@ export default function MeClient({ config }: { config: MeConfig }) {
                                             Last_Played: {spotifyLast.title} // {spotifyLast.artist}
                                         </p>
                                     )}
-                                    
+
                                     <div className="mt-3 relative h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                                        <div 
-                                            className="absolute top-0 left-0 h-full bg-emerald-500 transition-all duration-300 shadow-[0_0_10px_rgba(16,185,129,0.5)]" 
+                                        <div
+                                            className="absolute top-0 left-0 h-full bg-emerald-500 transition-all duration-300 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
                                             style={{ width: `${spotifyData?.isPlaying ? spotifyProgress : progress}%` }}
                                         />
-                                        <input 
-                                            type="range" 
+                                        <input
+                                            type="range"
                                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                             value={spotifyData?.isPlaying ? spotifyProgress : progress}
                                             onChange={handleProgressChange}
@@ -683,7 +684,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
                                 </div>
 
                                 <div className="flex flex-col gap-2">
-                                    <button 
+                                    <button
                                         onClick={() => {
                                             if (spotifyData?.isPlaying && spotifyData?.songUrl) {
                                                 window.open(spotifyData.songUrl, '_blank', 'noopener,noreferrer');
@@ -695,7 +696,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
                                     >
                                         {isPlaying ? <Pause size={14} /> : <Play size={14} className="ml-0.5" />}
                                     </button>
-                                    <button 
+                                    <button
                                         onClick={toggleMute}
                                         disabled={spotifyData?.isPlaying}
                                         className="w-10 h-10 rounded-full bg-white/0 flex items-center justify-center text-zinc-700 hover:text-white transition-all"
@@ -726,12 +727,12 @@ export default function MeClient({ config }: { config: MeConfig }) {
                                 <Reveal key={item.id} direction="up" delay={0.4}>
                                     <div className="group relative aspect-square rounded-xl overflow-hidden border border-white/10 bg-zinc-900/50">
                                         {item.type === 'video' ? (
-                                            <video 
-                                                src={item.url} 
-                                                className="w-full h-full object-cover" 
+                                            <video
+                                                src={item.url}
+                                                className="w-full h-full object-cover"
                                                 controls={false}
                                                 muted
-                                                loop 
+                                                loop
                                                 playsInline
                                                 onMouseOver={e => e.currentTarget.play()}
                                                 onMouseOut={e => e.currentTarget.pause()}
@@ -778,20 +779,20 @@ export default function MeClient({ config }: { config: MeConfig }) {
                             )}
 
                             <form onSubmit={handleSubscribe} className="space-y-3">
-                                <input 
-                                    type="email" 
-                                    name="email" 
+                                <input
+                                    type="email"
+                                    name="email"
                                     required
-                                    placeholder="your@email.com" 
+                                    placeholder="your@email.com"
                                     className="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-xl text-sm text-white placeholder-zinc-600 font-mono focus:border-white/40 transition-all outline-none"
                                 />
-                                <button 
-                                    type="submit" 
+                                <button
+                                    type="submit"
                                     disabled={isSubmitting}
                                     className="w-full py-3 bg-white text-black font-bold rounded-xl text-xs uppercase tracking-widest hover:opacity-90 transition-all font-mono disabled:opacity-50"
-                                    style={{ 
-                                        backgroundColor: config.profile.themeColor || '#ffffff', 
-                                        color: config.profile.themeColor ? (parseInt(config.profile.themeColor.replace('#', ''), 16) > 0xffffff / 2 ? '#000' : '#fff') : '#000' 
+                                    style={{
+                                        backgroundColor: config.profile.themeColor || '#ffffff',
+                                        color: config.profile.themeColor ? (parseInt(config.profile.themeColor.replace('#', ''), 16) > 0xffffff / 2 ? '#000' : '#fff') : '#000'
                                     }}
                                 >
                                     {isSubmitting ? 'CONNECTING...' : 'Subscribe_'}
@@ -809,7 +810,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
                             <Reveal key={res.id} direction="up" delay={0.5 + (i * 0.05)}>
                                 {res.type === 'gallery' ? (
                                     <Link href={res.url} className="link-card block aspect-[16/5] rounded-xl group relative overflow-hidden bg-white/[0.03] border border-white/[0.08] backdrop-blur-xl">
-                                        <div 
+                                        <div
                                             className="absolute inset-0 bg-cover bg-center grayscale-[40%] group-hover:grayscale-0 transition-all duration-500"
                                             style={{ backgroundImage: `url('${config.profile.bannerUrl || "https://objects.avrxt.in/images/aviorxt_01.jpg"}')` }}
                                         ></div>
@@ -834,8 +835,8 @@ export default function MeClient({ config }: { config: MeConfig }) {
                                     <Link href={res.url} className="link-card block rounded-xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] transition-all group overflow-hidden">
                                         {res.previewUrl && (
                                             <div className="relative h-28 overflow-hidden">
-                                                <img src={res.previewUrl} 
-                                                    alt="Post Preview" 
+                                                <img src={res.previewUrl}
+                                                    alt="Post Preview"
                                                     className="w-full h-full object-cover opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-700" />
                                                 <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d0d] via-transparent to-transparent"></div>
                                                 <div className="absolute top-3 left-4">
