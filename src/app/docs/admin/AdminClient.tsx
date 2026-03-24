@@ -63,10 +63,11 @@ function ImageUploadModal({ onInsert, onClose }: { onInsert: (md: string) => voi
         setError('');
         try {
             const res = await getPresignedR2UrlAction(file.name, file.type);
-            if (res.error) throw new Error(res.error);
+            if ('error' in res && res.error) throw new Error(res.error);
+            const { uploadUrl, publicUrl } = res as { uploadUrl: string; publicUrl: string; key: string; success: boolean };
             // Upload directly to R2
-            await fetch(res.uploadUrl!, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } });
-            onInsert(`![${alt || file.name}](${res.publicUrl})`);
+            await fetch(uploadUrl, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } });
+            onInsert(`![${alt || file.name}](${publicUrl})`);
         } catch (err: any) {
             setError(err.message);
         } finally {
