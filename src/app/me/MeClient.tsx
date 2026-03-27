@@ -130,26 +130,63 @@ export default function MeClient({ config }: { config: MeConfig }) {
         let pollTimeout: number | undefined;
         let inFlight: AbortController | null = null;
 
-        const normalize = (input: any) => {
+        const normalizeIncoming = (input: any) => {
             if (!input) return null;
             const isPlaying = Boolean(input.isPlaying ?? input.is_playing);
             const title = input.title ?? null;
             const artist = input.artist ?? null;
             const albumImageUrl = input.albumImageUrl ?? input.album_image_url ?? null;
             const songUrl = input.songUrl ?? input.song_url ?? null;
-            const progressMs = Number(input.progressMs ?? input.progress_ms ?? 0) || 0;
-            const durationMs = Number(input.durationMs ?? input.duration_ms ?? 0) || 0;
+            const progressRaw = input.progressMs ?? input.progress_ms;
+            const durationRaw = input.durationMs ?? input.duration_ms;
+            const progressMs =
+                progressRaw === null || typeof progressRaw === 'undefined' ? undefined : (Number(progressRaw) || 0);
+            const durationMs =
+                durationRaw === null || typeof durationRaw === 'undefined' ? undefined : (Number(durationRaw) || 0);
             const updatedAt = input.updatedAt ?? input.updated_at ?? null;
             return { isPlaying, title, artist, albumImageUrl, songUrl, progressMs, durationMs, updatedAt };
         };
 
         const applySpotifyState = (raw: any) => {
-            const data = normalize(raw);
+            const data = normalizeIncoming(raw);
             if (!data?.title) return;
 
             if (data.isPlaying) {
-                setSpotifyData({ ...data, fetchedAt: Date.now() });
                 setSpotifyLast(null);
+                setSpotifyData((prev: any) => {
+                    const prevTitle = prev?.title;
+                    const prevArtist = prev?.artist;
+                    const prevSongUrl = prev?.songUrl;
+                    const sameTrack = Boolean(
+                        prev &&
+                        ((prevSongUrl && data.songUrl && prevSongUrl === data.songUrl) ||
+                            (prevTitle === data.title && prevArtist === data.artist))
+                    );
+
+                    const next: any = {
+                        ...(sameTrack ? prev : {}),
+                        ...data,
+                    };
+
+                    // Preserve duration/progress if upstream update is partial.
+                    if (typeof data.durationMs === 'undefined' && typeof prev?.durationMs !== 'undefined') {
+                        next.durationMs = prev.durationMs;
+                    }
+                    if (typeof data.progressMs === 'undefined' && typeof prev?.progressMs !== 'undefined') {
+                        next.progressMs = prev.progressMs;
+                    }
+
+                    // Update `fetchedAt` when we got a fresh progress reading; otherwise keep the previous base.
+                    if (typeof data.progressMs !== 'undefined') {
+                        next.fetchedAt = Date.now();
+                    } else if (typeof prev?.fetchedAt !== 'undefined') {
+                        next.fetchedAt = prev.fetchedAt;
+                    } else {
+                        next.fetchedAt = Date.now();
+                    }
+
+                    return next;
+                });
             } else {
                 setSpotifyData(null);
                 setSpotifyLast(data);
@@ -196,7 +233,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
                 const data = await res.json();
                 if (!isActive) return;
 
-                const normalized = normalize(data);
+                const normalized = normalizeIncoming(data);
                 applySpotifyState(normalized);
                 scheduleNext(normalized?.isPlaying ? 5_000 : 15_000);
             } catch (e: any) {
@@ -224,7 +261,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'spotify_status' },
                 (payload) => {
-                    const mapped = normalize(payload.new);
+                    const mapped = normalizeIncoming(payload.new);
                     if (!mapped) return;
                     applySpotifyState(mapped);
                     scheduleNext(mapped.isPlaying ? 5_000 : 15_000);
