@@ -111,15 +111,32 @@ export default function MeClient({ config }: { config: MeConfig }) {
     const ytPlayerRef = useRef<any>(null);
     const ytPendingPlayRef = useRef(false);
     const [ytReady, setYtReady] = useState(false);
+    const spotifyProgressBarRef = useRef<HTMLDivElement>(null);
+    const spotifyProgressLastStateUpdateRef = useRef<number>(0);
 
     useEffect(() => {
         setIsMounted(true);
-        if (weatherEnabled) fetchWeather();
         setQuote(pickQuote());
-        const lanyardInterval = setInterval(fetchLanyard, 10000);
-        fetchLanyard();
-        return () => clearInterval(lanyardInterval);
+        return () => { };
     }, []);
+
+    // Weather: only fetch when enabled
+    useEffect(() => {
+        if (!weatherEnabled) return;
+        fetchWeather();
+        // Weather doesn't need aggressive polling (limits-friendly).
+    }, [weatherEnabled]);
+
+    // Discord Presence: only fetch when auto mode + id present, poll every 60s
+    useEffect(() => {
+        const isAutoPresence = config.profile.presence?.mode === 'auto';
+        const discordId = config.profile.presence?.discordId;
+        if (!isAutoPresence || !discordId) return;
+
+        fetchLanyard();
+        const id = window.setInterval(fetchLanyard, 60000);
+        return () => window.clearInterval(id);
+    }, [config.profile.presence?.mode, config.profile.presence?.discordId]);
 
     // 2. Spotify Listeners (Realtime & Local Progress)
     useEffect(() => {
@@ -235,7 +252,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
 
                 const normalized = normalizeIncoming(data);
                 applySpotifyState(normalized);
-                scheduleNext(normalized?.isPlaying ? 5_000 : 15_000);
+                scheduleNext(15_000);
             } catch (e: any) {
                 if (e?.name === 'AbortError') return;
                 console.error('Spotify sync failed', e);
@@ -264,7 +281,8 @@ export default function MeClient({ config }: { config: MeConfig }) {
                     const mapped = normalizeIncoming(payload.new);
                     if (!mapped) return;
                     applySpotifyState(mapped);
-                    scheduleNext(mapped.isPlaying ? 5_000 : 15_000);
+                    // Keep polling cadence predictable (limits-friendly).
+                    scheduleNext(15_000);
                 }
             )
             .subscribe();
@@ -279,46 +297,44 @@ export default function MeClient({ config }: { config: MeConfig }) {
         };
     }, [spotifyEnabled]);
 
-    // 3. Smooth Progress Interpolation (60fps)
+    // 3. Spotify Progress Prediction (limits-friendly; avoids polling spam)
     useEffect(() => {
-        if (!spotifyData?.isPlaying || !spotifyData?.durationMs) return;
+        const barEl = spotifyProgressBarRef.current;
 
-        let frame: number;
-        const startTimestamp = Date.now();
-        const startProgress = spotifyData.progressMs;
-
-        const animate = () => {
-            const elapsed = Date.now() - startTimestamp;
-            const currentProgress = Math.min(startProgress + elapsed, spotifyData.durationMs);
-            const percentage = (currentProgress / spotifyData.durationMs) * 100;
-
-            setSpotifyProgress(percentage);
-            frame = requestAnimationFrame(animate);
-        };
-
-        frame = requestAnimationFrame(animate);
-        return () => cancelAnimationFrame(frame);
-    }, [spotifyData?.isPlaying, spotifyData?.progressMs, spotifyData?.title]);
-
-    useEffect(() => {
         if (!spotifyData?.isPlaying || !spotifyData?.durationMs) {
             setSpotifyProgress(0);
+            if (barEl) barEl.style.width = '0%';
             return;
         }
 
-        const base = spotifyData.progressMs || 0;
-        const duration = spotifyData.durationMs;
-        const fetchedAt = spotifyData.fetchedAt || Date.now();
+        const durationMs = Number(spotifyData.durationMs) || 0;
+        if (durationMs <= 0) return;
 
-        const tick = () => {
-            const elapsed = Date.now() - fetchedAt;
-            const pct = Math.min(100, Math.max(0, ((base + elapsed) / duration) * 100));
-            setSpotifyProgress(pct);
+        let raf = 0;
+        const baseProgressMs = Number(spotifyData.progressMs) || 0;
+        const baseTimestamp = Number(spotifyData.fetchedAt) || Date.now();
+
+        const animate = () => {
+            const elapsed = Date.now() - baseTimestamp;
+            const current = Math.min(baseProgressMs + elapsed, durationMs);
+            const pct = Math.min(100, Math.max(0, (current / durationMs) * 100));
+
+            if (barEl) {
+                barEl.style.width = `${pct}%`;
+            }
+
+            // Throttle state updates (range input / react render) to reduce churn.
+            const now = Date.now();
+            if (now - spotifyProgressLastStateUpdateRef.current >= 250) {
+                spotifyProgressLastStateUpdateRef.current = now;
+                setSpotifyProgress(pct);
+            }
+
+            raf = requestAnimationFrame(animate);
         };
 
-        tick();
-        const id = window.setInterval(tick, 500);
-        return () => window.clearInterval(id);
+        raf = requestAnimationFrame(animate);
+        return () => cancelAnimationFrame(raf);
     }, [spotifyData?.isPlaying, spotifyData?.durationMs, spotifyData?.progressMs, spotifyData?.fetchedAt]);
 
     useEffect(() => {
@@ -832,7 +848,8 @@ export default function MeClient({ config }: { config: MeConfig }) {
 
                                     <div className="mt-3 relative h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
                                         <div
-                                            className="absolute top-0 left-0 h-full bg-emerald-500 transition-all duration-300 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
+                                            ref={spotifyProgressBarRef}
+                                            className="absolute top-0 left-0 h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
                                             style={{ width: `${spotifyData?.isPlaying ? spotifyProgress : progress}%` }}
                                         />
                                         <input

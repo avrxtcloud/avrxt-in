@@ -39,7 +39,7 @@ export default function StatusBadge() {
 
         fetchStatus();
 
-        const interval = setInterval(fetchStatus, 15000);
+        const interval = setInterval(fetchStatus, 60000);
         const refreshOnFocus = () => {
             if (document.visibilityState === 'visible') {
                 fetchStatus();
