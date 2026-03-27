@@ -31,6 +31,7 @@ import Reveal from '@/components/Reveal';
 import Tilt from '@/components/Tilt';
 import Magnetic from '@/components/Magnetic';
 import { MeConfig } from '@/lib/me-config';
+import { edgeUrl } from '@/lib/edge';
 
 const iconMap: Record<string, any> = {
     Github, Twitter, Instagram, Linkedin, LinkedinIcon, Youtube, ExternalLink, Mail
@@ -98,6 +99,8 @@ export default function MeClient({ config }: { config: MeConfig }) {
     const [spotifyLast, setSpotifyLast] = useState<any>(null);
     const [spotifyProgress, setSpotifyProgress] = useState(0);
     const spotifyEnabled = Boolean(config.music.spotifyEnabled);
+    const spotifyAmbientEnabled = Boolean(config.music.spotifyAmbientEnabled);
+    const weatherEnabled = config.profile.weatherEnabled !== false;
     const [lanyardData, setLanyardData] = useState<any>(null);
     const [isMounted, setIsMounted] = useState(false);
     const [subscribeStatus, setSubscribeStatus] = useState<{ type: 'success' | 'error' | null, message: string }>({ type: null, message: '' });
@@ -111,7 +114,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
 
     useEffect(() => {
         setIsMounted(true);
-        fetchWeather();
+        if (weatherEnabled) fetchWeather();
         setQuote(pickQuote());
         const lanyardInterval = setInterval(fetchLanyard, 10000);
         fetchLanyard();
@@ -123,30 +126,96 @@ export default function MeClient({ config }: { config: MeConfig }) {
         if (!spotifyEnabled) return;
 
         const supabase = createClient();
-        let syncTimeout: any;
+        let isActive = true;
+        let pollTimeout: number | undefined;
+        let inFlight: AbortController | null = null;
 
-        // Fetch initial state
-        const triggerSync = async () => {
-            try {
-                const baseUrl = window.location.origin;
-                const spotifyApiUrl = process.env.NEXT_PUBLIC_SPOTIFY_API_URL || "https://jirohobyxsihzbpopsse.supabase.co/functions/v1/v2-now-playing";
-                const res = await fetch(spotifyApiUrl, { cache: 'no-store' });
-                const data = await res.json();
-                if (data?.title) {
-                    if (data.isPlaying) {
-                        setSpotifyData({ ...data, fetchedAt: Date.now() });
-                        setSpotifyLast(null);
-                    } else {
-                        setSpotifyData(null);
-                        setSpotifyLast(data);
-                    }
-                }
-            } catch (e) {
-                console.error('Initial Spotify sync failed', e);
+        const normalize = (input: any) => {
+            if (!input) return null;
+            const isPlaying = Boolean(input.isPlaying ?? input.is_playing);
+            const title = input.title ?? null;
+            const artist = input.artist ?? null;
+            const albumImageUrl = input.albumImageUrl ?? input.album_image_url ?? null;
+            const songUrl = input.songUrl ?? input.song_url ?? null;
+            const progressMs = Number(input.progressMs ?? input.progress_ms ?? 0) || 0;
+            const durationMs = Number(input.durationMs ?? input.duration_ms ?? 0) || 0;
+            const updatedAt = input.updatedAt ?? input.updated_at ?? null;
+            return { isPlaying, title, artist, albumImageUrl, songUrl, progressMs, durationMs, updatedAt };
+        };
+
+        const applySpotifyState = (raw: any) => {
+            const data = normalize(raw);
+            if (!data?.title) return;
+
+            if (data.isPlaying) {
+                setSpotifyData({ ...data, fetchedAt: Date.now() });
+                setSpotifyLast(null);
+            } else {
+                setSpotifyData(null);
+                setSpotifyLast(data);
             }
         };
 
-        triggerSync();
+        const clearPoll = () => {
+            if (pollTimeout) window.clearTimeout(pollTimeout);
+            pollTimeout = undefined;
+        };
+
+        const scheduleNext = (ms: number) => {
+            if (!isActive) return;
+            clearPoll();
+            pollTimeout = window.setTimeout(() => {
+                void syncNowPlaying();
+            }, ms);
+        };
+
+        const syncNowPlaying = async () => {
+            if (!isActive) return;
+
+            // Reduce background churn; resync quickly when the tab returns.
+            if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+                scheduleNext(30_000);
+                return;
+            }
+
+            try {
+                const spotifyApiUrl = process.env.NEXT_PUBLIC_SPOTIFY_API_URL || edgeUrl('/v1/spotify/now-playing');
+
+                try {
+                    inFlight?.abort();
+                } catch { }
+                inFlight = new AbortController();
+
+                const res = await fetch(spotifyApiUrl, {
+                    cache: 'no-store',
+                    signal: inFlight.signal,
+                    headers: { accept: 'application/json' }
+                });
+                if (!res.ok) throw new Error(`Spotify sync failed: ${res.status}`);
+
+                const data = await res.json();
+                if (!isActive) return;
+
+                const normalized = normalize(data);
+                applySpotifyState(normalized);
+                scheduleNext(normalized?.isPlaying ? 5_000 : 15_000);
+            } catch (e: any) {
+                if (e?.name === 'AbortError') return;
+                console.error('Spotify sync failed', e);
+                scheduleNext(15_000);
+            }
+        };
+
+        const onVisibilityOrFocus = () => {
+            if (!isActive) return;
+            if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+                void syncNowPlaying();
+            }
+        };
+        window.addEventListener('focus', onVisibilityOrFocus);
+        document.addEventListener('visibilitychange', onVisibilityOrFocus);
+
+        void syncNowPlaying();
 
         // Subscribe to Realtime Updates (Directly from status table)
         const channel = supabase
@@ -155,34 +224,21 @@ export default function MeClient({ config }: { config: MeConfig }) {
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'spotify_status' },
                 (payload) => {
-                    const data = payload.new as any;
-                    if (!data) return;
-
-                    const mapped = {
-                        isPlaying: data.is_playing,
-                        title: data.title,
-                        artist: data.artist,
-                        albumImageUrl: data.album_image_url,
-                        songUrl: data.song_url,
-                        progressMs: data.progress_ms,
-                        durationMs: data.duration_ms,
-                        updatedAt: data.updated_at
-                    };
-
-                    if (mapped.isPlaying) {
-                        setSpotifyData({ ...mapped, fetchedAt: Date.now() });
-                        setSpotifyLast(null);
-                    } else {
-                        setSpotifyData(null);
-                        setSpotifyLast(mapped);
-                    }
+                    const mapped = normalize(payload.new);
+                    if (!mapped) return;
+                    applySpotifyState(mapped);
+                    scheduleNext(mapped.isPlaying ? 5_000 : 15_000);
                 }
             )
             .subscribe();
 
         return () => {
+            isActive = false;
             supabase.removeChannel(channel);
-            clearTimeout(syncTimeout);
+            clearPoll();
+            try { inFlight?.abort(); } catch { }
+            window.removeEventListener('focus', onVisibilityOrFocus);
+            document.removeEventListener('visibilitychange', onVisibilityOrFocus);
         };
     }, [spotifyEnabled]);
 
@@ -352,7 +408,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
 
     const fetchWeather = async () => {
         try {
-            const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=13.0827&longitude=80.2707&current=temperature_2m,relative_humidity_2m,wind_speed_10m');
+            const res = await fetch(edgeUrl('/v1/fnc/geo/forecast?latitude=13.0827&longitude=80.2707&current=temperature_2m,relative_humidity_2m,wind_speed_10m'), { cache: 'no-store' });
             const data = await res.json();
             setWeather(data.current);
         } catch (e) { console.error(e); }
@@ -361,7 +417,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
     const fetchLanyard = async () => {
         try {
             if (!config.profile.presence?.discordId) return;
-            const res = await fetch(`https://api.lanyard.rest/v1/users/${config.profile.presence.discordId}`);
+            const res = await fetch(edgeUrl(`/v1/realtime/dc-presence/${config.profile.presence.discordId}`), { cache: 'no-store' });
             const data = await res.json();
             if (data.success) {
                 setLanyardData(data.data);
@@ -522,6 +578,12 @@ export default function MeClient({ config }: { config: MeConfig }) {
     const displayStatus = isManual ? config.profile.status?.text || 'Online' : lanyardData?.discord_status || 'offline';
     const statusColor = isManual ? config.profile.status?.color || 'green' : (lanyardData?.discord_status || 'offline');
 
+    const showSpotifyAmbient =
+        spotifyEnabled &&
+        spotifyAmbientEnabled &&
+        Boolean(spotifyData?.isPlaying) &&
+        Boolean(spotifyData?.albumImageUrl);
+
     const getStatusBg = (color: string) => {
         if (color === 'online' || color === 'green') return 'bg-emerald-500';
         if (color === 'idle' || color === 'yellow') return 'bg-yellow-500';
@@ -543,6 +605,22 @@ export default function MeClient({ config }: { config: MeConfig }) {
             )}>
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,#1a1a1a_0%,#000_70%)]"></div>
+
+                {/* Spotify Ambient (cover-based) */}
+                {showSpotifyAmbient && (
+                    <div className="absolute inset-0 pointer-events-none transition-opacity duration-700">
+                        <div
+                            className="absolute inset-0 opacity-35 blur-3xl scale-125 saturate-150"
+                            style={{
+                                backgroundImage: `url(${spotifyData.albumImageUrl})`,
+                                backgroundSize: 'cover',
+                                backgroundPosition: 'center',
+                            }}
+                        />
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_15%,rgba(16,185,129,0.18),transparent_55%),radial-gradient(circle_at_75%_85%,rgba(59,130,246,0.14),transparent_60%)] mix-blend-screen opacity-80" />
+                        <div className="absolute inset-0 bg-black/55" />
+                    </div>
+                )}
 
                 {/* Immersive Glows */}
                 <div className={cn(
@@ -582,13 +660,15 @@ export default function MeClient({ config }: { config: MeConfig }) {
                     <p className="text-[10px] font-mono text-zinc-500 tracking-[0.3em] uppercase mb-4">
                         {config.profile.handle} // {config.profile.location || 'PLANET_EARTH'}
                     </p>
-                    <div className="flex items-center justify-center gap-4 text-[9px] font-mono text-zinc-600 bg-white/5 py-1.5 px-4 rounded-full border border-white/5 backdrop-blur">
+                    {weatherEnabled && (
+                        <div className="flex items-center justify-center gap-4 text-[9px] font-mono text-zinc-600 bg-white/5 py-1.5 px-4 rounded-full border border-white/5 backdrop-blur">
                         <span className="flex items-center gap-1.5"><Cloud size={10} /> {weather?.temperature_2m || '??'}°C</span>
                         <span className="opacity-20">|</span>
                         <span className="flex items-center gap-1.5"><Droplets size={10} /> {weather?.relative_humidity_2m || '??'}%</span>
                         <span className="opacity-20">|</span>
                         <span className="flex items-center gap-1.5"><Wind size={10} /> {weather?.wind_speed_10m || '??'}km/h</span>
-                    </div>
+                        </div>
+                    )}
                     <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
                         <span className="text-[8px] font-mono text-emerald-500 uppercase tracking-widest">{displayStatus}</span>
                     </div>

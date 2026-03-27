@@ -32,6 +32,7 @@ export interface MeConfig {
         audioUrl: string;
         youtubeVideoId?: string;
         spotifyEnabled?: boolean;
+        spotifyAmbientEnabled?: boolean;
     };
     links: MeLink[];
     gallery: {
@@ -75,7 +76,8 @@ export const defaultMeConfig: MeConfig = {
         coverUrl: "https://objects.avrxt.in/assets/ab67616d0000b273a0934c15232680a3afc9da6e.jpeg",
         audioUrl: "https://objects.avrxt.in/assets/SpotiDownloader.com%20-%20her%20-%20JVKE.mp3",
         youtubeVideoId: "",
-        spotifyEnabled: false
+        spotifyEnabled: false,
+        spotifyAmbientEnabled: false
     },
     links: [
         { id: '1', name: 'Instagram', url: 'https://instagram.com/avr.me', icon: 'Instagram', type: 'social' },

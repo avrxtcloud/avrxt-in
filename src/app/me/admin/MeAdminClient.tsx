@@ -17,6 +17,7 @@ import { createClient } from '@/utils/supabase/client';
 import { disconnectSpotifyAction } from '@/app/actions/spotify';
 import { searchYouTubeAction } from '@/app/actions/youtube';
 import { uploadToR2Action, getPresignedR2UrlAction, deleteFromR2Action } from '@/app/actions/r2';
+import { edgeUrl } from '@/lib/edge';
 
 interface MeAdminClientProps {
     initialConfig: MeConfig;
@@ -320,14 +321,14 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                                             <button
                                                 onClick={() => setConfig({
                                                     ...config,
-                                                    profile: { ...config.profile, weatherEnabled: !config.profile.weatherEnabled }
+                                                    profile: { ...config.profile, weatherEnabled: config.profile.weatherEnabled === false }
                                                 })}
                                                 className={cn(
                                                     "px-3 py-1 rounded-md text-[9px] font-bold font-mono transition-all uppercase",
-                                                    config.profile.weatherEnabled ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-zinc-800 text-zinc-500 border border-white/5"
+                                                    config.profile.weatherEnabled !== false ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-zinc-800 text-zinc-500 border border-white/5"
                                                 )}
                                             >
-                                                {config.profile.weatherEnabled ? 'ENABLED' : 'DISABLED'}
+                                                {config.profile.weatherEnabled !== false ? 'ENABLED' : 'DISABLED'}
                                             </button>
                                         </div>
                                         <div className="flex gap-2">
@@ -344,7 +345,7 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                                                     if (!query) return;
                                                     setSaveStatus('SEARCHING_GEO...');
                                                     try {
-                                                        const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=en&format=json`);
+                                                        const res = await fetch(edgeUrl(`/v1/fnc/geo/search?name=${encodeURIComponent(query)}&count=5&language=en&format=json`), { cache: 'no-store' });
                                                         const data = await res.json();
                                                         if (data.results) {
                                                             // We'll use a simple alert/prompt for now or just take the first one
@@ -553,7 +554,15 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                                     <div className="flex items-center gap-3">
                                         <span className="text-[10px] font-mono text-zinc-500 uppercase">Live_Spotify</span>
                                         <button
-                                            onClick={() => setConfig({ ...config, music: { ...config.music, spotifyEnabled: !config.music.spotifyEnabled } })}
+                                            onClick={() => setConfig({
+                                                ...config,
+                                                music: {
+                                                    ...config.music,
+                                                    spotifyEnabled: !config.music.spotifyEnabled,
+                                                    // When disabling Spotify, also disable ambient to prevent confusion.
+                                                    spotifyAmbientEnabled: config.music.spotifyEnabled ? false : config.music.spotifyAmbientEnabled
+                                                }
+                                            })}
                                             className={cn(
                                                 "w-10 h-5 rounded-full transition-all relative border",
                                                 config.music.spotifyEnabled ? "bg-emerald-500/20 border-emerald-500/50" : "bg-white/5 border-white/10"
@@ -565,6 +574,33 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                                             )}></div>
                                         </button>
                                     </div>
+                                </div>
+
+                                <div className="flex justify-between items-center">
+                                    <div className="flex items-center gap-2">
+                                        <span className={cn(
+                                            "text-[10px] font-mono uppercase",
+                                            config.music.spotifyEnabled ? "text-zinc-500" : "text-zinc-700"
+                                        )}>Spotify_Ambient</span>
+                                        <span className="text-[9px] font-mono text-zinc-700 uppercase">(cover_glow)</span>
+                                    </div>
+                                    <button
+                                        onClick={() => setConfig({
+                                            ...config,
+                                            music: { ...config.music, spotifyAmbientEnabled: !config.music.spotifyAmbientEnabled }
+                                        })}
+                                        disabled={!config.music.spotifyEnabled}
+                                        className={cn(
+                                            "w-10 h-5 rounded-full transition-all relative border",
+                                            !config.music.spotifyEnabled && "opacity-40 cursor-not-allowed",
+                                            config.music.spotifyAmbientEnabled ? "bg-emerald-500/20 border-emerald-500/50" : "bg-white/5 border-white/10"
+                                        )}
+                                    >
+                                        <div className={cn(
+                                            "absolute top-1 w-2.5 h-2.5 rounded-full transition-all",
+                                            config.music.spotifyAmbientEnabled ? "right-1 bg-emerald-500" : "left-1 bg-zinc-600"
+                                        )}></div>
+                                    </button>
                                 </div>
 
                                 {/* Spotify Connection */}
