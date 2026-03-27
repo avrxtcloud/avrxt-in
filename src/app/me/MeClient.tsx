@@ -106,6 +106,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
     const [isMounted, setIsMounted] = useState(false);
     const [subscribeStatus, setSubscribeStatus] = useState<{ type: 'success' | 'error' | null, message: string }>({ type: null, message: '' });
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [activeBadgeId, setActiveBadgeId] = useState<string | null>(null);
 
     const audioRef = useRef<HTMLAudioElement>(null);
     const ytContainerRef = useRef<HTMLDivElement>(null);
@@ -831,7 +832,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
                         <div className="mt-3 flex items-center justify-center gap-2 flex-wrap">
                             {guildTag && (
                                 <div
-                                    className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/5 border border-white/10 backdrop-blur"
+                                    className="group relative inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/5 border border-white/10 backdrop-blur"
                                     aria-label={`Discord primary guild tag ${guildTag}`}
                                     title={`Discord Server Tag: ${guildTag}`}
                                 >
@@ -849,19 +850,38 @@ export default function MeClient({ config }: { config: MeConfig }) {
                                         />
                                     )}
                                     <span className="text-[9px] font-mono text-zinc-300 uppercase tracking-widest">{guildTag}</span>
+                                    <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-black/80 px-2 py-1 text-[9px] font-mono text-zinc-200 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100">
+                                        {`Server Tag: ${guildTag}`}
+                                    </span>
                                 </div>
                             )}
 
-                            {discordBadges.map((badge) => (
-                                <img
-                                    key={badge.id}
-                                    src={badge.src}
-                                    alt={badge.label}
-                                    title={badge.label}
-                                    className="w-5 h-5 opacity-90 hover:opacity-100 transition-opacity"
-                                    loading="lazy"
-                                />
-                            ))}
+                            {discordBadges.map((badge) => {
+                                const isActive = activeBadgeId === badge.id;
+                                return (
+                                    <button
+                                        key={badge.id}
+                                        type="button"
+                                        aria-label={badge.label}
+                                        onClick={() => setActiveBadgeId((prev) => (prev === badge.id ? null : badge.id))}
+                                        className="group relative"
+                                    >
+                                        <img
+                                            src={badge.src}
+                                            alt={badge.label}
+                                            className="w-5 h-5 opacity-90 hover:opacity-100 transition-opacity"
+                                            loading="lazy"
+                                            draggable={false}
+                                        />
+                                        <span className={cn(
+                                            "pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-black/80 px-2 py-1 text-[9px] font-mono text-zinc-200 transition-opacity duration-200",
+                                            isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100"
+                                        )}>
+                                            {badge.label}
+                                        </span>
+                                    </button>
+                                );
+                            })}
                         </div>
                     )}
                 </Reveal>
