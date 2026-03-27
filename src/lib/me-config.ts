@@ -23,6 +23,8 @@ export interface MeConfig {
             discordId?: string;
             serverTagEnabled?: boolean;
             badgesEnabled?: boolean;
+            badgesMode?: 'auto' | 'manual';
+            badgesManual?: Record<string, boolean>;
         };
         location?: string;
         weatherEnabled?: boolean;
@@ -70,7 +72,14 @@ export const defaultMeConfig: MeConfig = {
         bannerUrl: "https://objects.avrxt.in/images/aviorxt_01.jpg",
         themeColor: "#10b981",
         status: { text: 'Online', color: 'green' },
-        presence: { mode: 'manual', discordId: '1269352892146384957', serverTagEnabled: true, badgesEnabled: true }
+        presence: {
+            mode: 'manual',
+            discordId: '1269352892146384957',
+            serverTagEnabled: true,
+            badgesEnabled: true,
+            badgesMode: 'auto',
+            badgesManual: {}
+        }
     },
     music: {
         title: "her",

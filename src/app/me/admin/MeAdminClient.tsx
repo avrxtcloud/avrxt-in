@@ -18,6 +18,7 @@ import { disconnectSpotifyAction } from '@/app/actions/spotify';
 import { searchYouTubeAction } from '@/app/actions/youtube';
 import { uploadToR2Action, getPresignedR2UrlAction, deleteFromR2Action } from '@/app/actions/r2';
 import { edgeUrl } from '@/lib/edge';
+import { DISCORD_BADGES } from '@/lib/discord-badges';
 
 interface MeAdminClientProps {
     initialConfig: MeConfig;
@@ -534,6 +535,40 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                                                     "text-[10px] font-mono uppercase tracking-widest",
                                                     config.profile.presence?.discordId ? "text-zinc-500" : "text-zinc-700"
                                                 )}>Discord_Badges</span>
+                                            <button
+                                                onClick={() => {
+                                                    const currentlyEnabled = config.profile.presence?.badgesEnabled !== false;
+                                                    const nextEnabled = !currentlyEnabled;
+                                                    setConfig({
+                                                        ...config,
+                                                        profile: {
+                                                            ...config.profile,
+                                                            presence: {
+                                                                ...config.profile.presence,
+                                                                mode: config.profile.presence?.mode || 'manual',
+                                                                badgesEnabled: nextEnabled,
+                                                                badgesMode: nextEnabled ? (config.profile.presence?.badgesMode || 'auto') : 'auto'
+                                                            }
+                                                        }
+                                                    });
+                                                }}
+                                                className={cn(
+                                                    "w-10 h-5 rounded-full transition-all relative border",
+                                                    (config.profile.presence?.badgesEnabled !== false) ? "bg-emerald-500/20 border-emerald-500/50" : "bg-white/5 border-white/10"
+                                                )}
+                                            >
+                                                    <div className={cn(
+                                                        "absolute top-1 w-2.5 h-2.5 rounded-full transition-all",
+                                                        (config.profile.presence?.badgesEnabled !== false) ? "right-1 bg-emerald-500" : "left-1 bg-zinc-600"
+                                                    )}></div>
+                                                </button>
+                                            </div>
+
+                                            <div className="mt-4 flex items-center justify-between gap-3">
+                                                <span className={cn(
+                                                    "text-[10px] font-mono uppercase tracking-widest",
+                                                    config.profile.presence?.discordId ? "text-zinc-500" : "text-zinc-700"
+                                                )}>Badges_Mode</span>
                                                 <button
                                                     onClick={() => setConfig({
                                                         ...config,
@@ -542,21 +577,69 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                                                             presence: {
                                                                 ...config.profile.presence,
                                                                 mode: config.profile.presence?.mode || 'manual',
-                                                                badgesEnabled: !(config.profile.presence?.badgesEnabled !== false),
+                                                                badgesMode: (config.profile.presence?.badgesMode || 'auto') === 'auto' ? 'manual' : 'auto'
                                                             }
                                                         }
                                                     })}
+                                                    disabled={config.profile.presence?.badgesEnabled === false}
                                                     className={cn(
-                                                        "w-10 h-5 rounded-full transition-all relative border",
-                                                        (config.profile.presence?.badgesEnabled !== false) ? "bg-emerald-500/20 border-emerald-500/50" : "bg-white/5 border-white/10"
+                                                        "px-3 py-1 rounded-md text-[9px] font-bold font-mono transition-all uppercase border",
+                                                        config.profile.presence?.badgesEnabled === false && "opacity-40 cursor-not-allowed",
+                                                        (config.profile.presence?.badgesMode || 'auto') === 'manual'
+                                                            ? "bg-purple-500/15 text-purple-300 border-purple-500/30"
+                                                            : "bg-blue-500/15 text-blue-300 border-blue-500/30"
                                                     )}
                                                 >
-                                                    <div className={cn(
-                                                        "absolute top-1 w-2.5 h-2.5 rounded-full transition-all",
-                                                        (config.profile.presence?.badgesEnabled !== false) ? "right-1 bg-emerald-500" : "left-1 bg-zinc-600"
-                                                    )}></div>
+                                                    {(config.profile.presence?.badgesMode || 'auto') === 'manual' ? 'MANUAL' : 'AUTO'}
                                                 </button>
                                             </div>
+
+                                            {(config.profile.presence?.badgesEnabled !== false) && ((config.profile.presence?.badgesMode || 'auto') === 'manual') && (
+                                                <div className="mt-3 rounded-xl bg-black/30 border border-white/5 p-3">
+                                                    <div className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest mb-2">Select_Badges</div>
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        {DISCORD_BADGES.map((badge) => {
+                                                            const enabled = Boolean(config.profile.presence?.badgesManual?.[badge.id]);
+                                                            return (
+                                                                <label
+                                                                    key={badge.id}
+                                                                    className={cn(
+                                                                        "flex items-center gap-2 px-2 py-1.5 rounded-lg border cursor-pointer select-none transition-all",
+                                                                        enabled ? "bg-emerald-500/10 border-emerald-500/20" : "bg-white/0 border-white/5 hover:border-white/10"
+                                                                    )}
+                                                                >
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={enabled}
+                                                                        onChange={(e) => {
+                                                                            const next = Boolean(e.target.checked);
+                                                                            setConfig({
+                                                                                ...config,
+                                                                                profile: {
+                                                                                    ...config.profile,
+                                                                                    presence: {
+                                                                                        ...config.profile.presence,
+                                                                                        mode: config.profile.presence?.mode || 'manual',
+                                                                                        badgesMode: 'manual',
+                                                                                        badgesManual: {
+                                                                                            ...(config.profile.presence?.badgesManual || {}),
+                                                                                            [badge.id]: next
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            });
+                                                                        }}
+                                                                        className="accent-emerald-500"
+                                                                    />
+                                                                    <span className="text-[9px] font-mono text-zinc-300 truncate" title={badge.label}>
+                                                                        {badge.label}
+                                                                    </span>
+                                                                </label>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>

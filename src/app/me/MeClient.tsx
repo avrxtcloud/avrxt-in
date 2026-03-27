@@ -32,6 +32,7 @@ import Tilt from '@/components/Tilt';
 import Magnetic from '@/components/Magnetic';
 import { MeConfig } from '@/lib/me-config';
 import { edgeUrl } from '@/lib/edge';
+import { DISCORD_BADGES } from '@/lib/discord-badges';
 
 const iconMap: Record<string, any> = {
     Github, Twitter, Instagram, Linkedin, LinkedinIcon, Youtube, ExternalLink, Mail
@@ -132,10 +133,20 @@ export default function MeClient({ config }: { config: MeConfig }) {
         const discordId = config.profile.presence?.discordId;
         if (!discordId) return;
 
+        const manualSelected = Object.keys(config.profile.presence?.badgesManual || {})
+            .filter((k) => Boolean((config.profile.presence?.badgesManual || {})[k]))
+            .sort()
+            .join('|');
+
+        const badgesEnabled = config.profile.presence?.badgesEnabled !== false;
+        const badgesMode = config.profile.presence?.badgesMode || 'auto';
+        const badgesNeeded = badgesEnabled && (badgesMode === 'auto' || manualSelected.length > 0);
+        const serverTagNeeded = config.profile.presence?.serverTagEnabled !== false;
+
         const presenceNeeded =
             config.profile.presence?.mode === 'auto' ||
-            config.profile.presence?.serverTagEnabled !== false ||
-            config.profile.presence?.badgesEnabled !== false;
+            serverTagNeeded ||
+            badgesNeeded;
         if (!presenceNeeded) return;
 
         fetchLanyard();
@@ -145,7 +156,10 @@ export default function MeClient({ config }: { config: MeConfig }) {
         config.profile.presence?.mode,
         config.profile.presence?.discordId,
         config.profile.presence?.serverTagEnabled,
-        config.profile.presence?.badgesEnabled
+        config.profile.presence?.badgesEnabled,
+        config.profile.presence?.badgesMode,
+        // Re-evaluate polling when the selected manual badges change.
+        JSON.stringify(config.profile.presence?.badgesManual || {})
     ]);
 
     // 2. Spotify Listeners (Realtime & Local Progress)
@@ -694,37 +708,35 @@ export default function MeClient({ config }: { config: MeConfig }) {
 
     const discordUser = lanyardData?.discord_user as any;
     const showServerTag = config.profile.presence?.serverTagEnabled !== false;
-    const showDiscordBadges = config.profile.presence?.badgesEnabled !== false;
+    const badgesEnabled = config.profile.presence?.badgesEnabled !== false;
+    const badgesMode = config.profile.presence?.badgesMode || 'auto';
+    const manualBadges = config.profile.presence?.badgesManual || {};
 
-    const discordBadges: { id: string; label: string; src: string }[] = [];
     const publicFlags = Number(discordUser?.public_flags ?? discordUser?.publicFlags ?? 0) || 0;
-    const addBadge = (bit: number, id: string, label: string, src: string) => {
-        if ((publicFlags & bit) === bit) discordBadges.push({ id, label, src });
-    };
+    const hasDecorations = Boolean(discordUser?.avatar_decoration_data);
+    const hasCollectibles = Boolean(discordUser?.collectibles);
 
-    // Common public_flags -> badge icons (local, Discord-style SVGs).
-    if (showDiscordBadges) {
-        addBadge(1 << 0, 'staff', 'Discord Staff', '/discord/badges/discordstaff.svg');
-        addBadge(1 << 1, 'partner', 'Partnered Server Owner', '/discord/badges/discordpartner.svg');
-        addBadge(1 << 2, 'hypesquad_events', 'HypeSquad Events', '/discord/badges/hypesquadevents.svg');
-        addBadge(1 << 3, 'bug_hunter_1', 'Bug Hunter', '/discord/badges/discordbughunter1.svg');
-        addBadge(1 << 6, 'hypesquad_bravery', 'HypeSquad Bravery', '/discord/badges/hypesquadbravery.svg');
-        addBadge(1 << 7, 'hypesquad_brilliance', 'HypeSquad Brilliance', '/discord/badges/hypesquadbrilliance.svg');
-        addBadge(1 << 8, 'hypesquad_balance', 'HypeSquad Balance', '/discord/badges/hypesquadbalance.svg');
-        addBadge(1 << 9, 'early_supporter', 'Early Supporter', '/discord/badges/discordearlysupporter.svg');
-        addBadge(1 << 14, 'bug_hunter_2', 'Bug Hunter (Gold)', '/discord/badges/discordbughunter2.svg');
-        addBadge(1 << 17, 'early_verified_bot_dev', 'Early Verified Bot Developer', '/discord/badges/discordbotdev.svg');
-        addBadge(1 << 18, 'certified_moderator', 'Certified Moderator', '/discord/badges/discordmod.svg');
-        addBadge(1 << 19, 'interactions', 'Bot HTTP Interactions', '/discord/badges/supportscommands.svg');
-        addBadge(1 << 22, 'active_developer', 'Active Developer', '/discord/badges/activedeveloper.svg');
+    // Best-effort detection for newer profile collectibles.
+    const collectibleStr = JSON.stringify(discordUser?.collectibles || {});
+    const hasOrb = /orb/i.test(collectibleStr) || /orb/i.test(String(discordUser?.avatar_decoration_data?.asset || ''));
+    const hasQuest = /quest/i.test(collectibleStr) || /quest/i.test(JSON.stringify(lanyardData?.kv || {}));
 
-        // Nitro is not a public_flag; infer it from decorations/collectibles presence.
-        const hasDecorations = Boolean(discordUser?.avatar_decoration_data);
-        const hasCollectibles = Boolean(discordUser?.collectibles);
-        if (hasDecorations || hasCollectibles) {
-            discordBadges.push({ id: 'nitro', label: 'Discord Nitro', src: '/discord/badges/discordnitro.svg' });
+    const discordBadges = DISCORD_BADGES.filter((badge) => {
+        if (!badgesEnabled) return false;
+
+        if (badgesMode === 'manual') {
+            return Boolean(manualBadges[badge.id]);
         }
-    }
+
+        // auto
+        if (typeof badge.bit === 'number') {
+            return (publicFlags & badge.bit) === badge.bit;
+        }
+        if (badge.detection === 'nitro') return hasDecorations || hasCollectibles;
+        if (badge.detection === 'orb') return hasOrb;
+        if (badge.detection === 'quest') return hasQuest;
+        return false;
+    });
 
     const primaryGuild = discordUser?.primary_guild;
     const guildTag = showServerTag ? ((primaryGuild?.tag as string | undefined) || '') : '';
@@ -821,11 +833,13 @@ export default function MeClient({ config }: { config: MeConfig }) {
                                 <div
                                     className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/5 border border-white/10 backdrop-blur"
                                     aria-label={`Discord primary guild tag ${guildTag}`}
+                                    title={`Discord Server Tag: ${guildTag}`}
                                 >
                                     {guildTagBadgeUrl && (
                                         <img
                                             src={guildTagBadgeUrl}
                                             alt={`Discord server tag badge (${guildTag})`}
+                                            title={`Discord server tag badge (${guildTag})`}
                                             className="w-4 h-4 rounded-[4px]"
                                             loading="lazy"
                                             onError={(e) => {
