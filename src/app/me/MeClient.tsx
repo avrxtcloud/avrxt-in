@@ -633,12 +633,30 @@ export default function MeClient({ config }: { config: MeConfig }) {
     // Hydration guard for everything that depends on isMounted
     if (!isMounted) return null;
 
-    const profileName = config.profile.handle.startsWith('@') ? config.profile.handle.slice(1) : config.profile.handle;
+    const rawHandle = (config.profile.handle || '').trim();
+    const headingName = rawHandle.startsWith('@') ? rawHandle.slice(1) : rawHandle;
+
+    const formatLocation = (raw: string | undefined | null) => {
+        const value = (raw || '').trim() || 'PLANET_EARTH';
+        const parts = value.split(',').map((p) => p.trim()).filter(Boolean);
+        if (parts.length >= 2) {
+            const city = parts[0].toUpperCase();
+            const country = parts.slice(1).join(', ').toUpperCase();
+            return `// ${city} // ${country}`;
+        }
+        return `// ${value.toUpperCase()}`;
+    };
 
     // Presence Logic
     const isManual = config.profile.presence?.mode === 'manual';
-    const displayStatus = isManual ? config.profile.status?.text || 'Online' : lanyardData?.discord_status || 'offline';
-    const statusColor = isManual ? config.profile.status?.color || 'green' : (lanyardData?.discord_status || 'offline');
+    const discordStatus = (lanyardData?.discord_status || 'offline') as string;
+    const displayStatus = isManual
+        ? config.profile.status?.text || 'Online'
+        : (discordStatus === 'online' ? 'Active'
+            : discordStatus === 'idle' ? 'Sleep'
+                : discordStatus === 'dnd' ? 'DND'
+                    : 'Offline');
+    const statusColor = isManual ? (config.profile.status?.color || 'green') : discordStatus;
 
     const showSpotifyAmbient =
         spotifyEnabled &&
@@ -646,14 +664,23 @@ export default function MeClient({ config }: { config: MeConfig }) {
         Boolean(spotifyData?.isPlaying) &&
         Boolean(spotifyData?.albumImageUrl);
 
-    const getStatusBg = (color: string) => {
-        if (color === 'online' || color === 'green') return 'bg-emerald-500';
-        if (color === 'idle' || color === 'yellow') return 'bg-yellow-500';
-        if (color === 'dnd' || color === 'red') return 'bg-red-500';
-        if (color === 'blue') return 'bg-blue-500';
-        if (color === 'purple') return 'bg-purple-500';
-        return 'bg-zinc-600';
+    const getPresenceClasses = (color: string) => {
+        // Auto presence (Lanyard): online/idle/dnd/offline
+        if (color === 'online') return { dot: 'bg-emerald-500', text: 'text-emerald-400' };
+        if (color === 'idle') return { dot: 'bg-yellow-500', text: 'text-yellow-400' };
+        if (color === 'dnd') return { dot: 'bg-red-500', text: 'text-red-400' };
+        if (color === 'offline') return { dot: 'bg-zinc-600', text: 'text-zinc-400' };
+
+        // Manual palette fallback
+        if (color === 'green') return { dot: 'bg-emerald-500', text: 'text-emerald-400' };
+        if (color === 'yellow') return { dot: 'bg-yellow-500', text: 'text-yellow-400' };
+        if (color === 'red') return { dot: 'bg-red-500', text: 'text-red-400' };
+        if (color === 'blue') return { dot: 'bg-blue-500', text: 'text-blue-400' };
+        if (color === 'purple') return { dot: 'bg-purple-500', text: 'text-purple-400' };
+        return { dot: 'bg-zinc-600', text: 'text-zinc-400' };
     };
+
+    const presenceClasses = getPresenceClasses(statusColor);
 
     return (
         <main className={cn(
@@ -713,15 +740,17 @@ export default function MeClient({ config }: { config: MeConfig }) {
                         />
                         <div className={cn(
                             "absolute bottom-1 right-1 w-5 h-5 rounded-full border-4 border-black z-20 transition-colors duration-500",
-                            getStatusBg(statusColor)
+                            presenceClasses.dot
                         )} />
                     </div>
                     <h1 className="text-3xl font-black tracking-tighter mb-1 uppercase italic">
-                        {profileName}<span className="text-emerald-500">_</span>
+                        {headingName}
                     </h1>
-                    <p className="text-[10px] font-mono text-zinc-500 tracking-[0.3em] uppercase mb-4">
-                        {config.profile.handle} // {config.profile.location || 'PLANET_EARTH'}
-                    </p>
+                    {weatherEnabled && (
+                        <p className="text-[10px] font-mono text-zinc-500 tracking-[0.3em] uppercase mb-4">
+                            {formatLocation(config.profile.location)}
+                        </p>
+                    )}
                     {weatherEnabled && (
                         <div className="flex items-center justify-center gap-4 text-[9px] font-mono text-zinc-600 bg-white/5 py-1.5 px-4 rounded-full border border-white/5 backdrop-blur">
                         <span className="flex items-center gap-1.5"><Cloud size={10} /> {weather?.temperature_2m || '??'}°C</span>
@@ -731,8 +760,8 @@ export default function MeClient({ config }: { config: MeConfig }) {
                         <span className="flex items-center gap-1.5"><Wind size={10} /> {weather?.wind_speed_10m || '??'}km/h</span>
                         </div>
                     )}
-                    <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
-                        <span className="text-[8px] font-mono text-emerald-500 uppercase tracking-widest">{displayStatus}</span>
+                    <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-white/5 border border-white/10">
+                        <span className={cn("text-[8px] font-mono uppercase tracking-widest", presenceClasses.text)}>{displayStatus}</span>
                     </div>
                 </Reveal>
 
