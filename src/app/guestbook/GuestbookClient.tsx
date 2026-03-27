@@ -5,6 +5,7 @@ import { User } from '@supabase/supabase-js';
 import { Github, Send, Trash2, Edit3, X, Check, ShieldAlert, TriangleAlert } from 'lucide-react';
 import { signInWithGithub, postMessage, deleteMessage, updateMessage } from '@/app/actions/guestbook';
 import { cn } from '@/lib/utils';
+import AutoLinkPreview from '@/components/AutoLinkPreview';
 
 interface Message {
     id: string;
@@ -253,7 +254,10 @@ export default function GuestbookClient({ user, initialMessages }: { user: User 
                                             </div>
                                         </div>
                                     ) : (
-                                        <p className="text-zinc-400 text-sm leading-relaxed">{msg.message}</p>
+                                        <>
+                                            <p className="text-zinc-400 text-sm leading-relaxed">{msg.message}</p>
+                                            <AutoLinkPreview text={msg.message} />
+                                        </>
                                     )}
 
                                     {/* Actions for owner */}

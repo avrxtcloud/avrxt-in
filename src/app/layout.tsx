@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import CustomCursor from "@/components/CustomCursor";
 import ParallaxBackground from "@/components/ParallaxBackground";
 import PremiumLoader from "@/components/PremiumLoader";
+import GlobalLinkPreview from "@/components/GlobalLinkPreview";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -80,6 +81,7 @@ export default function RootLayout({
         <main className="relative z-10 min-h-screen">
           {children}
         </main>
+        <GlobalLinkPreview />
         <Footer />
       </body>
     </html>
