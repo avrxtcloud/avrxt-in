@@ -45,6 +45,7 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                         profile: {
                             ...prev.profile,
                             presence: {
+                                ...prev.profile.presence,
                                 mode: prev.profile.presence?.mode || 'auto',
                                 discordId: discordId
                             }
@@ -453,6 +454,7 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                                                     profile: {
                                                         ...config.profile,
                                                         presence: {
+                                                            ...config.profile.presence,
                                                             mode: config.profile.presence?.mode || 'manual',
                                                             discordId: ''
                                                         }
@@ -489,6 +491,7 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                                                     profile: {
                                                         ...config.profile,
                                                         presence: {
+                                                            ...config.profile.presence,
                                                             mode: config.profile.presence?.mode || 'manual',
                                                             discordId: e.target.value
                                                         }
@@ -496,6 +499,64 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                                                 })}
                                                 placeholder="Discord User ID"
                                             />
+
+                                            <div className="mt-3 flex items-center justify-between gap-3">
+                                                <span className={cn(
+                                                    "text-[10px] font-mono uppercase tracking-widest",
+                                                    config.profile.presence?.discordId ? "text-zinc-500" : "text-zinc-700"
+                                                )}>Server_Tag</span>
+                                                <button
+                                                    onClick={() => setConfig({
+                                                        ...config,
+                                                        profile: {
+                                                            ...config.profile,
+                                                            presence: {
+                                                                ...config.profile.presence,
+                                                                mode: config.profile.presence?.mode || 'manual',
+                                                                serverTagEnabled: !(config.profile.presence?.serverTagEnabled !== false),
+                                                            }
+                                                        }
+                                                    })}
+                                                    className={cn(
+                                                        "w-10 h-5 rounded-full transition-all relative border",
+                                                        (config.profile.presence?.serverTagEnabled !== false) ? "bg-emerald-500/20 border-emerald-500/50" : "bg-white/5 border-white/10"
+                                                    )}
+                                                >
+                                                    <div className={cn(
+                                                        "absolute top-1 w-2.5 h-2.5 rounded-full transition-all",
+                                                        (config.profile.presence?.serverTagEnabled !== false) ? "right-1 bg-emerald-500" : "left-1 bg-zinc-600"
+                                                    )}></div>
+                                                </button>
+                                            </div>
+
+                                            <div className="mt-3 flex items-center justify-between gap-3">
+                                                <span className={cn(
+                                                    "text-[10px] font-mono uppercase tracking-widest",
+                                                    config.profile.presence?.discordId ? "text-zinc-500" : "text-zinc-700"
+                                                )}>Discord_Badges</span>
+                                                <button
+                                                    onClick={() => setConfig({
+                                                        ...config,
+                                                        profile: {
+                                                            ...config.profile,
+                                                            presence: {
+                                                                ...config.profile.presence,
+                                                                mode: config.profile.presence?.mode || 'manual',
+                                                                badgesEnabled: !(config.profile.presence?.badgesEnabled !== false),
+                                                            }
+                                                        }
+                                                    })}
+                                                    className={cn(
+                                                        "w-10 h-5 rounded-full transition-all relative border",
+                                                        (config.profile.presence?.badgesEnabled !== false) ? "bg-emerald-500/20 border-emerald-500/50" : "bg-white/5 border-white/10"
+                                                    )}
+                                                >
+                                                    <div className={cn(
+                                                        "absolute top-1 w-2.5 h-2.5 rounded-full transition-all",
+                                                        (config.profile.presence?.badgesEnabled !== false) ? "right-1 bg-emerald-500" : "left-1 bg-zinc-600"
+                                                    )}></div>
+                                                </button>
+                                            </div>
                                         </div>
                                     )}
                                 </div>

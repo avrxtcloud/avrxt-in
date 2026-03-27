@@ -132,12 +132,21 @@ export default function MeClient({ config }: { config: MeConfig }) {
         const discordId = config.profile.presence?.discordId;
         if (!discordId) return;
 
-        fetchLanyard();
-        if (config.profile.presence?.mode !== 'auto') return;
+        const presenceNeeded =
+            config.profile.presence?.mode === 'auto' ||
+            config.profile.presence?.serverTagEnabled !== false ||
+            config.profile.presence?.badgesEnabled !== false;
+        if (!presenceNeeded) return;
 
+        fetchLanyard();
         const id = window.setInterval(fetchLanyard, 60000);
         return () => window.clearInterval(id);
-    }, [config.profile.presence?.mode, config.profile.presence?.discordId]);
+    }, [
+        config.profile.presence?.mode,
+        config.profile.presence?.discordId,
+        config.profile.presence?.serverTagEnabled,
+        config.profile.presence?.badgesEnabled
+    ]);
 
     // 2. Spotify Listeners (Realtime & Local Progress)
     useEffect(() => {
@@ -684,27 +693,41 @@ export default function MeClient({ config }: { config: MeConfig }) {
     const presenceClasses = getPresenceClasses(statusColor);
 
     const discordUser = lanyardData?.discord_user as any;
+    const showServerTag = config.profile.presence?.serverTagEnabled !== false;
+    const showDiscordBadges = config.profile.presence?.badgesEnabled !== false;
+
     const discordBadges: { id: string; label: string; src: string }[] = [];
-    const publicFlags = typeof discordUser?.public_flags === 'number' ? (discordUser.public_flags as number) : 0;
+    const publicFlags = Number(discordUser?.public_flags ?? discordUser?.publicFlags ?? 0) || 0;
     const addBadge = (bit: number, id: string, label: string, src: string) => {
         if ((publicFlags & bit) === bit) discordBadges.push({ id, label, src });
     };
 
     // Common public_flags -> badge icons (local, Discord-style SVGs).
-    addBadge(1 << 0, 'staff', 'Discord Staff', '/discord/badges/discordstaff.svg');
-    addBadge(1 << 1, 'partner', 'Partnered Server Owner', '/discord/badges/discordpartner.svg');
-    addBadge(1 << 2, 'hypesquad_events', 'HypeSquad Events', '/discord/badges/hypesquadevents.svg');
-    addBadge(1 << 3, 'bug_hunter_1', 'Bug Hunter', '/discord/badges/discordbughunter1.svg');
-    addBadge(1 << 6, 'hypesquad_bravery', 'HypeSquad Bravery', '/discord/badges/hypesquadbravery.svg');
-    addBadge(1 << 7, 'hypesquad_brilliance', 'HypeSquad Brilliance', '/discord/badges/hypesquadbrilliance.svg');
-    addBadge(1 << 8, 'hypesquad_balance', 'HypeSquad Balance', '/discord/badges/hypesquadbalance.svg');
-    addBadge(1 << 9, 'early_supporter', 'Early Supporter', '/discord/badges/discordearlysupporter.svg');
-    addBadge(1 << 14, 'bug_hunter_2', 'Bug Hunter (Gold)', '/discord/badges/discordbughunter2.svg');
-    addBadge(1 << 17, 'early_verified_bot_dev', 'Early Verified Bot Developer', '/discord/badges/discordbotdev.svg');
-    addBadge(1 << 22, 'active_developer', 'Active Developer', '/discord/badges/activedeveloper.svg');
+    if (showDiscordBadges) {
+        addBadge(1 << 0, 'staff', 'Discord Staff', '/discord/badges/discordstaff.svg');
+        addBadge(1 << 1, 'partner', 'Partnered Server Owner', '/discord/badges/discordpartner.svg');
+        addBadge(1 << 2, 'hypesquad_events', 'HypeSquad Events', '/discord/badges/hypesquadevents.svg');
+        addBadge(1 << 3, 'bug_hunter_1', 'Bug Hunter', '/discord/badges/discordbughunter1.svg');
+        addBadge(1 << 6, 'hypesquad_bravery', 'HypeSquad Bravery', '/discord/badges/hypesquadbravery.svg');
+        addBadge(1 << 7, 'hypesquad_brilliance', 'HypeSquad Brilliance', '/discord/badges/hypesquadbrilliance.svg');
+        addBadge(1 << 8, 'hypesquad_balance', 'HypeSquad Balance', '/discord/badges/hypesquadbalance.svg');
+        addBadge(1 << 9, 'early_supporter', 'Early Supporter', '/discord/badges/discordearlysupporter.svg');
+        addBadge(1 << 14, 'bug_hunter_2', 'Bug Hunter (Gold)', '/discord/badges/discordbughunter2.svg');
+        addBadge(1 << 17, 'early_verified_bot_dev', 'Early Verified Bot Developer', '/discord/badges/discordbotdev.svg');
+        addBadge(1 << 18, 'certified_moderator', 'Certified Moderator', '/discord/badges/discordmod.svg');
+        addBadge(1 << 19, 'interactions', 'Bot HTTP Interactions', '/discord/badges/supportscommands.svg');
+        addBadge(1 << 22, 'active_developer', 'Active Developer', '/discord/badges/activedeveloper.svg');
+
+        // Nitro is not a public_flag; infer it from decorations/collectibles presence.
+        const hasDecorations = Boolean(discordUser?.avatar_decoration_data);
+        const hasCollectibles = Boolean(discordUser?.collectibles);
+        if (hasDecorations || hasCollectibles) {
+            discordBadges.push({ id: 'nitro', label: 'Discord Nitro', src: '/discord/badges/discordnitro.svg' });
+        }
+    }
 
     const primaryGuild = discordUser?.primary_guild;
-    const guildTag = (primaryGuild?.tag as string | undefined) || '';
+    const guildTag = showServerTag ? ((primaryGuild?.tag as string | undefined) || '') : '';
     const guildId = (primaryGuild?.identity_guild_id as string | undefined) || '';
     const guildBadgeHash = (primaryGuild?.badge as string | undefined) || '';
     const guildTagBadgeUrl =
@@ -795,11 +818,14 @@ export default function MeClient({ config }: { config: MeConfig }) {
                     {(guildTag || discordBadges.length > 0) && (
                         <div className="mt-3 flex items-center justify-center gap-2 flex-wrap">
                             {guildTag && (
-                                <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/5 border border-white/10 backdrop-blur">
+                                <div
+                                    className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/5 border border-white/10 backdrop-blur"
+                                    aria-label={`Discord primary guild tag ${guildTag}`}
+                                >
                                     {guildTagBadgeUrl && (
                                         <img
                                             src={guildTagBadgeUrl}
-                                            alt="Server Tag"
+                                            alt={`Discord server tag badge (${guildTag})`}
                                             className="w-4 h-4 rounded-[4px]"
                                             loading="lazy"
                                             onError={(e) => {
