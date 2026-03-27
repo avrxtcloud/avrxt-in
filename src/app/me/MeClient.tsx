@@ -146,6 +146,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
         let isActive = true;
         let pollTimeout: number | undefined;
         let inFlight: AbortController | null = null;
+        let lastNowPlayingFetchAt = 0;
 
         const normalizeIncoming = (input: any) => {
             if (!input) return null;
@@ -231,6 +232,14 @@ export default function MeClient({ config }: { config: MeConfig }) {
                 scheduleNext(30_000);
                 return;
             }
+
+            // Vercel free-plan friendly throttle (even on focus/visibility triggers).
+            const now = Date.now();
+            if (lastNowPlayingFetchAt && now - lastNowPlayingFetchAt < 15_000) {
+                scheduleNext(15_000 - (now - lastNowPlayingFetchAt));
+                return;
+            }
+            lastNowPlayingFetchAt = now;
 
             try {
                 const spotifyApiUrl = process.env.NEXT_PUBLIC_SPOTIFY_API_URL || edgeUrl('/v1/spotify/now-playing');
