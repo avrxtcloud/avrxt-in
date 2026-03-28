@@ -5,11 +5,12 @@ import type { Metadata } from 'next';
 import { buildPageMetadata } from '@/lib/page-metadata';
 
 type PageProps = {
-    searchParams?: Record<string, string | string[] | undefined>;
+    searchParams?: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined>;
 };
 
 export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
-    const share = typeof searchParams?.share === 'string' ? searchParams.share : undefined;
+    const resolved = await Promise.resolve(searchParams ?? {});
+    const share = typeof resolved.share === 'string' ? resolved.share : undefined;
     const path = share ? `/guestbook?share=${share}` : '/guestbook';
 
     return buildPageMetadata({

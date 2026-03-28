@@ -4,11 +4,12 @@ import { buildPageMetadata } from '@/lib/page-metadata';
 import MeClient from './MeClient';
 
 type PageProps = {
-    searchParams?: Record<string, string | string[] | undefined>;
+    searchParams?: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined>;
 };
 
 export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
-    const share = typeof searchParams?.share === 'string' ? searchParams.share : undefined;
+    const resolved = await Promise.resolve(searchParams ?? {});
+    const share = typeof resolved.share === 'string' ? resolved.share : undefined;
     const path = share ? `/me?share=${share}` : '/me';
 
     return buildPageMetadata({
@@ -25,4 +26,3 @@ export default async function MePage() {
     const config = await getMeConfigAction();
     return <MeClient config={config} />;
 }
-
