@@ -70,14 +70,44 @@ export async function GET(request: NextRequest) {
 
       await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
 
-      await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 20000 });
+
+      // Wait for client-side hydration to paint real content (many routes render mostly Client Components).
+      try {
+        await page.waitForFunction(
+          () => {
+            const main = document.querySelector('main');
+            if (!main) return false;
+            if (main.querySelector('*')) return true;
+            return (main.textContent || '').trim().length > 0;
+          },
+          { timeout: 12000 }
+        );
+      } catch {
+        // Best-effort: still attempt a screenshot even if hydration is slow.
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 800));
 
       await page.addStyleTag({
         content: `
           *, *::before, *::after { animation: none !important; transition: none !important; }
           html, body { background: #050505 !important; }
         `,
+      });
+
+      // Hide full-screen overlays/loaders and cursors that can block the viewport during the capture.
+      await page.evaluate(() => {
+        const elements = Array.from(document.querySelectorAll<HTMLElement>('body *'));
+        for (const el of elements) {
+          const style = getComputedStyle(el);
+          if (style.position !== 'fixed') continue;
+          const z = Number.parseInt(style.zIndex || '0', 10);
+          if (!Number.isFinite(z) || z < 9000) continue;
+          const rect = el.getBoundingClientRect();
+          if (rect.width < window.innerWidth * 0.9 || rect.height < window.innerHeight * 0.9) continue;
+          el.style.display = 'none';
+        }
       });
 
       const png = (await page.screenshot({ type: 'png' })) as Uint8Array;
