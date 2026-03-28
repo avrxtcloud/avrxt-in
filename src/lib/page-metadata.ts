@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { ogSize } from '@/lib/og-image';
 
 type PageMetadataInput = {
   title: string;
@@ -8,6 +9,7 @@ type PageMetadataInput = {
 };
 
 const SITE_NAME = 'avrxt';
+const DEFAULT_OG_IMAGE_ALT = 'avrxt.in preview image';
 
 function withSiteSuffix(title: string) {
   const normalized = title.trim();
@@ -25,6 +27,13 @@ export function buildPageMetadata({
   const fullTitle = withSiteSuffix(title);
   const normalizedDescription = description.trim();
 
+  const openGraphImage = {
+    url: '/opengraph-image',
+    width: ogSize.width,
+    height: ogSize.height,
+    alt: DEFAULT_OG_IMAGE_ALT,
+  } as const;
+
   const metadata: Metadata = {
     title: fullTitle,
     description: normalizedDescription,
@@ -34,11 +43,20 @@ export function buildPageMetadata({
       description: normalizedDescription,
       type: 'website',
       siteName: 'avrxt.in',
+      images: [openGraphImage],
     },
     twitter: {
       card: 'summary_large_image',
       title: fullTitle,
       description: normalizedDescription,
+      images: [
+        {
+          url: '/twitter-image',
+          width: ogSize.width,
+          height: ogSize.height,
+          alt: DEFAULT_OG_IMAGE_ALT,
+        },
+      ],
     },
   };
 

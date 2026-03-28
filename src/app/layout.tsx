@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import CustomCursor from "@/components/CustomCursor";
 import ParallaxBackground from "@/components/ParallaxBackground";
 import PremiumLoader from "@/components/PremiumLoader";
+import { ogSize } from "@/lib/og-image";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -31,9 +32,25 @@ const instrumentSerif = Instrument_Serif({
 });
 
 const siteFavicon = "https://cdn.avrxt.in/icons/favicon.jpg";
-const metadataBase = process.env.NEXT_PUBLIC_SITE_URL
-  ? new URL(process.env.NEXT_PUBLIC_SITE_URL)
-  : new URL("https://avrxt.in");
+const metadataBase = new URL(
+  process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
+    "https://www.avrxt.in"
+);
+
+const openGraphImage = {
+  url: "/opengraph-image",
+  width: ogSize.width,
+  height: ogSize.height,
+  alt: "avrxt.in preview image",
+} as const;
+
+const twitterImage = {
+  url: "/twitter-image",
+  width: ogSize.width,
+  height: ogSize.height,
+  alt: "avrxt.in preview image",
+} as const;
 
 export const metadata: Metadata = {
   metadataBase,
@@ -49,11 +66,13 @@ export const metadata: Metadata = {
     description: "avrxt: Full Stack Developer specializing in React, Node.js, API development, and AI automation. Building secure, scalable, and enterprise-ready web solutions.",
     type: "website",
     siteName: "avrxt.in",
+    images: [openGraphImage],
   },
   twitter: {
     card: "summary_large_image",
     title: "avrxt | Full Stack Developer & Tech Innovator",
     description: "avrxt: Full Stack Developer specializing in React, Node.js, API development, and AI automation. Building secure, scalable, and enterprise-ready web solutions.",
+    images: [twitterImage],
   },
 };
 
