@@ -5,6 +5,15 @@ import { defaultMeConfig, type MeConfig } from '@/lib/me-config';
 
 const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
+const SCREENSHOT_TIMEOUT_MS = 6500;
+
+function siteBaseUrl(): string {
+  const base =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '') ||
+    'https://www.avrxt.in';
+  return base.replace(/\/+$/, '');
+}
 
 function clampText(value: string, max: number): string {
   const normalized = value.replace(/\s+/g, ' ').trim();
@@ -17,6 +26,62 @@ function normalizePath(input: string | null): string {
   if (!raw.startsWith('/')) return '/';
   if (raw.includes('://') || raw.includes('..')) return '/';
   return raw.length > 200 ? '/' : raw;
+}
+
+function shouldScreenshot(path: string): boolean {
+  if (path === '/me' || path.startsWith('/me?')) return true;
+  if (path === '/guestbook' || path.startsWith('/guestbook?')) return true;
+  return false;
+}
+
+async function proxyPageScreenshot(path: string): Promise<Response | null> {
+  const base = siteBaseUrl();
+  const target = new URL(path, base);
+  target.searchParams.set('og', '1');
+
+  try {
+    const timeoutSignal =
+      typeof (AbortSignal as unknown as { timeout?: (ms: number) => AbortSignal }).timeout === 'function'
+        ? (AbortSignal as unknown as { timeout: (ms: number) => AbortSignal }).timeout(SCREENSHOT_TIMEOUT_MS)
+        : undefined;
+
+    const screenshotUrl = new URL('https://api.microlink.io/');
+    screenshotUrl.searchParams.set('url', target.toString());
+    screenshotUrl.searchParams.set('screenshot', 'true');
+    screenshotUrl.searchParams.set('meta', 'false');
+    screenshotUrl.searchParams.set('embed', 'screenshot.url');
+    screenshotUrl.searchParams.set('viewport.width', String(OG_WIDTH));
+    screenshotUrl.searchParams.set('viewport.height', String(OG_HEIGHT));
+
+    let res = await fetch(screenshotUrl.toString(), {
+      redirect: 'follow',
+      headers: {
+        accept: 'image/*,*/*;q=0.8',
+        'user-agent': 'avrxt-og/1.0 (+https://www.avrxt.in)',
+      },
+      signal: timeoutSignal,
+    });
+
+    const contentType = res.headers.get('content-type') || '';
+    if (!res.ok || !contentType.startsWith('image/')) {
+      const wp = `https://s0.wp.com/mshots/v1/${encodeURIComponent(target.toString())}?w=${OG_WIDTH}&h=${OG_HEIGHT}`;
+      res = await fetch(wp, { redirect: 'follow', signal: timeoutSignal });
+      const wpType = res.headers.get('content-type') || '';
+      if (!res.ok || !wpType.startsWith('image/')) return null;
+    }
+
+    const finalType = res.headers.get('content-type') || 'image/png';
+
+    return new Response(res.body, {
+      status: 200,
+      headers: {
+        'content-type': finalType,
+        'cache-control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+      },
+    });
+  } catch {
+    return null;
+  }
 }
 
 function baseStyle() {
@@ -506,6 +571,11 @@ export async function renderDynamicOgImage(requestUrl: string) {
   const { searchParams } = new URL(requestUrl);
   const path = normalizePath(searchParams.get('path'));
 
+  if (shouldScreenshot(path)) {
+    const screenshot = await proxyPageScreenshot(path);
+    if (screenshot) return screenshot;
+  }
+
   const fonts = await getOgFonts();
 
   let body: React.ReactNode;
@@ -590,4 +660,3 @@ export async function renderDynamicOgImage(requestUrl: string) {
     }
   );
 }
-

@@ -1,18 +1,25 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function PremiumLoader() {
-    const [loading, setLoading] = useState(true);
+    const searchParams = useSearchParams();
+    const isOgRender = searchParams.get('og') === '1';
+    const [loading, setLoading] = useState(() => !isOgRender);
 
     useEffect(() => {
+        if (isOgRender) {
+            setLoading(false);
+            return;
+        }
         const timer = setTimeout(() => {
             setLoading(false);
         }, 2000); // 2 seconds high-end intro
 
         return () => clearTimeout(timer);
-    }, []);
+    }, [isOgRender]);
 
     return (
         <AnimatePresence>
