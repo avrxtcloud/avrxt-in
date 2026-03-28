@@ -31,8 +31,14 @@ export function buildPageMetadata({
 
   const normalizedPath = path?.trim();
   const effectivePath = normalizedPath && normalizedPath.startsWith('/') ? normalizedPath : undefined;
+  const ogVersion =
+    process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 12) ||
+    process.env.VERCEL_DEPLOYMENT_ID ||
+    process.env.NEXT_PUBLIC_OG_VERSION ||
+    'dev';
+
   const imageUrl = effectivePath
-    ? `/api/og?path=${encodeURIComponent(effectivePath)}`
+    ? `/api/og?${new URLSearchParams({ path: effectivePath, v: ogVersion }).toString()}`
     : '/opengraph-image';
 
   const openGraphImage = {
