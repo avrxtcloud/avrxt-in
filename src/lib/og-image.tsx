@@ -24,6 +24,11 @@ export function renderOgImage(
   { title, description, eyebrow }: OgImageInput,
   options?: { fonts?: OgFont[] }
 ) {
+  const sans =
+    'system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"';
+  const mono =
+    '"Space Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
+
   return new ImageResponse(
     (
       <div
@@ -36,7 +41,7 @@ export function renderOgImage(
           padding: 64,
           color: 'white',
           backgroundColor: '#050505',
-          fontFamily: 'Outfit',
+          fontFamily: sans,
           backgroundImage: [
             'radial-gradient(circle at 20% 20%, rgba(16,185,129,0.20), transparent 55%)',
             'radial-gradient(circle at 85% 25%, rgba(59,130,246,0.18), transparent 55%)',
@@ -134,7 +139,7 @@ export function renderOgImage(
                   boxShadow: '0 0 32px rgba(16,185,129,0.40)',
                 }}
               />
-              <div style={{ fontSize: 20, letterSpacing: 3, opacity: 0.9, fontFamily: 'Space Mono' }}>avrxt.in</div>
+              <div style={{ fontSize: 20, letterSpacing: 3, opacity: 0.9, fontFamily: mono }}>avrxt.in</div>
             </div>
             <div
               style={{
@@ -142,7 +147,7 @@ export function renderOgImage(
                 letterSpacing: 4,
                 textTransform: 'uppercase',
                 opacity: 0.65,
-                fontFamily: 'Space Mono',
+                fontFamily: mono,
               }}
             >
               {eyebrow || 'Premium Preview'}
@@ -152,6 +157,7 @@ export function renderOgImage(
           <div
             style={{
               position: 'relative',
+              display: 'flex',
               fontSize: 78,
               fontWeight: 800,
               letterSpacing: -2,
@@ -176,6 +182,7 @@ export function renderOgImage(
             <div
               style={{
                 position: 'relative',
+                display: 'flex',
                 fontSize: 26,
                 lineHeight: 1.35,
                 color: 'rgba(255,255,255,0.78)',
@@ -207,12 +214,12 @@ export function renderOgImage(
                 opacity: 0.7,
               }}
             />
-            <div style={{ fontSize: 18, opacity: 0.7, letterSpacing: 1, fontFamily: 'Space Mono' }}>
+            <div style={{ fontSize: 18, opacity: 0.7, letterSpacing: 1, fontFamily: mono }}>
               Full Stack • AI • Cloud
             </div>
           </div>
 
-          <div style={{ fontSize: 18, opacity: 0.7, letterSpacing: 1, fontFamily: 'Space Mono' }}>
+          <div style={{ fontSize: 18, opacity: 0.7, letterSpacing: 1, fontFamily: mono }}>
             share-ready • og:image
           </div>
         </div>
