@@ -3,8 +3,6 @@ import { getOgFonts } from '@/app/_og/fonts';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { defaultMeConfig, type MeConfig } from '@/lib/me-config';
 
-export const runtime = 'edge';
-
 const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
 
@@ -248,14 +246,7 @@ function meOg(config: MeConfig) {
           </div>
         </div>
 
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'row',
-            gap: 14,
-            flexWrap: 'wrap',
-          }}
-        >
+        <div style={{ display: 'flex', flexDirection: 'row', gap: 14, flexWrap: 'wrap' }}>
           {(config.resources || []).slice(0, 4).map((r) => (
             <div
               key={r.id}
@@ -339,6 +330,12 @@ function meOg(config: MeConfig) {
   );
 }
 
+type GuestbookRow = {
+  user_name: string | null;
+  message: string | null;
+  created_at: string | null;
+};
+
 async function guestbookOg() {
   const messages = (await fetchGuestbookMessages()).slice(0, 4).map((m) => ({
     name: clampText(m.user_name || 'Anonymous', 18),
@@ -410,6 +407,11 @@ async function guestbookOg() {
   );
 }
 
+type DocumentRow = {
+  title: string | null;
+  description: string | null;
+};
+
 async function docsOg(path: string) {
   const parts = path.split('/').filter(Boolean);
   const slug = parts[1];
@@ -448,113 +450,6 @@ async function docsOg(path: string) {
     </div>
   );
 }
-
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const path = normalizePath(searchParams.get('path'));
-
-  const fonts = await getOgFonts();
-
-  let body: React.ReactNode;
-  if (path === '/me' || path.startsWith('/me?')) {
-    const config = await fetchMeConfig();
-    body = meOg(config);
-  } else if (path === '/guestbook' || path.startsWith('/guestbook?')) {
-    body = await guestbookOg();
-  } else if (path === '/docs' || path.startsWith('/docs/')) {
-    body = await docsOg(path);
-  } else {
-    body = frame(
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-        <div style={{ fontSize: 52, fontWeight: 900, letterSpacing: -2 }}>avrxt</div>
-        <div style={{ fontSize: 18, opacity: 0.75, lineHeight: 1.35 }}>
-          Full Stack Developer &amp; Tech Innovator
-        </div>
-      </div>
-    );
-  }
-
-  return new ImageResponse(
-    (
-      <div style={baseStyle()}>
-        {topBar(path)}
-        {body}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            paddingTop: 18,
-            borderTop: '1px solid rgba(255,255,255,0.10)',
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 10,
-            }}
-          >
-            <div
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: 999,
-                background: 'rgba(255,255,255,0.85)',
-                opacity: 0.7,
-              }}
-            />
-            <div
-              style={{
-                fontSize: 14,
-                opacity: 0.7,
-                letterSpacing: 1,
-                fontFamily:
-                  '"Space Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-              }}
-            >
-              og:image • dynamic
-            </div>
-          </div>
-
-          <div
-            style={{
-              fontSize: 14,
-              opacity: 0.7,
-              letterSpacing: 1,
-              fontFamily:
-                '"Space Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-            }}
-          >
-            {new Date().toISOString().slice(0, 10)}
-          </div>
-        </div>
-      </div>
-    ),
-    {
-      width: OG_WIDTH,
-      height: OG_HEIGHT,
-      headers: {
-        'content-type': 'image/png',
-        'cache-control': 'public, s-maxage=3600, stale-while-revalidate=86400',
-      },
-      fonts,
-    }
-  );
-}
-
-type GuestbookRow = {
-  user_name: string | null;
-  message: string | null;
-  created_at: string | null;
-};
-
-type DocumentRow = {
-  title: string | null;
-  description: string | null;
-};
 
 function supabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -606,3 +501,93 @@ async function fetchDocBySlug(slug: string): Promise<DocumentRow | null> {
 
   return data || null;
 }
+
+export async function renderDynamicOgImage(requestUrl: string) {
+  const { searchParams } = new URL(requestUrl);
+  const path = normalizePath(searchParams.get('path'));
+
+  const fonts = await getOgFonts();
+
+  let body: React.ReactNode;
+  if (path === '/me' || path.startsWith('/me?')) {
+    const config = await fetchMeConfig();
+    body = meOg(config);
+  } else if (path === '/guestbook' || path.startsWith('/guestbook?')) {
+    body = await guestbookOg();
+  } else if (path === '/docs' || path.startsWith('/docs/')) {
+    body = await docsOg(path);
+  } else {
+    body = frame(
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+        <div style={{ fontSize: 52, fontWeight: 900, letterSpacing: -2 }}>avrxt</div>
+        <div style={{ fontSize: 18, opacity: 0.75, lineHeight: 1.35 }}>
+          Full Stack Developer &amp; Tech Innovator
+        </div>
+      </div>
+    );
+  }
+
+  return new ImageResponse(
+    (
+      <div style={baseStyle()}>
+        {topBar(path)}
+        {body}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingTop: 18,
+            borderTop: '1px solid rgba(255,255,255,0.10)',
+          }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <div
+              style={{
+                width: 10,
+                height: 10,
+                borderRadius: 999,
+                background: 'rgba(255,255,255,0.85)',
+                opacity: 0.7,
+              }}
+            />
+            <div
+              style={{
+                fontSize: 14,
+                opacity: 0.7,
+                letterSpacing: 1,
+                fontFamily:
+                  '"Space Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+              }}
+            >
+              og:image • dynamic
+            </div>
+          </div>
+
+          <div
+            style={{
+              fontSize: 14,
+              opacity: 0.7,
+              letterSpacing: 1,
+              fontFamily:
+                '"Space Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+            }}
+          >
+            {new Date().toISOString().slice(0, 10)}
+          </div>
+        </div>
+      </div>
+    ),
+    {
+      width: OG_WIDTH,
+      height: OG_HEIGHT,
+      headers: {
+        'content-type': 'image/png',
+        'cache-control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+      },
+      fonts,
+    }
+  );
+}
+
