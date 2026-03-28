@@ -12,6 +12,7 @@ export const metadata = buildPageMetadata({
   description:
     'Support the development of open-source projects and digital frontiers. Buy a cupcake to fuel innovation and creative engineering.',
   keywords: ['support developer', 'buy me a coffee', 'buy me a cupcake', 'avrxt support', 'tech innovation funding'],
+  path: '/cupcake',
 });
 
 type Tip = {

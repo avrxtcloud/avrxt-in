@@ -6,6 +6,7 @@ export const metadata = buildPageMetadata({
     description:
         'Our transparent Refund Policy for digital services, cloud solutions, and contributions. Understand your rights and our processing timelines.',
     keywords: ['refund policy', 'cancellation policy', 'avrxt refunds', 'digital service refund', 'payment processing', 'customer trust'],
+    path: '/refund',
 });
 
 export default function Refund() {

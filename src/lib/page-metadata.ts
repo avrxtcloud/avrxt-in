@@ -6,6 +6,7 @@ type PageMetadataInput = {
   description: string;
   keywords?: string[];
   noIndex?: boolean;
+  path?: string;
 };
 
 const SITE_NAME = 'avrxt';
@@ -23,12 +24,19 @@ export function buildPageMetadata({
   description,
   keywords,
   noIndex,
+  path,
 }: PageMetadataInput): Metadata {
   const fullTitle = withSiteSuffix(title);
   const normalizedDescription = description.trim();
 
+  const normalizedPath = path?.trim();
+  const effectivePath = normalizedPath && normalizedPath.startsWith('/') ? normalizedPath : undefined;
+  const imageUrl = effectivePath
+    ? `/api/og?path=${encodeURIComponent(effectivePath)}`
+    : '/opengraph-image';
+
   const openGraphImage = {
-    url: '/opengraph-image',
+    url: imageUrl,
     width: ogSize.width,
     height: ogSize.height,
     alt: DEFAULT_OG_IMAGE_ALT,
@@ -51,7 +59,7 @@ export function buildPageMetadata({
       description: normalizedDescription,
       images: [
         {
-          url: '/twitter-image',
+          url: imageUrl,
           width: ogSize.width,
           height: ogSize.height,
           alt: DEFAULT_OG_IMAGE_ALT,

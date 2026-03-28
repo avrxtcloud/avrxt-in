@@ -7,6 +7,7 @@ export const metadata = buildPageMetadata({
     title: 'Guestbook',
     description: 'Leave Your Foot Print Here.',
     keywords: ['guestbook', 'avrxt community', 'digital footprint', 'developer messages', 'Leave Your Foot Print Here'],
+    path: '/guestbook',
 });
 
 export default async function GuestbookPage() {

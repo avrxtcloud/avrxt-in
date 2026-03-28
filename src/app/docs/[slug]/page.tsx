@@ -22,6 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             title: 'Docs',
             description: 'Browse engineering docs, playbooks, and technical resources authored by avrxt.',
             noIndex: true,
+            path: '/docs',
         });
     }
 
@@ -30,6 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         description: doc.description || 'Technical documentation by avrxt.',
         keywords: ['docs', 'avrxt', doc.category, doc.slug, doc.title],
         noIndex: !doc.published,
+        path: `/docs/${slug}`,
     });
 }
 

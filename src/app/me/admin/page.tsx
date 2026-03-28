@@ -8,6 +8,7 @@ export const metadata = buildPageMetadata({
     title: 'Me Admin',
     description: 'Admin panel for managing /me page content and integrations.',
     noIndex: true,
+    path: '/me/admin',
 });
 
 export default async function MeAdminPage() {

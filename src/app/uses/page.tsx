@@ -177,6 +177,7 @@ const sections = [
 export const metadata = buildPageMetadata({
     title: 'Uses',
     description: "Tools, apps, and gear that power avrxt's daily workflow.",
+    path: '/uses',
 });
 
 export default function UsesPage() {
