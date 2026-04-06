@@ -16,12 +16,13 @@ async function verifyAdmin() {
         headers: await headers(),
     });
     
-    if (!session || session.user.role !== 'admin') {
+    if (!session || (session.user as any).role !== 'admin') {
         throw new Error("Unauthorized: Administrative clearance required.");
     }
     
     return session;
 }
+
 
 /**
  * Get active users with filtering from Neon (Auth DB)

@@ -18,9 +18,10 @@ export async function verifyAdmin() {
     }
 
     // Role check from our SQL database via Better Auth
-    if (session.user.role === 'admin') {
+    if ((session.user as any).role === 'admin') {
         return { authorized: true, user: session.user };
     }
+
 
     console.warn(`[AUTH_CHECK] Access Denied for ${session.user.email}. Role 'admin' not found.`);
     return { authorized: false, error: 'unauthorized_role' };
