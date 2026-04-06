@@ -1,4 +1,6 @@
 'use client';
+import React from 'react';
+
 import { useState } from 'react';
 import { Github, Send, Trash2, Edit3, X, Check, ShieldAlert, TriangleAlert, LogOut } from 'lucide-react';
 import { postMessage, deleteMessage, updateMessage } from '@/app/actions/guestbook';

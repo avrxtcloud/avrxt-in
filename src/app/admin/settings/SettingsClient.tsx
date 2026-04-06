@@ -1,4 +1,6 @@
 'use client';
+import React from 'react';
+
 
 import { useState } from "react";
 import { Save, Shield, Globe, Zap, Settings2, Info } from "lucide-react";

@@ -1,4 +1,6 @@
 'use client';
+import React from 'react';
+
 
 import { useState } from "react";
 import { Search, Filter, MoreVertical, ShieldBan, ShieldCheck, UserCog, Mail, Calendar, MapPin, Globe, Activity, History } from "lucide-react";

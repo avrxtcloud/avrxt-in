@@ -1,4 +1,6 @@
 'use client';
+import React from "react";
+
 
 import { signIn, useSession } from "@/lib/auth-client";
 import SpotlightBox from "@/components/SpotlightBox";
@@ -16,18 +18,20 @@ export default function AdminLoginPage() {
 
     // If session exists and user is admin, redirect to dashboard
     useEffect(() => {
-        if (session?.user && session.user.role === 'admin') {
+        if (session?.user && (session.user as any).role === 'admin') {
             router.push('/admin');
         }
     }, [session, router]);
+
 
     const handleDiscordLogin = async () => {
         try {
             setLoading(true);
             await signIn.social({
                 provider: "discord",
-                callbackURL: "https://www.avrxt.in/admin", // Main site dashboard
+                callbackURL: "/admin", // Main site dashboard
             });
+
         } catch (error) {
             console.error("Login failed:", error);
             setLoading(false);

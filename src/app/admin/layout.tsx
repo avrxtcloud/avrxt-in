@@ -1,4 +1,6 @@
 'use client';
+import React from 'react';
+
 
 import { useSession, signOut } from "@/lib/auth-client";
 import { useRouter, usePathname } from "next/navigation";
