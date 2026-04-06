@@ -1,11 +1,10 @@
 import { createAuthClient } from "better-auth/react";
-import { adminClient, organizationClient, twoFactorClient } from "better-auth/client/plugins";
+import { adminClient, twoFactorClient } from "better-auth/client/plugins";
 
 export const authClient = createAuthClient({
-	baseURL: process.env.NEXT_PUBLIC_AUTH_URL || "https://auth.avrxt.in",
+	baseURL: process.env.NEXT_PUBLIC_SITE_URL || "https://www.avrxt.in",
 	plugins: [
 		adminClient(),
-		organizationClient(),
 		twoFactorClient(),
 	],
 });
@@ -20,3 +19,4 @@ export const {
     listAccounts,
     twoFactor,
 } = authClient;
+
