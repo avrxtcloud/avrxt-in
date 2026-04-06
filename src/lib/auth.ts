@@ -25,14 +25,13 @@ export const auth = betterAuth({
             clientSecret: process.env.DISCORD_CLIENT_SECRET!,
             // Added scope for role verification
             scope: ["identify", "email", "guilds.members.read"],
-            callbackURL: (process.env.NEXT_PUBLIC_SITE_URL || "https://www.avrxt.in") + "/api/auth/callback/discord",
         },
         github: {
             clientId: process.env.GITHUB_CLIENT_ID!,
             clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-            callbackURL: (process.env.NEXT_PUBLIC_SITE_URL || "https://www.avrxt.in") + "/api/auth/callback/github",
         }
     },
+
 
     // Session security improvements
     session: {
