@@ -27,18 +27,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     // Protection check
     useEffect(() => {
-        if (!isPending && (!session?.user || session.user.role !== 'admin')) {
+        if (!isPending && (!session?.user || (session.user as any).role !== 'admin')) {
             router.push('https://auth.avrxt.in/login/admin');
         }
     }, [session, isPending, router]);
 
-    if (isPending || !session?.user || session.user.role !== 'admin') {
+    if (isPending || !session?.user || (session.user as any).role !== 'admin') {
         return (
             <div className="min-h-screen bg-[#050505] flex items-center justify-center">
                 <Activity className="w-10 h-10 text-emerald-500 animate-spin" />
             </div>
         );
     }
+
 
     const navigation = [
         { name: "Overview", href: "/admin", icon: LayoutDashboard },
@@ -100,7 +101,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     </div>
 
                     <button 
-                        onClick={() => signOut({ fetchOptions: { callbackURL: '/' } })}
+                        onClick={async () => {
+                            await signOut({
+                                fetchOptions: {
+                                    onSuccess: () => {
+                                        router.push('/');
+                                    }
+                                }
+                            });
+                        }}
+
                         className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl border border-white/5 hover:bg-red-500/5 hover:border-red-500/20 hover:text-red-500 transition-all group"
                     >
                         <LogOut className="w-4 h-4 transition-transform group-hover:translate-x-1" />
