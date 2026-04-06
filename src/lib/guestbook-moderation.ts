@@ -195,7 +195,7 @@ async function recordBlockedTermHits(terms: any[]) {
               hits: (data?.hits || 0) + 1, 
               last_seen_at: new Date().toISOString() 
           })
-          .where('normalized_term', 'eq', term);
+          .eq('normalized_term', term);
     }
     blockedTermsCache = null;
   } catch (error) {
