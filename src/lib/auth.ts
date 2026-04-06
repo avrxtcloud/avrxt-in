@@ -50,6 +50,23 @@ export const auth = betterAuth({
         admin(), // Enabling admin plugin for role based access
     ],
 
+    user: {
+        fields: {
+            role: {
+                type: "string",
+                defaultValue: "user",
+            },
+            banned: {
+                type: "boolean",
+                defaultValue: false,
+            },
+            banReason: {
+                type: "string",
+            },
+        },
+    },
+
+
     hooks: {
         afterSessionChange: async (session) => {
             // Optional: Re-verify roles on session changes if needed
