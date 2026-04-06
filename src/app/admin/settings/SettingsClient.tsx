@@ -189,6 +189,3 @@ export default function SettingsClient({ initialSettings }: { initialSettings: a
     );
 }
 
-function cn(...classes: any[]) {
-    return classes.filter(Boolean).join(' ');
-}

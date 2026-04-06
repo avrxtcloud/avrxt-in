@@ -1,7 +1,9 @@
+'use client';
 import { useState } from 'react';
 import { Github, Send, Trash2, Edit3, X, Check, ShieldAlert, TriangleAlert, LogOut } from 'lucide-react';
 import { postMessage, deleteMessage, updateMessage } from '@/app/actions/guestbook';
 import { cn } from '@/lib/utils';
+
 import AutoLinkPreview from '@/components/AutoLinkPreview';
 import { signOut } from '@/lib/auth-client';
 
