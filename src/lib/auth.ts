@@ -68,13 +68,13 @@ export const auth = betterAuth({
 
 
     hooks: {
-        afterSessionChange: async (session) => {
+        afterSessionChange: async (session: any) => {
             // Optional: Re-verify roles on session changes if needed
         }
     },
 
     callbacks: {
-        async beforeLogin(ctx) {
+        async beforeLogin(ctx: any) {
             // Handle banned users
             if (ctx.user.banned) {
                 return {
@@ -84,7 +84,8 @@ export const auth = betterAuth({
             }
         },
 
-        async postSignIn(ctx) {
+        async postSignIn(ctx: any) {
+
             // Check Discord Role after successful sign-in
             if (ctx.account.providerId === 'discord') {
                 const hasRole = await checkDiscordRole(ctx.account.accountId, ctx.account.accessToken);
