@@ -1,13 +1,14 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { verifyAdmin } from '@/lib/auth-checks';
-import { createAdminClient } from '@/utils/supabase/admin';
+import { createClient } from '@/utils/supabase/server';
 
 const TOKEN_ENDPOINT = 'https://accounts.spotify.com/api/token';
 
-function redirectWithStateCleanup(request: Request, path: string) {
+async function redirectWithStateCleanup(request: Request, path: string) {
   const response = NextResponse.redirect(new URL(path, request.url));
-  response.cookies.set('spotify_oauth_state', '', {
+  const cookieStore = await cookies();
+  cookieStore.set('spotify_oauth_state', '', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
@@ -18,8 +19,8 @@ function redirectWithStateCleanup(request: Request, path: string) {
 }
 
 export async function GET(request: Request) {
-  const { authorized } = await verifyAdmin();
-  if (!authorized) {
+  const { authorized, user } = await verifyAdmin();
+  if (!authorized || !user?.id) {
     return NextResponse.redirect(new URL('/auth/login?source=admin&error=unauthorized_role', request.url));
   }
 
@@ -39,11 +40,11 @@ export async function GET(request: Request) {
   const storedState = cookieStore.get('spotify_oauth_state')?.value;
 
   if (!code) {
-    return redirectWithStateCleanup(request, '/me/admin?error=no_code');
+    return await redirectWithStateCleanup(request, '/me/admin?error=no_code');
   }
 
   if (!returnedState || !storedState || returnedState !== storedState) {
-    return redirectWithStateCleanup(request, '/me/admin?error=state_mismatch');
+    return await redirectWithStateCleanup(request, '/me/admin?error=state_mismatch');
   }
 
   const basic = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
@@ -68,34 +69,41 @@ export async function GET(request: Request) {
   };
 
   if (!tokenResponse.ok || !tokenData.access_token || !tokenData.expires_in) {
-    return redirectWithStateCleanup(request, '/me/admin?error=token_fetch_failed');
+    return await redirectWithStateCleanup(request, '/me/admin?error=token_fetch_failed');
   }
 
-  const supabase = createAdminClient();
+  try {
+    const supabase = await createClient();
 
-  const { data: existing } = await supabase
-    .from('spotify_tokens')
-    .select('refresh_token')
-    .limit(1)
-    .maybeSingle();
+    // Get existing refresh token if not provided in this flow
+    const { data: existing } = await supabase
+        .from('spotify_tokens')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
 
-  const refreshToken = tokenData.refresh_token || existing?.refresh_token;
-  if (!refreshToken) {
-    return redirectWithStateCleanup(request, '/me/admin?error=refresh_token_missing');
+    const refreshToken = tokenData.refresh_token || existing?.refresh_token;
+    if (!refreshToken) {
+      return await redirectWithStateCleanup(request, '/me/admin?error=refresh_token_missing');
+    }
+
+    // Upsert tokens for the user
+    const { error: dbError } = await supabase
+        .from('spotify_tokens')
+        .upsert({
+            user_id: user.id,
+            access_token: tokenData.access_token,
+            refresh_token: refreshToken,
+            expires_at: new Date(Date.now() + tokenData.expires_in * 1000).toISOString(),
+            updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id' });
+
+    if (dbError) throw dbError;
+
+    return await redirectWithStateCleanup(request, '/me/admin?success=spotify_connected');
+  } catch (error: any) {
+    console.error('SPOTIFY SUPABASE SAVE ERROR:', error);
+    return await redirectWithStateCleanup(request, `/me/admin?error=db_save_failed&msg=${encodeURIComponent(error.message)}`);
   }
-
-  await supabase.from('spotify_tokens').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-
-  const { error } = await supabase.from('spotify_tokens').insert({
-    access_token: tokenData.access_token,
-    refresh_token: refreshToken,
-    expires_at: new Date(Date.now() + tokenData.expires_in * 1000).toISOString(),
-  });
-
-  if (error) {
-    console.error('SPOTIFY DB SAVE ERROR:', error);
-    return redirectWithStateCleanup(request, `/me/admin?error=db_save_failed&msg=${encodeURIComponent(error.message)}`);
-  }
-
-  return redirectWithStateCleanup(request, '/me/admin?success=spotify_connected');
 }
+

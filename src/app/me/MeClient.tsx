@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef } from 'react';
 import React from 'react';
 import Link from 'next/link';
-import { createClient } from '@/utils/supabase/client';
 import {
     ExternalLink,
     Play,
@@ -167,7 +166,6 @@ export default function MeClient({ config }: { config: MeConfig }) {
     useEffect(() => {
         if (!spotifyEnabled) return;
 
-        const supabase = createClient();
         let isActive = true;
         let pollTimeout: number | undefined;
         let inFlight: AbortController | null = null;
@@ -305,25 +303,8 @@ export default function MeClient({ config }: { config: MeConfig }) {
 
         void syncNowPlaying();
 
-        // Subscribe to Realtime Updates (Directly from status table)
-        const channel = supabase
-            .channel('spotify_realtime_v2')
-            .on(
-                'postgres_changes',
-                { event: '*', schema: 'public', table: 'spotify_status' },
-                (payload) => {
-                    const mapped = normalizeIncoming(payload.new);
-                    if (!mapped) return;
-                    applySpotifyState(mapped);
-                    // Keep polling cadence predictable (limits-friendly).
-                    scheduleNext(15_000);
-                }
-            )
-            .subscribe();
-
         return () => {
             isActive = false;
-            supabase.removeChannel(channel);
             clearPoll();
             try { inFlight?.abort(); } catch { }
             window.removeEventListener('focus', onVisibilityOrFocus);

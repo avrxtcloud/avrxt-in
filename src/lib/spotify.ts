@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/utils/supabase/admin';
+import { createClient } from '@/utils/supabase/server';
 
 const client_id = process.env.SPOTIFY_CLIENT_ID;
 const client_secret = process.env.SPOTIFY_CLIENT_SECRET;
@@ -7,14 +7,28 @@ const NOW_PLAYING_ENDPOINT = `https://api.spotify.com/v1/me/player/currently-pla
 const TOKEN_ENDPOINT = `https://accounts.spotify.com/api/token`;
 
 export async function getSpotifyTokens() {
-    const supabase = createAdminClient();
-    const { data: tokens, error } = await supabase
-        .from('spotify_tokens')
-        .select('*')
-        .single();
+    try {
+        const supabase = await createClient();
+        const { data, error } = await supabase
+            .from('spotify_tokens')
+            .select('*')
+            .single();
 
-    if (error || !tokens) return null;
-    return tokens;
+        if (error || !data) return null;
+        
+        return {
+            id: data.id,
+            userId: data.user_id,
+            accessToken: data.access_token,
+            refreshToken: data.refresh_token,
+            expiresAt: data.expires_at,
+            createdAt: data.created_at,
+            updatedAt: data.updated_at
+        };
+    } catch (error) {
+        console.error('Error fetching Spotify tokens:', error);
+        return null;
+    }
 }
 
 export async function refreshAccessToken(refresh_token: string) {
@@ -33,16 +47,19 @@ export async function refreshAccessToken(refresh_token: string) {
     const data = await response.json();
     if (!response.ok) throw new Error('Failed to refresh token');
 
-    const supabase = createAdminClient();
-    const { error: updateError } = await supabase
-        .from('spotify_tokens')
-        .update({
-            access_token: data.access_token,
-            expires_at: new Date(Date.now() + data.expires_in * 1000).toISOString(),
-        })
-        .match({ refresh_token });
-
-    if (updateError) console.error('Error updating tokens in DB:', updateError);
+    try {
+        const supabase = await createClient();
+        await supabase
+            .from('spotify_tokens')
+            .update({
+                access_token: data.access_token,
+                expires_at: new Date(Date.now() + data.expires_in * 1000).toISOString(),
+                updated_at: new Date().toISOString(),
+            })
+            .eq('refresh_token', refresh_token);
+    } catch (error) {
+        console.error('Error updating tokens in Supabase:', error);
+    }
 
     return data.access_token;
 }
@@ -51,11 +68,11 @@ export async function getNowPlaying() {
     const tokens = await getSpotifyTokens();
     if (!tokens) return { isPlaying: false };
 
-    let accessToken = tokens.access_token;
-    const expiresAt = new Date(tokens.expires_at).getTime();
+    let accessToken = tokens.accessToken;
+    const expiresAt = new Date(tokens.expiresAt).getTime();
 
     if (Date.now() > expiresAt - 60000) {
-        accessToken = await refreshAccessToken(tokens.refresh_token);
+        accessToken = await refreshAccessToken(tokens.refreshToken);
     }
 
     const response = await fetch(NOW_PLAYING_ENDPOINT, {
@@ -72,13 +89,19 @@ export async function getNowPlaying() {
 
     // Save to history if playing
     if (song.is_playing) {
-        const supabase = createAdminClient();
-        await supabase.from('spotify_history').upsert({
-            song_name: song.item.name,
-            artist: song.item.artists.map((_artist: any) => _artist.name).join(', '),
-            cover_url: song.item.album.images[0].url,
-            played_at: new Date().toISOString()
-        }, { onConflict: 'song_name, artist' });
+        try {
+            const supabase = await createClient();
+            await supabase
+                .from('spotify_history')
+                .insert([{
+                    song_name: song.item.name,
+                    artist: song.item.artists.map((_artist: any) => _artist.name).join(', '),
+                    cover_url: song.item.album.images[0].url,
+                    played_at: new Date().toISOString()
+                }]);
+        } catch (error) {
+            console.error('Error saving song history to Supabase:', error);
+        }
     }
 
     return {
@@ -92,15 +115,16 @@ export async function getNowPlaying() {
         durationMs: song.item.duration_ms,
     };
 }
+
 export async function searchSpotify(query: string) {
     const tokens = await getSpotifyTokens();
     if (!tokens) return null;
 
-    let accessToken = tokens.access_token;
-    const expiresAt = new Date(tokens.expires_at).getTime();
+    let accessToken = tokens.accessToken;
+    const expiresAt = new Date(tokens.expiresAt).getTime();
 
     if (Date.now() > expiresAt - 60000) {
-        accessToken = await refreshAccessToken(tokens.refresh_token);
+        accessToken = await refreshAccessToken(tokens.refreshToken);
     }
 
     const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=10`, {
@@ -122,3 +146,4 @@ export async function searchSpotify(query: string) {
         spotifyUrl: track.external_urls.spotify,
     }));
 }
+

@@ -1,7 +1,9 @@
-import { createClient } from '@/utils/supabase/server';
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
 import GuestbookClient from './GuestbookClient';
 import { getMessages } from '@/app/actions/guestbook';
 import { buildPageMetadata } from '@/lib/page-metadata';
+import { signSource } from '@/lib/auth-tokens';
 
 export const metadata = buildPageMetadata({
     title: 'Guestbook',
@@ -10,9 +12,15 @@ export const metadata = buildPageMetadata({
 });
 
 export default async function GuestbookPage() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const session = await auth.api.getSession({
+        headers: await headers()
+    });
+    
+    // Fallback if data is missing or empty
     const { data: messages = [] } = await getMessages() as { data: any[] };
+
+    // Generate a signed source for safe redirection after login
+    const signedSource = signSource('guestbook');
 
     return (
         <main className="min-h-screen bg-black text-white selection:bg-white/10 relative overflow-hidden">
@@ -28,8 +36,13 @@ export default async function GuestbookPage() {
                     <p className="text-zinc-500 font-mono text-sm tracking-widest uppercase">Leave a footprint or just say hi.</p>
                 </header>
 
-                <GuestbookClient user={user} initialMessages={messages} />
+                <GuestbookClient 
+                    user={session?.user} 
+                    initialMessages={messages} 
+                    signedSource={signedSource}
+                />
             </div>
         </main>
     );
 }
+

@@ -1,19 +1,24 @@
-'use client';
-
 import { useState } from 'react';
-import { User } from '@supabase/supabase-js';
-import { Github, Send, Trash2, Edit3, X, Check, ShieldAlert, TriangleAlert } from 'lucide-react';
-import { signInWithGithub, postMessage, deleteMessage, updateMessage } from '@/app/actions/guestbook';
+import { Github, Send, Trash2, Edit3, X, Check, ShieldAlert, TriangleAlert, LogOut } from 'lucide-react';
+import { postMessage, deleteMessage, updateMessage } from '@/app/actions/guestbook';
 import { cn } from '@/lib/utils';
 import AutoLinkPreview from '@/components/AutoLinkPreview';
+import { signOut } from '@/lib/auth-client';
 
 interface Message {
     id: string;
-    user_id: string;
-    user_name: string;
-    user_avatar: string;
+    userId: string;
+    userName: string;
+    userAvatar: string;
     message: string;
-    created_at: string;
+    createdAt: Date;
+}
+
+interface BetterAuthUser {
+    id: string;
+    name: string;
+    email: string;
+    image?: string | null;
 }
 
 type DialogState =
@@ -30,8 +35,16 @@ type DialogState =
     }
     | null;
 
-export default function GuestbookClient({ user, initialMessages }: { user: User | null, initialMessages: Message[] }) {
-    const [messages, setMessages] = useState<Message[]>(initialMessages);
+export default function GuestbookClient({ 
+    user, 
+    initialMessages,
+    signedSource
+}: { 
+    user: BetterAuthUser | null | undefined, 
+    initialMessages: any[],
+    signedSource: string 
+}) {
+    const [messages, setMessages] = useState<any[]>(initialMessages);
     const [input, setInput] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -47,12 +60,17 @@ export default function GuestbookClient({ user, initialMessages }: { user: User 
     };
 
     const handleSignIn = () => {
-        window.location.href = '/auth/login?source=guestbook';
+        window.location.href = `/auth/login?source=${signedSource}`;
     };
 
     const handleSignOut = async () => {
-        const { logout } = await import('@/app/actions/auth');
-        await logout('/guestbook');
+        await signOut({
+            fetchOptions: {
+                onSuccess: () => {
+                    window.location.reload();
+                }
+            }
+        });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -60,9 +78,9 @@ export default function GuestbookClient({ user, initialMessages }: { user: User 
         if (!input.trim() || !user) return;
 
         setIsSubmitting(true);
-        // Better fallback for names and avatars
-        const name = user.user_metadata.full_name || user.user_metadata.user_name || user.email?.split('@')[0] || 'Anonymous';
-        const avatar = user.user_metadata.avatar_url || `https://ui-avatars.com/api/?name=${name}&background=random&color=fff`;
+        // Better Auth user properties
+        const name = user.name || user.email?.split('@')[0] || 'Anonymous';
+        const avatar = user.image || `https://ui-avatars.com/api/?name=${name}&background=random&color=fff`;
 
         const result = await postMessage(input, name, avatar);
         if (result.error) {
@@ -188,15 +206,15 @@ export default function GuestbookClient({ user, initialMessages }: { user: User 
                     <div className="flex items-center justify-between px-2">
                         <div className="flex items-center gap-2">
                             <img
-                                src={user.user_metadata.avatar_url || `https://ui-avatars.com/api/?name=${user.email}&background=random`}
+                                src={user.image || `https://ui-avatars.com/api/?name=${user.name}&background=random`}
                                 className="w-5 h-5 rounded-full border border-white/10"
                             />
                             <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
-                                Posting as <span className="text-zinc-300">{user.user_metadata.full_name || user.email}</span>
+                                Posting as <span className="text-zinc-300">{user.name}</span>
                             </span>
                         </div>
-                        <button onClick={handleSignOut} className="text-[9px] font-mono text-zinc-600 hover:text-white uppercase transition-colors">
-                            [ Sign_Out ]
+                        <button onClick={handleSignOut} className="text-[9px] font-mono text-zinc-600 hover:text-white uppercase transition-colors flex items-center gap-2">
+                            <LogOut size={10} /> [ Sign_Out ]
                         </button>
                     </div>
                     <form onSubmit={handleSubmit} className="p-1 gap-2 flex flex-col sm:flex-row items-stretch">
@@ -227,12 +245,12 @@ export default function GuestbookClient({ user, initialMessages }: { user: User 
                     messages.map((msg) => (
                         <div key={msg.id} className="group p-6 rounded-2xl bg-zinc-900/20 border border-white/5 hover:border-white/10 transition-all">
                             <div className="flex items-start gap-4">
-                                <img src={msg.user_avatar} alt="" className="w-10 h-10 rounded-full border border-white/10" />
+                                <img src={msg.userAvatar} alt="" className="w-10 h-10 rounded-full border border-white/10" />
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between mb-1">
-                                        <h4 className="text-sm font-bold font-mono text-white truncate">{msg.user_name}</h4>
+                                        <h4 className="text-sm font-bold font-mono text-white truncate">{msg.userName}</h4>
                                         <span className="text-[10px] text-zinc-600 font-mono">
-                                            {new Date(msg.created_at).toLocaleDateString()}
+                                            {new Date(msg.createdAt).toLocaleDateString()}
                                         </span>
                                     </div>
 
@@ -261,7 +279,7 @@ export default function GuestbookClient({ user, initialMessages }: { user: User 
                                     )}
 
                                     {/* Actions for owner */}
-                                    {user?.id === msg.user_id && editingId !== msg.id && (
+                                    {user?.id === msg.userId && editingId !== msg.id && (
                                         <div className="flex gap-3 mt-4 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                                             <button
                                                 onClick={() => {
@@ -294,3 +312,4 @@ export default function GuestbookClient({ user, initialMessages }: { user: User 
         </div>
     );
 }
+

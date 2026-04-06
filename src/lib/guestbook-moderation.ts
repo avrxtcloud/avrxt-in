@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import { LRUCache } from 'lru-cache';
-import { createAdminClient } from '@/utils/supabase/admin';
+import { createClient } from '@/utils/supabase/server';
 
 type ModerationOutcome = {
   blocked: boolean;
@@ -16,47 +16,16 @@ type CloudflareWorkerModerationResponse = {
   model?: string;
 };
 
-type ModerationCacheRow = {
-  blocked: boolean | null;
-  reasons: unknown;
-  hits: number | null;
-};
-
-type BlockedTermRow = {
-  id: number;
-  term: string;
-  normalized_term: string;
-  reason: string;
-  hits: number | null;
-};
-
-type BlockedTermMatch = {
-  term: string;
-  reason: string;
-};
-
 const MODERATION_MODEL =
   process.env.CLOUDFLARE_GUESTBOOK_MODERATION_MODEL || '@cf/meta/llama-3.1-8b-instruct';
 const MODERATION_API_URL = process.env.CLOUDFLARE_GUESTBOOK_MODERATION_URL;
 const MODERATION_SHARED_SECRET = process.env.CLOUDFLARE_GUESTBOOK_MODERATION_SECRET;
 const MODERATION_TIMEOUT_MS = 8000;
-const CACHE_TABLE = 'guestbook_moderation_cache';
-const BLOCKED_TERMS_TABLE = 'guestbook_blocked_terms';
 const BLOCKED_TERMS_TTL_MS = 1000 * 60 * 5;
 
 function parseDegradedMode(value: string | undefined): ModerationDegradedMode {
   const normalized = (value ?? 'heuristic_allow').trim().toLowerCase();
-
   if (normalized === 'block') return 'block';
-  if (
-    normalized === 'heuristic_allow' ||
-    normalized === 'heuristic-allow' ||
-    normalized === 'heuristic' ||
-    normalized === 'allow'
-  ) {
-    return 'heuristic_allow';
-  }
-
   return 'heuristic_allow';
 }
 
@@ -80,21 +49,6 @@ const HEURISTIC_RULES: Array<{ reason: string; terms: string[]; pattern: RegExp 
     terms: ['rape', 'porn', 'nude', 'nudes', 'naked pic', 'naked pics', 'sexual favor', 'sexual favors'],
     pattern: /\b(?:rape|porn|nudes?|naked pics?|sexual favors?)\b/i,
   },
-  {
-    reason: 'heuristic_violence',
-    terms: ['i will kill', 'shoot you', 'stab you', 'burn you alive'],
-    pattern: /\b(?:i will kill|shoot you|stab you|burn you alive)\b/i,
-  },
-  {
-    reason: 'heuristic_self_harm',
-    terms: ['suicide method', 'suicide methods', 'self-harm', 'cut myself', 'end my life'],
-    pattern: /\b(?:suicide methods?|self-harm|cut myself|end my life)\b/i,
-  },
-  {
-    reason: 'heuristic_toxic_language',
-    terms: ['bitch', 'whore', 'slut', 'asshole', 'retard'],
-    pattern: /\b(?:bitch|whore|slut|asshole|retard)\b/i,
-  },
 ];
 
 const moderationCache = new LRUCache<string, ModerationOutcome>({
@@ -102,12 +56,7 @@ const moderationCache = new LRUCache<string, ModerationOutcome>({
   ttl: 1000 * 60 * 60 * 24,
 });
 
-let blockedTermsCache:
-  | {
-      fetchedAt: number;
-      terms: BlockedTermRow[];
-    }
-  | null = null;
+let blockedTermsCache: { fetchedAt: number; terms: any[] } | null = null;
 
 function normalizeMessage(message: string): string {
   return message.trim().toLowerCase().replace(/\s+/g, ' ');
@@ -131,144 +80,91 @@ function termToPattern(term: string): RegExp {
   return new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`, 'i');
 }
 
-function uniqueMatches(matches: BlockedTermMatch[]): BlockedTermMatch[] {
+function uniqueMatches(matches: any[]): any[] {
   return Array.from(new Map(matches.map((match) => [match.term, match])).values());
 }
 
-function findMatchedRuleTerms(normalizedMessage: string): BlockedTermMatch[] {
-  const matches: BlockedTermMatch[] = [];
-
+function findMatchedRuleTerms(normalizedMessage: string): any[] {
+  const matches: any[] = [];
   for (const rule of HEURISTIC_RULES) {
     for (const term of rule.terms) {
       if (termToPattern(term).test(normalizedMessage)) {
-        matches.push({
-          term,
-          reason: rule.reason,
-        });
+        matches.push({ term, reason: rule.reason });
       }
     }
   }
-
   return uniqueMatches(matches);
 }
 
 function runHeuristicModeration(normalizedMessage: string): ModerationOutcome {
   const matched = HEURISTIC_RULES.filter((rule) => rule.pattern.test(normalizedMessage)).map((rule) => rule.reason);
-  return {
-    blocked: matched.length > 0,
-    reasons: matched,
-  };
-}
-
-function mapApiStatusToReason(status: number): string {
-  if (status === 429) return 'moderation_api_rate_limited';
-  if (status === 401 || status === 403) return 'moderation_worker_auth_failed';
-  if (status === 404) return 'moderation_worker_not_found';
-  if (status >= 500) return 'moderation_api_unavailable';
-  return 'moderation_worker_error';
-}
-
-async function cacheAndReturn(
-  cacheKey: string,
-  normalizedMessage: string,
-  outcome: ModerationOutcome
-): Promise<ModerationOutcome & { cached: boolean }> {
-  moderationCache.set(cacheKey, outcome);
-  await setPersistentCache(cacheKey, normalizedMessage, outcome);
-  return { ...outcome, cached: false };
-}
-
-async function fallbackOnUnavailable(
-  cacheKey: string,
-  normalizedMessage: string,
-  baseReason: string
-): Promise<ModerationOutcome & { cached: boolean }> {
-  if (MODERATION_DEGRADED_MODE === 'heuristic_allow') {
-    const matchedTerms = findMatchedRuleTerms(normalizedMessage);
-    await upsertBlockedTerms(matchedTerms, 'heuristic');
-    const heuristicOutcome = runHeuristicModeration(normalizedMessage);
-    return cacheAndReturn(cacheKey, normalizedMessage, heuristicOutcome);
-  }
-
-  return cacheAndReturn(cacheKey, normalizedMessage, {
-    blocked: true,
-    reasons: [baseReason],
-  });
+  return { blocked: matched.length > 0, reasons: matched };
 }
 
 async function getPersistentCache(cacheKey: string): Promise<ModerationOutcome | null> {
   try {
-    const supabase = createAdminClient();
+    const supabase = await createClient();
     const { data, error } = await supabase
-      .from(CACHE_TABLE)
-      .select('blocked,reasons,hits')
-      .eq('content_hash', cacheKey)
-      .maybeSingle<ModerationCacheRow>();
+        .from('guestbook_moderation_cache')
+        .select('*')
+        .eq('content_hash', cacheKey)
+        .single();
 
-    if (error || !data) {
-      if (error) {
-        console.error('[GUESTBOOK_MODERATION] Supabase cache read error:', error.message);
-      }
-      return null;
-    }
+    if (error || !data) return null;
 
-    const outcome: ModerationOutcome = {
-      blocked: Boolean(data.blocked),
-      reasons: parseReasons(data.reasons),
-    };
-
+    // Update hits
     await supabase
-      .from(CACHE_TABLE)
-      .update({
-        hits: (data.hits || 0) + 1,
-        last_seen_at: new Date().toISOString(),
-      })
-      .eq('content_hash', cacheKey);
+        .from('guestbook_moderation_cache')
+        .update({
+            hits: (data.hits || 0) + 1,
+            last_seen_at: new Date().toISOString()
+        })
+        .eq('content_hash', cacheKey);
 
-    return outcome;
+    return {
+      blocked: data.blocked,
+      reasons: data.reasons as string[],
+    };
   } catch (error) {
-    console.error('[GUESTBOOK_MODERATION] Supabase cache unavailable:', error);
+    console.error('[GUESTBOOK_MODERATION] Cache read error:', error);
     return null;
   }
 }
 
 async function setPersistentCache(cacheKey: string, normalizedMessage: string, outcome: ModerationOutcome) {
   try {
-    const supabase = createAdminClient();
-    await supabase.from(CACHE_TABLE).upsert(
-      {
-        content_hash: cacheKey,
-        normalized_message: normalizedMessage,
-        blocked: outcome.blocked,
-        reasons: outcome.reasons,
-        model: MODERATION_MODEL,
-        last_seen_at: new Date().toISOString(),
-      },
-      { onConflict: 'content_hash' }
-    );
+    const supabase = await createClient();
+    await supabase
+        .from('guestbook_moderation_cache')
+        .upsert({
+            content_hash: cacheKey,
+            normalized_message: normalizedMessage,
+            blocked: outcome.blocked,
+            reasons: outcome.reasons,
+            model: MODERATION_MODEL,
+            hits: 1,
+            last_seen_at: new Date().toISOString(),
+        }, { onConflict: 'content_hash' });
   } catch (error) {
-    console.error('[GUESTBOOK_MODERATION] Supabase cache write failed:', error);
+    console.error('[GUESTBOOK_MODERATION] Cache write failed:', error);
   }
 }
 
-async function getBlockedTerms(): Promise<BlockedTermRow[]> {
+async function getBlockedTerms(): Promise<any[]> {
   if (blockedTermsCache && Date.now() - blockedTermsCache.fetchedAt < BLOCKED_TERMS_TTL_MS) {
     return blockedTermsCache.terms;
   }
 
   try {
-    const supabase = createAdminClient();
+    const supabase = await createClient();
     const { data, error } = await supabase
-      .from(BLOCKED_TERMS_TABLE)
-      .select('id,term,normalized_term,reason,hits')
-      .order('normalized_term', { ascending: true });
+        .from('guestbook_blocked_terms')
+        .select('*')
+        .order('normalized_term', { ascending: true });
 
-    if (error) {
-      console.error('[GUESTBOOK_MODERATION] Blocked term read error:', error.message);
-      return blockedTermsCache?.terms || [];
-    }
+    if (error) throw error;
 
-    const terms = (data || []) as BlockedTermRow[];
+    const terms = data || [];
     blockedTermsCache = {
       fetchedAt: Date.now(),
       terms,
@@ -276,111 +172,60 @@ async function getBlockedTerms(): Promise<BlockedTermRow[]> {
 
     return terms;
   } catch (error) {
-    console.error('[GUESTBOOK_MODERATION] Blocked term cache unavailable:', error);
+    console.error('[GUESTBOOK_MODERATION] Blocked term read error:', error);
     return blockedTermsCache?.terms || [];
   }
 }
 
-function findMatchedBlockedTerms(normalizedMessage: string, blockedTerms: BlockedTermRow[]): BlockedTermMatch[] {
-  return uniqueMatches(
-    blockedTerms
-      .filter((term) => termToPattern(term.normalized_term).test(normalizedMessage))
-      .map((term) => ({
-        term: term.normalized_term,
-        reason: term.reason,
-      }))
-  );
-}
-
-async function recordBlockedTermHits(terms: BlockedTermMatch[]) {
+async function recordBlockedTermHits(terms: any[]) {
   if (terms.length === 0) return;
-
   try {
-    const supabase = createAdminClient();
-    const now = new Date().toISOString();
-    const uniqueTerms = uniqueMatches(terms);
-
-    for (const { term, reason } of uniqueTerms) {
-      const { data, error } = await supabase
-        .from(BLOCKED_TERMS_TABLE)
-        .select('id,hits')
+    const supabase = await createClient();
+    for (const { term } of uniqueMatches(terms)) {
+      // Get current hits
+      const { data } = await supabase
+        .from('guestbook_blocked_terms')
+        .select('hits')
         .eq('normalized_term', term)
-        .maybeSingle<{ id: number; hits: number | null }>();
-
-      if (error) {
-        console.error('[GUESTBOOK_MODERATION] Blocked term hit read failed:', error.message);
-        continue;
-      }
-
-      if (!data) {
-        await supabase.from(BLOCKED_TERMS_TABLE).insert({
-          term,
-          normalized_term: term,
-          reason,
-          hits: 1,
-          last_seen_at: now,
-        });
-        continue;
-      }
-
+        .single();
+        
       await supabase
-        .from(BLOCKED_TERMS_TABLE)
-        .update({
-          hits: (data.hits || 0) + 1,
-          last_seen_at: now,
-        })
-        .eq('id', data.id);
+          .from('guestbook_blocked_terms')
+          .update({ 
+              hits: (data?.hits || 0) + 1, 
+              last_seen_at: new Date().toISOString() 
+          })
+          .where('normalized_term', 'eq', term);
     }
-
     blockedTermsCache = null;
   } catch (error) {
-    console.error('[GUESTBOOK_MODERATION] Blocked term hit update failed:', error);
+    console.error('[GUESTBOOK_MODERATION] Hit update failed:', error);
   }
 }
 
-async function upsertBlockedTerms(terms: BlockedTermMatch[], source: 'heuristic' | 'worker') {
+async function upsertBlockedTerms(terms: any[], source: 'heuristic' | 'worker') {
   if (terms.length === 0) return;
-
   try {
-    const supabase = createAdminClient();
-    const now = new Date().toISOString();
-    const uniqueTerms = uniqueMatches(terms);
-
-    for (const { term, reason } of uniqueTerms) {
-      const { data, error } = await supabase
-        .from(BLOCKED_TERMS_TABLE)
-        .select('id,hits')
+    const supabase = await createClient();
+    for (const { term, reason } of uniqueMatches(terms)) {
+      // Get current hits if exists
+      const { data: existing } = await supabase
+        .from('guestbook_blocked_terms')
+        .select('hits')
         .eq('normalized_term', term)
-        .maybeSingle<{ id: number; hits: number | null }>();
-
-      if (error) {
-        console.error('[GUESTBOOK_MODERATION] Blocked term write read failed:', error.message);
-        continue;
-      }
-
-      if (!data) {
-        await supabase.from(BLOCKED_TERMS_TABLE).insert({
-          term,
-          normalized_term: term,
-          reason,
-          source,
-          hits: 1,
-          last_seen_at: now,
-        });
-        continue;
-      }
+        .single();
 
       await supabase
-        .from(BLOCKED_TERMS_TABLE)
-        .update({
-          reason,
-          source,
-          hits: (data.hits || 0) + 1,
-          last_seen_at: now,
-        })
-        .eq('id', data.id);
+          .from('guestbook_blocked_terms')
+          .upsert({
+              term,
+              normalized_term: term,
+              reason,
+              source,
+              hits: (existing?.hits || 0) + 1,
+              last_seen_at: new Date().toISOString()
+          }, { onConflict: 'normalized_term' });
     }
-
     blockedTermsCache = null;
   } catch (error) {
     console.error('[GUESTBOOK_MODERATION] Blocked term upsert failed:', error);
@@ -389,15 +234,11 @@ async function upsertBlockedTerms(terms: BlockedTermMatch[], source: 'heuristic'
 
 export async function moderateGuestbookMessage(message: string): Promise<ModerationOutcome & { cached: boolean }> {
   const normalized = normalizeMessage(message);
-  if (!normalized) {
-    return { blocked: false, reasons: [], cached: true };
-  }
+  if (!normalized) return { blocked: false, reasons: [], cached: true };
 
   const cacheKey = hashMessage(normalized);
   const cached = moderationCache.get(cacheKey);
-  if (cached) {
-    return { ...cached, cached: true };
-  }
+  if (cached) return { ...cached, cached: true };
 
   const persistent = await getPersistentCache(cacheKey);
   if (persistent) {
@@ -406,57 +247,53 @@ export async function moderateGuestbookMessage(message: string): Promise<Moderat
   }
 
   const blockedTerms = await getBlockedTerms();
-  const matchedBlockedTerms = findMatchedBlockedTerms(normalized, blockedTerms);
+  const matchedBlockedTerms = blockedTerms
+      .filter((term) => termToPattern(term.normalized_term || term.normalizedTerm).test(normalized))
+      .map((term) => ({ term: term.normalized_term || term.normalizedTerm, reason: term.reason }));
+
   if (matchedBlockedTerms.length > 0) {
     await recordBlockedTermHits(matchedBlockedTerms);
-    return cacheAndReturn(cacheKey, normalized, {
-      blocked: true,
-      reasons: matchedBlockedTerms.map((match) => `blocked_term:${match.term}`),
-    });
+    const outcome = { blocked: true, reasons: matchedBlockedTerms.map((m) => `blocked_term:${m.term}`) };
+    moderationCache.set(cacheKey, outcome);
+    await setPersistentCache(cacheKey, normalized, outcome);
+    return { ...outcome, cached: false };
   }
 
   if (!MODERATION_API_URL || !MODERATION_SHARED_SECRET) {
-    return fallbackOnUnavailable(cacheKey, normalized, 'moderation_not_configured');
+      const heuristic = runHeuristicModeration(normalized);
+      moderationCache.set(cacheKey, heuristic);
+      await setPersistentCache(cacheKey, normalized, heuristic);
+      return { ...heuristic, cached: false };
   }
-
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), MODERATION_TIMEOUT_MS);
 
   try {
     const response = await fetch(MODERATION_API_URL, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${MODERATION_SHARED_SECRET}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        message: normalized,
-      }),
-      signal: controller.signal,
-      cache: 'no-store',
+      headers: { Authorization: `Bearer ${MODERATION_SHARED_SECRET}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: normalized }),
     });
 
     if (!response.ok) {
-      return fallbackOnUnavailable(cacheKey, normalized, mapApiStatusToReason(response.status));
+        const heuristic = runHeuristicModeration(normalized);
+        return { ...heuristic, cached: false };
     }
 
     const data = (await response.json()) as CloudflareWorkerModerationResponse;
-    const reasons = parseReasons(data.reasons);
-    const categories = parseReasons(data.categories);
+    const reasons = parseReasons(data.reasons || data.categories);
     const blocked = Boolean(data.blocked);
-    const normalizedReasons =
-      reasons.length > 0 ? reasons : categories.length > 0 ? categories : blocked ? ['unsafe'] : [];
+    const finalReasons = reasons.length > 0 ? reasons : (blocked ? ['unsafe'] : []);
 
     if (blocked) {
       await upsertBlockedTerms(findMatchedRuleTerms(normalized), 'worker');
     }
 
-    const outcome: ModerationOutcome = { blocked, reasons: normalizedReasons };
-    return cacheAndReturn(cacheKey, normalized, outcome);
+    const outcome: ModerationOutcome = { blocked, reasons: finalReasons };
+    moderationCache.set(cacheKey, outcome);
+    await setPersistentCache(cacheKey, normalized, outcome);
+    return { ...outcome, cached: false };
   } catch (error) {
-    console.error('[GUESTBOOK_MODERATION] API call failed:', error);
-    return fallbackOnUnavailable(cacheKey, normalized, 'moderation_api_error');
-  } finally {
-    clearTimeout(timer);
+    const heuristic = runHeuristicModeration(normalized);
+    return { ...heuristic, cached: false };
   }
 }
+

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getNowPlaying, getSpotifyTokens } from '@/lib/spotify';
-import { createAdminClient } from '@/utils/supabase/admin';
+import { createClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,16 +17,16 @@ export async function GET() {
             return NextResponse.json(nowPlaying);
         }
 
-        // If not playing, get last played from history
-        const supabase = createAdminClient();
-        const { data: lastPlayed, error } = await supabase
+        // If not playing, get last played from history via Supabase
+        const supabase = await createClient();
+        const { data: lastPlayed, error: historyError } = await supabase
             .from('spotify_history')
             .select('*')
             .order('played_at', { ascending: false })
             .limit(1)
             .single();
 
-        if (error || !lastPlayed) {
+        if (historyError || !lastPlayed) {
             return NextResponse.json({ isPlaying: false });
         }
 
@@ -42,3 +42,4 @@ export async function GET() {
         return NextResponse.json({ isPlaying: false, error: 'Internal Server Error' }, { status: 500 });
     }
 }
+
