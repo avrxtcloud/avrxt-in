@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from "react";
-import { Search, Filter, MoreVertical, ShieldBan, ShieldCheck, UserCog, Mail, Calendar, MapPin, Globe } from "lucide-react";
+import { Search, Filter, MoreVertical, ShieldBan, ShieldCheck, UserCog, Mail, Calendar, MapPin, Globe, Activity, History } from "lucide-react";
 import SpotlightBox from "@/components/SpotlightBox";
 import { adminSetBanStatus, adminSetRole } from "@/app/actions/admin";
 import { cn } from "@/lib/utils";
