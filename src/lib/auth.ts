@@ -49,7 +49,6 @@ export const auth = betterAuth({
         admin(), // Enabling admin plugin for role based access
     ],
 
-    // @ts-ignore
     user: {
         fields: {
             role: {
@@ -107,6 +106,7 @@ export const auth = betterAuth({
             }
         }
     }
-});
+} as any);
+
 
 
