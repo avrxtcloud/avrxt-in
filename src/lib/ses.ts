@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
-import { SES, SendRawEmailCommand } from '@aws-sdk/client-ses';
+import * as aws from '@aws-sdk/client-sesv2';
 
-const ses = new SES({
+const ses = new aws.SESv2Client({
   region: process.env.AWS_REGION || 'ap-south-1',
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
@@ -9,9 +9,9 @@ const ses = new SES({
   },
 });
 
-// For SES v3, Nodemailer needs both the client and the SendRawEmailCommand
+// Using SESv2Client as explicitly requested by the build error
 const transporter = nodemailer.createTransport({
-  SES: { ses, aws: { SendRawEmailCommand } },
+  SES: { ses, aws },
 } as any);
 
 export const FROM_EMAIL = 'Avior ( avrxt.in ) <dispatch@notify.avrxt.in>';
