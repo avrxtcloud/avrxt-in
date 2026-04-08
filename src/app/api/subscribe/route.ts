@@ -1,5 +1,7 @@
 import { resolveMx } from 'node:dns/promises';
 import { headers } from 'next/headers';
+
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { LRUCache } from 'lru-cache';
 import { sql } from '@/lib/db';

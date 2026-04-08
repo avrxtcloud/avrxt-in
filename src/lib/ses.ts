@@ -1,20 +1,30 @@
 import nodemailer from 'nodemailer';
-import { SES, SendEmailCommand } from '@aws-sdk/client-ses';
-
-const ses = new SES({
-  region: process.env.AWS_REGION || 'ap-south-1',
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-  },
-});
-
-// Use the syntax recommended for AWS SDK v3 with Nodemailer
-const transporter = nodemailer.createTransport({
-  SES: { ses, aws: { SendEmailCommand } },
-} as any);
 
 export const FROM_EMAIL = 'Avior ( avrxt.in ) <dispatch@notify.avrxt.in>';
+
+// Lazy-initialized transporter — avoids build-time SES client creation
+let _transporter: nodemailer.Transporter | null = null;
+
+function getTransporter(): nodemailer.Transporter {
+  if (_transporter) return _transporter;
+
+  // Dynamic require at runtime only, never during build
+  const { SESClient, SendRawEmailCommand } = require('@aws-sdk/client-ses');
+
+  const ses = new SESClient({
+    region: process.env.AWS_REGION || 'ap-south-1',
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    },
+  });
+
+  _transporter = nodemailer.createTransport({
+    SES: { ses, aws: { SendRawEmailCommand } },
+  } as any);
+
+  return _transporter;
+}
 
 interface SendMailOptions {
   to: string;
@@ -25,12 +35,12 @@ interface SendMailOptions {
 
 export async function sendMail({ to, subject, html, unsubscribeToken }: SendMailOptions) {
   const unsubscribeUrl = `https://unsubscribe.avrxt.in/mail?token=${unsubscribeToken}`;
-  
+
   const mailOptions: any = {
     from: FROM_EMAIL,
-    to: to,
-    subject: subject,
-    html: html,
+    to,
+    subject,
+    html,
   };
 
   if (unsubscribeToken) {
@@ -40,5 +50,5 @@ export async function sendMail({ to, subject, html, unsubscribeToken }: SendMail
     };
   }
 
-  return transporter.sendMail(mailOptions);
+  return getTransporter().sendMail(mailOptions);
 }
