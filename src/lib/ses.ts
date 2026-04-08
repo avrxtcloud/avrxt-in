@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
-import * as aws from '@aws-sdk/client-ses';
+import { SES, SendRawEmailCommand } from '@aws-sdk/client-ses';
 
-const ses = new aws.SES({
+const ses = new SES({
   region: process.env.AWS_REGION || 'ap-south-1',
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
@@ -9,9 +9,10 @@ const ses = new aws.SES({
   },
 });
 
+// For SES v3, Nodemailer needs both the client and the SendRawEmailCommand
 const transporter = nodemailer.createTransport({
-  SES: { ses, aws },
-} as any);
+  SES: { ses, aws: { SendRawEmailCommand } },
+});
 
 export const FROM_EMAIL = 'Avior ( avrxt.in ) <dispatch@notify.avrxt.in>';
 
