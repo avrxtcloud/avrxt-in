@@ -12,7 +12,7 @@ const ses = new SES({
 // For SES v3, Nodemailer needs both the client and the SendRawEmailCommand
 const transporter = nodemailer.createTransport({
   SES: { ses, aws: { SendRawEmailCommand } },
-});
+} as any);
 
 export const FROM_EMAIL = 'Avior ( avrxt.in ) <dispatch@notify.avrxt.in>';
 
