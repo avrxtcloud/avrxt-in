@@ -1,5 +1,5 @@
 import { buildPageMetadata } from '@/lib/page-metadata';
-import { protectAdminPage } from '@/lib/auth-checks';
+import { protectMailAdminPage } from '@/lib/auth-checks';
 import MailAdminClient from './MailAdminClient';
 import { sql } from '@/lib/db';
 
@@ -10,7 +10,7 @@ export const metadata = buildPageMetadata({
 });
 
 export default async function MailAdminPage() {
-    await protectAdminPage();
+    await protectMailAdminPage();
 
     // Get stats
     const stats = await sql`

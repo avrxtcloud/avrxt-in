@@ -1,41 +1,68 @@
-import { auth } from '@/lib/auth';
-import { headers } from 'next/headers';
+import { createClient } from '@/utils/supabase/server';
+import { checkDiscordRole } from '@/lib/discord';
 import { redirect } from 'next/navigation';
-import { signSource } from './auth-tokens';
 
-/**
- * Verifies if the current requester is an active admin.
- * Uses Better Auth API to check and validate the session against the database.
- */
 export async function verifyAdmin() {
-    const session = await auth.api.getSession({
-        headers: await headers(),
-    });
+    const supabase = await createClient();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-    if (!session || !session.user) {
-        console.warn(`[AUTH_CHECK] No user session found: Unauthorized`);
+    if (userError || !user) {
+        console.warn(`[AUTH_CHECK] No user found: ${userError?.message || 'Unauthorized'}`);
         return { authorized: false, error: 'not_logged_in' };
     }
 
-    // Role check from our SQL database via Better Auth
-    if ((session.user as any).role === 'admin') {
-        return { authorized: true, user: session.user };
+    // 1. Check if the user is tagged as admin in the current session (JWT)
+    if (user.app_metadata?.role === 'admin') {
+        return { authorized: true, user };
     }
 
+    // 2. STALE SESSION FIX: If not in JWT, check the DATABASE directly
+    try {
+        console.log(`[AUTH_CHECK] Checking DB for user: ${user.email} (${user.id})`);
+        const { createAdminClient } = await import('@/utils/supabase/admin');
+        const adminClient = createAdminClient();
+        const { data: { user: dbUser }, error: dbError } = await adminClient.auth.admin.getUserById(user.id);
 
-    console.warn(`[AUTH_CHECK] Access Denied for ${session.user.email}. Role 'admin' not found.`);
+        if (!dbError && dbUser?.app_metadata?.role === 'admin') {
+            console.log('[AUTH_CHECK] Success! DB confirmed admin status bypassing stale JWT.');
+            return { authorized: true, user: dbUser };
+        }
+
+        if (dbError) console.error('[AUTH_CHECK] DB Fetch Error:', dbError);
+    } catch (e) {
+        console.error('[AUTH_CHECK] Service Role Client failed:', e);
+    }
+
+    // 3. Last Resort Fallback: Check Discord Live
+    const isDiscord = user.app_metadata?.provider === 'discord' || user.app_metadata?.providers?.includes('discord');
+    if (isDiscord) {
+        const discordId = user.user_metadata?.provider_id || user.user_metadata?.sub;
+        if (discordId) {
+            const hasAccess = await checkDiscordRole(discordId);
+            if (hasAccess) {
+                console.log('[AUTH_CHECK] Success via Live Discord Fallback.');
+                return { authorized: true, user };
+            }
+        }
+    }
+
+    console.warn(`[AUTH_CHECK] Access Denied for ${user.email}. Role 'admin' not found in metadata.`);
     return { authorized: false, error: 'unauthorized_role' };
 }
 
-/**
- * Redirection utility for protected server pages.
- */
 export async function protectAdminPage() {
     const { authorized, error } = await verifyAdmin();
     if (!authorized) {
-        // Use a signed state token for the source parameter as requested
-        const sourceToken = signSource('admin');
-        redirect(`/auth/login?source=${sourceToken}&error=${error}`);
+        redirect(`/auth/login?source=admin&error=${error}`);
     }
 }
 
+/**
+ * Redirection utility for /mail/admin protected page.
+ */
+export async function protectMailAdminPage() {
+    const { authorized, error } = await verifyAdmin();
+    if (!authorized) {
+        redirect(`/auth/login?source=mail&error=${error}`);
+    }
+}

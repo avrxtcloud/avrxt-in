@@ -15,7 +15,6 @@
     "@neondatabase/serverless": "^0.10.4",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.90.1",
-    "better-auth": "^1.6.0",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.2",
     "framer-motion": "^12.36.0",
