@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1000.0",
+    "@aws-sdk/client-ses": "^3.1026.0",
     "@aws-sdk/s3-request-presigner": "^3.1000.0",
     "@neondatabase/serverless": "^0.10.4",
     "@supabase/ssr": "^0.8.0",
@@ -21,9 +22,14 @@
     "googleapis": "^171.4.0",
     "lru-cache": "^11.2.6",
     "lucide-react": "^0.562.0",
+    "nanoid": "^5.1.7",
     "next": "16.1.6",
     "nodemailer": "^7.0.12",
+<<<<<<< Updated upstream
     "pg": "^8.13.1",
+=======
+    "postgres": "^3.4.9",
+>>>>>>> Stashed changes
     "razorpay": "^2.9.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
