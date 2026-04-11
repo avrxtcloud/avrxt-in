@@ -1,4 +1,4 @@
-# avrxt-in Analysis Report (Branch: codex/v3fix)
+# avrxt-in Analysis Report (Branch: codex/v3fix) 
 
 - Repository: https://github.com/avrxtcloud/avrxt-in
 - Branch analyzed: `codex/v3fix` (checked out locally)
@@ -55,7 +55,7 @@ Notable vulnerable packages:
     - `razorpay_signature: 'VALID'`
   - `src/app/actions/cloud.ts:54-60` always verifies signature cryptographically and rejects mismatch.
 - Impact:
-  - ìPrice on Requestî submissions will fail verification and never complete as intended.
+  - ‚ÄúPrice on Request‚Äù submissions will fail verification and never complete as intended.
 
 ### [Critical] Server trusts client-provided price for cloud payments
 - Evidence:
