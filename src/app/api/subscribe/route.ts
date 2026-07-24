@@ -22,7 +22,7 @@ const DISPOSABLE_DOMAINS = new Set([
   'rhyta.com',
 ]);
 
-const PROHIBITED_DOMAINS = ['avrxt.in', 'avrxt.space', 'aviorxt.aero'];
+const PROHIBITED_DOMAINS = ['avrxt.dev', 'avrxt.space', 'aviorxt.aero'];
 
 const BLACKLISTED_EMAILS = new Set(['example@gmail.com', 'spam@gmail.com', 'test@test.com']);
 
@@ -37,7 +37,7 @@ function getAllowedOrigin(request: NextRequest): string {
   const configured = process.env.NEXT_PUBLIC_SITE_URL;
   const origin = request.headers.get('origin');
   if (configured && origin && origin === configured) return origin;
-  return configured || 'https://www.avrxt.in';
+  return configured || 'https://www.avrxt.dev';
 }
 
 function getClientIp(headerList: Headers): string {
@@ -152,18 +152,18 @@ export async function POST(request: NextRequest) {
     await sleep(2000);
 
     const { error: emailError } = await resend.emails.send({
-      from: 'Glory at avrxt.in <notify@mail.avrxt.in>',
+      from: 'avrxt.dev <Notify@send.AvrXt.dev>',
       to: sanitizedEmail,
-      subject: 'Connection Established: Welcome to avrxt.in',
+      subject: 'Connection Established: Welcome to avrxt.dev',
       html: `
         <div style="background-color: #000; color: #fff; padding: 40px; font-family: Arial, sans-serif; max-width: 500px; margin: auto; border: 1px solid #1a1a1a; border-radius: 24px; text-align: center;">
-          <h1 style="font-size: 24px; font-weight: 900; margin-bottom: 16px;">Greetings, Glory</h1>
+          <h1 style="font-size: 24px; font-weight: 900; margin-bottom: 16px;">Greetings, avrxt</h1>
           <p style="color: #a1a1aa; line-height: 1.6; margin-bottom: 32px;">
             Welcome to <strong>avrxt.in</strong>. You are now successfully subscribed to the avrxt mailing list.
           </p>
           <div style="border-top: 1px solid #1a1a1a; padding-top: 24px; margin-top: 24px;">
             <p style="font-size: 14px; color: #666; margin-bottom: 4px;">Best regards @avrxt</p>
-            <a href="https://www.avrxt.in" style="color: #fff; text-decoration: none; font-size: 12px; font-weight: 700;">www.avrxt.in</a>
+            <a href="https://www.avrxt.dev" style="color: #fff; text-decoration: none; font-size: 12px; font-weight: 700;">www.avrxt.dev</a>
           </div>
         </div>
       `,
