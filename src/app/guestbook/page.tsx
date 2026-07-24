@@ -1,13 +1,25 @@
 import { createClient } from '@/utils/supabase/server';
 import GuestbookClient from './GuestbookClient';
 import { getMessages } from '@/app/actions/guestbook';
+import type { Metadata } from 'next';
 import { buildPageMetadata } from '@/lib/page-metadata';
 
-export const metadata = buildPageMetadata({
-    title: 'Guestbook',
-    description: 'Leave Your Foot Print Here.',
-    keywords: ['guestbook', 'avrxt community', 'digital footprint', 'developer messages', 'Leave Your Foot Print Here'],
-});
+type PageProps = {
+    searchParams?: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined>;
+};
+
+export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
+    const resolved = await Promise.resolve(searchParams ?? {});
+    const share = typeof resolved.share === 'string' ? resolved.share : undefined;
+    const path = share ? `/guestbook?share=${share}` : '/guestbook';
+
+    return buildPageMetadata({
+        title: 'Guestbook',
+        description: 'Leave Your Foot Print Here.',
+        keywords: ['guestbook', 'avrxt community', 'digital footprint', 'developer messages', 'Leave Your Foot Print Here'],
+        path,
+    });
+}
 
 export default async function GuestbookPage() {
     const supabase = await createClient();

@@ -1,13 +1,16 @@
 import type { Metadata } from 'next';
+import { ogSize } from '@/lib/og-image';
 
 type PageMetadataInput = {
   title: string;
   description: string;
   keywords?: string[];
   noIndex?: boolean;
+  path?: string;
 };
 
 const SITE_NAME = 'avrxt';
+const DEFAULT_OG_IMAGE_ALT = 'avrxt.in preview image';
 
 function withSiteSuffix(title: string) {
   const normalized = title.trim();
@@ -21,9 +24,29 @@ export function buildPageMetadata({
   description,
   keywords,
   noIndex,
+  path,
 }: PageMetadataInput): Metadata {
   const fullTitle = withSiteSuffix(title);
   const normalizedDescription = description.trim();
+
+  const normalizedPath = path?.trim();
+  const effectivePath = normalizedPath && normalizedPath.startsWith('/') ? normalizedPath : undefined;
+  const ogVersion =
+    process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 12) ||
+    process.env.VERCEL_DEPLOYMENT_ID ||
+    process.env.NEXT_PUBLIC_OG_VERSION ||
+    'dev';
+
+  const imageUrl = effectivePath
+    ? `/api/og?${new URLSearchParams({ path: effectivePath, v: ogVersion }).toString()}`
+    : '/opengraph-image';
+
+  const openGraphImage = {
+    url: imageUrl,
+    width: ogSize.width,
+    height: ogSize.height,
+    alt: DEFAULT_OG_IMAGE_ALT,
+  } as const;
 
   const metadata: Metadata = {
     title: fullTitle,
@@ -34,11 +57,20 @@ export function buildPageMetadata({
       description: normalizedDescription,
       type: 'website',
       siteName: 'avrxt.in',
+      images: [openGraphImage],
     },
     twitter: {
       card: 'summary_large_image',
       title: fullTitle,
       description: normalizedDescription,
+      images: [
+        {
+          url: imageUrl,
+          width: ogSize.width,
+          height: ogSize.height,
+          alt: DEFAULT_OG_IMAGE_ALT,
+        },
+      ],
     },
   };
 

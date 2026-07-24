@@ -1,12 +1,17 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Space_Mono, Outfit, Instrument_Serif } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CustomCursor from "@/components/CustomCursor";
 import ParallaxBackground from "@/components/ParallaxBackground";
 import PremiumLoader from "@/components/PremiumLoader";
+<<<<<< v6-1-beta
 import GlobalLinkPreview from "@/components/GlobalLinkPreview";
+======
+import { ogSize } from "@/lib/og-image";
+>>>>>> main
 
 const inter = Inter({
   variable: "--font-sans",
@@ -32,9 +37,25 @@ const instrumentSerif = Instrument_Serif({
 });
 
 const siteFavicon = "https://cdn.avrxt.in/icons/favicon.jpg";
-const metadataBase = process.env.NEXT_PUBLIC_SITE_URL
-  ? new URL(process.env.NEXT_PUBLIC_SITE_URL)
-  : new URL("https://avrxt.in");
+const metadataBase = new URL(
+  process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
+    "https://www.avrxt.in"
+);
+
+const openGraphImage = {
+  url: "/opengraph-image",
+  width: ogSize.width,
+  height: ogSize.height,
+  alt: "avrxt.in preview image",
+} as const;
+
+const twitterImage = {
+  url: "/twitter-image",
+  width: ogSize.width,
+  height: ogSize.height,
+  alt: "avrxt.in preview image",
+} as const;
 
 export const metadata: Metadata = {
   metadataBase,
@@ -50,11 +71,13 @@ export const metadata: Metadata = {
     description: "avrxt: Full Stack Developer specializing in React, Node.js, API development, and AI automation. Building secure, scalable, and enterprise-ready web solutions.",
     type: "website",
     siteName: "avrxt.in",
+    images: [openGraphImage],
   },
   twitter: {
     card: "summary_large_image",
     title: "avrxt | Full Stack Developer & Tech Innovator",
     description: "avrxt: Full Stack Developer specializing in React, Node.js, API development, and AI automation. Building secure, scalable, and enterprise-ready web solutions.",
+    images: [twitterImage],
   },
 };
 
@@ -73,7 +96,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark scroll-smooth">
       <body className={`${inter.variable} ${spaceMono.variable} ${outfit.variable} ${instrumentSerif.variable} font-sans bg-[#050505] text-white selection:bg-white/10 overflow-x-hidden`}>
-        <PremiumLoader />
+        <Suspense fallback={null}>
+          <PremiumLoader />
+        </Suspense>
         <CustomCursor />
         <ParallaxBackground />
         <div className="mesh-gradient" />

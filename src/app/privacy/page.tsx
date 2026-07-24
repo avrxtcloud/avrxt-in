@@ -6,6 +6,7 @@ export const metadata = buildPageMetadata({
     description:
         'Our Data Governance and Privacy Policy. Learn how we handle your data, logging, and security in accordance with DPDP Act and GDPR.',
     keywords: ['privacy policy', 'data governance', 'avrxt privacy', 'GDPR compliance', 'DPDP Act', 'data security'],
+    path: '/privacy',
 });
 
 export default function Privacy() {

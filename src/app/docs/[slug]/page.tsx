@@ -16,13 +16,23 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
     const doc = await getDocBySlug(slug);
     if (!doc) {
+<<<<<< v6-1-beta
         return buildPageMetadata({ title: 'Docs', description: 'Browse engineering docs by avrxt.', noIndex: true });
+======
+        return buildPageMetadata({
+            title: 'Docs',
+            description: 'Browse engineering docs, playbooks, and technical resources authored by avrxt.',
+            noIndex: true,
+            path: '/docs',
+        });
+>>>>>> main
     }
     return buildPageMetadata({
         title: doc.title,
         description: doc.description || 'Technical documentation by avrxt.',
         keywords: ['docs', 'avrxt', doc.category, doc.slug, doc.title, ...(doc.tags || [])],
         noIndex: !doc.published,
+        path: `/docs/${slug}`,
     });
 }
 

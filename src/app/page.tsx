@@ -11,6 +11,7 @@ export const metadata = buildPageMetadata({
   description:
     'avrxt: Full Stack Developer specializing in React, Node.js, API development, and AI automation. Building secure, scalable, and enterprise-ready web solutions.',
   keywords: ['avrxt', 'full stack developer', 'react', 'node.js', 'api development', 'ai automation', 'cloud engineering'],
+  path: '/',
 });
 
 export default function Home() {

@@ -1,4 +1,8 @@
+<<<<<< v6-1-beta
 ### avrxt-in Analysis Report (Branch: codex/v3fix)
+=======
+# avrxt-in Analysis Report (Branch: codex/v3fix) 
+>>>>>> main
 
 - Repository: https://github.com/avrxtcloud/avrxt-in
 - Branch analyzed: `codex/v3fix` (checked out locally)

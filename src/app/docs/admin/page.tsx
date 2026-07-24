@@ -8,6 +8,7 @@ export const metadata = buildPageMetadata({
     title: 'Docs Admin',
     description: 'Admin panel for managing documentation posts.',
     noIndex: true,
+    path: '/docs/admin',
 });
 
 export default async function DocsAdminPage() {

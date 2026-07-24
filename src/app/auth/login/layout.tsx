@@ -5,6 +5,7 @@ export const metadata = buildPageMetadata({
   description: 'Authenticate with GitHub or Discord to access guestbook and admin experiences.',
   keywords: ['login', 'auth', 'github', 'discord', 'avrxt'],
   noIndex: true,
+  path: '/auth/login',
 });
 
 export default function LoginLayout({ children }: { children: React.ReactNode }) {

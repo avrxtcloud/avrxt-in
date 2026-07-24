@@ -8,6 +8,7 @@ export const metadata = buildPageMetadata({
     title: 'Docs',
     description: 'Explore in-depth technical guides, architectural deep dives, and performance optimization tutorials by avrxt.',
     keywords: ['technical documentation', 'coding tutorials', 'system architecture', 'software engineering guides', 'avrxt library'],
+    path: '/docs',
 });
 
 export const revalidate = 60;

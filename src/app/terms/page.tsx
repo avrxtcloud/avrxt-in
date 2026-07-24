@@ -6,6 +6,7 @@ export const metadata = buildPageMetadata({
     description:
         'The formal Terms and Conditions for accessing avrxt.in and using our Cloud architecture. Review our rules on API usage, liability, and conduct.',
     keywords: ['terms of service', 'legal terms', 'avrxt terms', 'API usage rules', 'user conduct', 'legal jurisdiction'],
+    path: '/terms',
 });
 
 export default function Terms() {

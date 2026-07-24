@@ -6,6 +6,7 @@ export const metadata = buildPageMetadata({
     description:
         'Explore our multi-layered Security Protocol. Learn how we secure your data with TLS 1.3, encrypted storage, and proactive vulnerability audits.',
     keywords: ['security protocol', 'data security', 'encryption', 'TLS 1.3', 'infrastructure security', 'vulnerability reporting', 'bug bounty'],
+    path: '/security',
 });
 
 export default function Security() {
