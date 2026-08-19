@@ -23,6 +23,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
         { route: '/cupcake',    priority: 0.5, changeFrequency: 'monthly' },
         { route: '/privacy',    priority: 0.3, changeFrequency: 'yearly'  },
         { route: '/terms',      priority: 0.3, changeFrequency: 'yearly'  },
+        { route: '/dc/privacy', priority: 0.3, changeFrequency: 'yearly'  },
+        { route: '/dc/terms',   priority: 0.3, changeFrequency: 'yearly'  },
         { route: '/refund',     priority: 0.3, changeFrequency: 'yearly'  },
         { route: '/security',   priority: 0.3, changeFrequency: 'yearly'  },
     ];
