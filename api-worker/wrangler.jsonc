@@ -1,0 +1,14 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "avrxt-api-gateway",
+  "main": "worker.ts",
+  "compatibility_date": "2026-08-19",
+  "keep_vars": true,
+  "vars": {
+    "SITE_ORIGIN": "https://www.avrxt.dev",
+    "EDGE_ORIGIN": "https://edge.avrxt.space"
+  },
+  "routes": [
+    { "pattern": "api.avrxt.dev", "custom_domain": true }
+  ]
+}

@@ -4,12 +4,13 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Github, Mail, Instagram, Menu } from 'lucide-react';
 import Reveal from '@/components/Reveal';
+import { apiUrl } from '@/lib/api-gateway';
 
 export default function Contact() {
     const [formStatus, setFormStatus] = useState<{ type: 'success' | 'error' | null, message: string }>({ type: null, message: '' });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const API_ENDPOINT = '/api/contact';
+    const API_ENDPOINT = apiUrl('/v1/contact', '/api/contact');
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();

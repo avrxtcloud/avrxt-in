@@ -5,6 +5,7 @@ import { Layout, Database, BrainCircuit, ShieldCheck, UploadCloud } from 'lucide
 import Link from 'next/link';
 import Reveal from '@/components/Reveal';
 import { cn } from '@/lib/utils';
+import { apiUrl } from '@/lib/api-gateway';
 
 // Metadata is not allowed in Client Components, but we can set it via a side-file or document head.
 // However, in Next.js App Router, for client pages we usually use a separate layout or head component if we want dynamic.
@@ -47,7 +48,7 @@ export default function HireMe() {
         const data = Object.fromEntries(formData);
 
         try {
-            const response = await fetch('/api/hireme', {
+            const response = await fetch(apiUrl('/v1/hire', '/api/hireme'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),

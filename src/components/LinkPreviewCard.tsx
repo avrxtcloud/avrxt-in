@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { apiUrl } from '@/lib/api-gateway';
 
 export type LinkPreviewData = {
   url: string;
@@ -47,7 +48,8 @@ export default function LinkPreviewCard({
     (async () => {
       try {
         setError(null);
-        const res = await fetch(`/api/link-preview?url=${encodeURIComponent(normalizedUrl)}`, { cache: 'force-cache' });
+        const path = `/v1/link-preview?url=${encodeURIComponent(normalizedUrl)}`;
+        const res = await fetch(apiUrl(path, `/api/link-preview?url=${encodeURIComponent(normalizedUrl)}`), { cache: 'force-cache' });
         if (!res.ok) throw new Error('Failed');
         const json = (await res.json()) as LinkPreviewData;
         if (active) setData(json);

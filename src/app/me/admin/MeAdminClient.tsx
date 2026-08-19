@@ -17,6 +17,7 @@ import { disconnectSpotifyAction } from '@/app/actions/spotify';
 import { searchYouTubeAction } from '@/app/actions/youtube';
 import { uploadToR2Action, getPresignedR2UrlAction, deleteFromR2Action } from '@/app/actions/r2';
 import { edgeUrl } from '@/lib/edge';
+import { apiUrl } from '@/lib/api-gateway';
 import { DISCORD_BADGES } from '@/lib/discord-badges';
 
 interface MeAdminClientProps {
@@ -367,7 +368,8 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                                                     if (!query) return;
                                                     setSaveStatus('SEARCHING_GEO...');
                                                     try {
-                                                        const res = await fetch(edgeUrl(`/v1/fnc/geo/search?name=${encodeURIComponent(query)}&count=5&language=en&format=json`), { cache: 'no-store' });
+                                                        const path = `/v1/geo/search?name=${encodeURIComponent(query)}&count=5&language=en&format=json`;
+                                                        const res = await fetch(apiUrl(path, edgeUrl(`/v1/fnc/geo/search?name=${encodeURIComponent(query)}&count=5&language=en&format=json`)), { cache: 'no-store' });
                                                         const data = await res.json();
                                                         if (data.results) {
                                                             // We'll use a simple alert/prompt for now or just take the first one

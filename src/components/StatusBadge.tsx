@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { ShieldCheck, Activity, ExternalLink, AlertTriangle, AlertCircle } from 'lucide-react';
+import { apiUrl } from '@/lib/api-gateway';
 
 type StatusState = {
     status: 'operational' | 'down' | 'maintenance' | 'unknown' | 'degraded';
@@ -20,7 +21,7 @@ export default function StatusBadge() {
 
         const fetchStatus = async () => {
             try {
-                const response = await fetch('/api/status', {
+                const response = await fetch(apiUrl('/v1/status', '/api/status'), {
                     method: 'GET',
                     cache: 'no-store'
                 });

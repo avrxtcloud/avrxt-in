@@ -32,6 +32,7 @@ import Tilt from '@/components/Tilt';
 import Magnetic from '@/components/Magnetic';
 import { MeConfig } from '@/lib/me-config';
 import { edgeUrl } from '@/lib/edge';
+import { apiUrl } from '@/lib/api-gateway';
 import { DISCORD_BADGES } from '@/lib/discord-badges';
 
 const iconMap: Record<string, any> = {
@@ -127,7 +128,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
         if (!weatherEnabled) return;
         const fetchWeather = async () => {
             try {
-                const res = await fetch(edgeUrl('/v1/fnc/geo/forecast?latitude=13.0827&longitude=80.2707&current=temperature_2m,relative_humidity_2m,wind_speed_10m'), { cache: 'no-store' });
+                const res = await fetch(apiUrl('/v1/geo/forecast?latitude=13.0827&longitude=80.2707&current=temperature_2m,relative_humidity_2m,wind_speed_10m', edgeUrl('/v1/fnc/geo/forecast?latitude=13.0827&longitude=80.2707&current=temperature_2m,relative_humidity_2m,wind_speed_10m')), { cache: 'no-store' });
                 const data = await res.json();
                 setWeather(data.current);
             } catch (e) { console.error(e); }
@@ -159,7 +160,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
 
         const fetchLanyard = async () => {
             try {
-                const res = await fetch(edgeUrl(`/v1/realtime/dc-presence/${discordId}`), { cache: 'no-store' });
+                const res = await fetch(apiUrl(`/v1/discord/presence/${discordId}`, edgeUrl(`/v1/realtime/dc-presence/${discordId}`)), { cache: 'no-store' });
                 const data = await res.json();
                 if (data.success) setLanyardData(data.data);
             } catch (e) { console.error(e); }
@@ -281,7 +282,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
             lastNowPlayingFetchAt = now;
 
             try {
-                const spotifyApiUrl = '/api/spotify/now-playing';
+                const spotifyApiUrl = apiUrl('/v1/spotify/now-playing', '/api/spotify/now-playing');
 
                 try {
                     inFlight?.abort();
@@ -629,7 +630,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
         const data = Object.fromEntries(formData);
 
         try {
-            const response = await fetch('/api/subscribe', {
+            const response = await fetch(apiUrl('/v1/subscribe', '/api/subscribe'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Mail, ArrowRight } from 'lucide-react';
 import Reveal from '@/components/Reveal';
 import { cn } from '@/lib/utils';
+import { apiUrl } from '@/lib/api-gateway';
 
 export default function Subscribe() {
     const [formStatus, setFormStatus] = useState<{ type: 'success' | 'error' | null, message: string }>({ type: null, message: '' });
@@ -18,7 +19,7 @@ export default function Subscribe() {
         const data = Object.fromEntries(formData);
 
         try {
-            const response = await fetch('/api/subscribe', {
+            const response = await fetch(apiUrl('/v1/subscribe', '/api/subscribe'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
