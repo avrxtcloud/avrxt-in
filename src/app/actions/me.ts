@@ -4,6 +4,7 @@ import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { MeConfig, defaultMeConfig } from '@/lib/me-config';
 import { verifyAdmin } from '@/lib/auth-checks';
+import { createAdminClient } from '@/utils/supabase/admin';
 
 
 function normalizeMeConfig(config: MeConfig): MeConfig {
@@ -63,7 +64,7 @@ export async function saveMeConfigAction(config: MeConfig) {
         return { error: `Unauthorized: ${authError}` };
     }
 
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     const { error } = await supabase
         .from('me_config')

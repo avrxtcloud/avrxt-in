@@ -4,6 +4,7 @@ import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { moderateGuestbookMessage } from '@/lib/guestbook-moderation';
 import { getAuthUser } from '@/lib/openauth';
+import { createAdminClient } from '@/utils/supabase/admin';
 
 export async function getMessages() {
     const supabase = await createClient();
@@ -17,10 +18,10 @@ export async function getMessages() {
 }
 
 export async function postMessage(message: string, userName: string, userAvatar: string) {
-    const supabase = await createClient();
     const user = await getAuthUser();
 
     if (!user) return { error: 'You must be logged in to post.' };
+    const supabase = createAdminClient();
 
     const normalizedMessage = message.trim();
     if (!normalizedMessage) return { error: 'Message cannot be empty.' };
@@ -47,10 +48,10 @@ export async function postMessage(message: string, userName: string, userAvatar:
 }
 
 export async function updateMessage(id: string, message: string) {
-    const supabase = await createClient();
     const user = await getAuthUser();
 
     if (!user) return { error: 'Unauthorized' };
+    const supabase = createAdminClient();
 
     const normalizedMessage = message.trim();
     if (!normalizedMessage) return { error: 'Message cannot be empty.' };
@@ -74,10 +75,10 @@ export async function updateMessage(id: string, message: string) {
 }
 
 export async function deleteMessage(id: string) {
-    const supabase = await createClient();
     const user = await getAuthUser();
 
     if (!user) return { error: 'Unauthorized' };
+    const supabase = createAdminClient();
 
     const { error } = await supabase
         .from('guestbook')
