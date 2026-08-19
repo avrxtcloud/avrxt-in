@@ -743,7 +743,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
 
     return (
         <main className={cn(
-            "min-h-screen bg-black text-white relative flex flex-col items-center select-none overflow-x-hidden pt-16 pb-12",
+            "me-v7 min-h-[100dvh] bg-[#050505] text-white relative flex flex-col items-center select-none overflow-x-hidden px-1 pt-12 pb-12 sm:pt-16",
             isImmersive && "immersive-mode"
         )}>
             {/* Background Decor */}
@@ -751,8 +751,8 @@ export default function MeClient({ config }: { config: MeConfig }) {
                 "fixed inset-0 z-0 transition-all duration-1000",
                 isImmersive ? "blur-xl scale-110" : ""
             )}>
-                <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,#1a1a1a_0%,#000_70%)]"></div>
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:56px_56px]"></div>
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(34,211,238,0.08),transparent_28%),radial-gradient(circle_at_85%_80%,rgba(139,92,246,0.08),transparent_32%),#050505]"></div>
 
                 {/* Spotify Ambient (cover-based) */}
                 {showSpotifyAmbient && (
@@ -787,26 +787,26 @@ export default function MeClient({ config }: { config: MeConfig }) {
                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.08] mix-blend-overlay pointer-events-none"></div>
             </div>
 
-            <div className="relative z-20 w-full max-w-md px-6 flex flex-col items-center [perspective:1000px]">
+            <div className="relative z-20 w-full max-w-2xl px-5 sm:px-8 flex flex-col items-center [perspective:1000px]">
                 {/* Profile Header */}
-                <Reveal className="text-center mb-10" direction="down" delay={0.1}>
+                <Reveal className="me-profile-header w-full border-l border-white/20 py-7 pl-5 text-left mb-10 sm:py-10 sm:pl-8" direction="down" delay={0.1}>
                     <div className="mb-6 relative inline-block">
                         <div className="absolute inset-0 animate-pulse bg-emerald-500/20 blur-2xl rounded-full scale-110 opacity-30"></div>
                         <img
                             src={config.profile.avatarUrl}
                             alt={config.profile.handle}
-                            className="w-24 h-24 rounded-full border-2 border-white/10 relative z-10 shadow-2xl hover:scale-105 transition-transform duration-500"
+                            className="w-24 h-24 rounded-none border border-white/20 relative z-10 shadow-2xl hover:scale-105 transition-transform duration-500"
                         />
                         <div className={cn(
                             "absolute bottom-1 right-1 w-5 h-5 rounded-full border-4 border-black z-20 transition-colors duration-500",
                             presenceClasses.dot
                         )} />
                     </div>
-                    <h1 className="text-3xl font-black tracking-tighter mb-1 uppercase italic">
+                    <h1 className="me-profile-title font-[family-name:var(--font-outfit)] text-[clamp(3.5rem,12vw,7rem)] font-black tracking-[-0.085em] leading-[0.82] mb-3 uppercase text-transparent [-webkit-text-stroke:1px_rgba(255,255,255,0.78)]">
                         {headingName}
                     </h1>
                     {weatherEnabled && (
-                        <p className="text-[10px] font-mono text-zinc-500 tracking-[0.3em] uppercase mb-4">
+                        <p className="text-[10px] font-mono text-cyan-400/70 tracking-[0.3em] uppercase mb-4">
                             {formatLocation(config.profile.location)}
                         </p>
                     )}
@@ -819,7 +819,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
                         <span className="flex items-center gap-1.5"><Wind size={10} /> {weather?.wind_speed_10m || '??'}km/h</span>
                         </div>
                     )}
-                    <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-white/5 border border-white/10">
+                    <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 bg-white/[0.03] border border-white/10">
                         <span className={cn("text-[8px] font-mono uppercase tracking-widest", presenceClasses.text)}>{displayStatus}</span>
                     </div>
 
@@ -903,7 +903,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
 
                 {/* Links Section */}
                 <div className="w-full mb-8">
-                    <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.2em] mb-3 ml-1 block">Social_Connections</span>
+                    <span className="me-section-label text-[10px] font-mono text-cyan-400 uppercase tracking-[0.3em] mb-3 ml-1 block">Social_Connections</span>
                     <div className="space-y-3">
                         {config.links.map((link, idx) => {
                             const isCustomIcon = link.icon && (link.icon.startsWith('http') || link.icon.startsWith('/') || link.icon.startsWith('data:'));
@@ -939,7 +939,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
                 {/* Music Player Section */}
                 <div className="w-full mb-8">
                     <div className="flex items-center justify-between mb-3 ml-1">
-                        <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.2em] block">Audio_Terminal</span>
+                        <span className="me-section-label text-[10px] font-mono text-blue-400 uppercase tracking-[0.3em] block">Audio_Terminal</span>
                         <div className="flex items-center gap-3">
                             <button onClick={() => setIsImmersive(!isImmersive)} className={cn(
                                 "text-[9px] font-mono uppercase tracking-widest transition-all",
@@ -1057,7 +1057,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
                 {/* Gallery Section */}
                 {config.gallery && config.gallery.length > 0 && (
                     <div className="w-full mb-10">
-                        <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.2em] mb-3 ml-1 block">Visual_Feed</span>
+                        <span className="me-section-label text-[10px] font-mono text-violet-400 uppercase tracking-[0.3em] mb-3 ml-1 block">Visual_Feed</span>
                         <div className="grid grid-cols-2 gap-3">
                             {config.gallery.map((item) => (
                                 <Reveal key={item.id} direction="up" delay={0.4}>
@@ -1098,7 +1098,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
                     <Tilt intensity={5}>
                         <div className="sub-card p-6 rounded-2xl border border-white/15 bg-white/[0.04] backdrop-blur-3xl relative overflow-hidden">
                             <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
-                            <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.2em] mb-3 block">// Newsletter</span>
+                            <span className="me-section-label text-[10px] font-mono text-violet-400 uppercase tracking-[0.3em] mb-3 block">// Newsletter</span>
                             <h3 className="text-lg font-bold tracking-tight mb-1 text-white">Stay Synchronized</h3>
                             <p className="text-xs text-zinc-400 mb-5 leading-relaxed">
                                 Get Your Special Note&apos;s <span className="inline-block animate-bounce">🍂</span>
@@ -1140,7 +1140,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
 
                 {/* Resources */}
                 <div className="w-full mb-10">
-                    <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.2em] mb-3 ml-1 block">Resources_&_Visuals</span>
+                    <span className="me-section-label text-[10px] font-mono text-blue-400 uppercase tracking-[0.3em] mb-3 ml-1 block">Resources_&_Visuals</span>
                     <div className="space-y-3">
                         {config.resources.map((res, i) => (
                             <Reveal key={res.id} direction="up" delay={0.5 + (i * 0.05)}>
@@ -1228,6 +1228,70 @@ export default function MeClient({ config }: { config: MeConfig }) {
                 }
                 .animate-bounce-slow {
                     animation: bounce-slow 3s ease-in-out infinite;
+                }
+                .me-v7 .me-profile-header {
+                    position: relative;
+                }
+                .me-v7 .me-profile-header::before,
+                .me-v7 .me-profile-header::after {
+                    content: '';
+                    position: absolute;
+                    left: -3px;
+                    width: 6px;
+                    height: 6px;
+                    border-radius: 999px;
+                    background: white;
+                }
+                .me-v7 .me-profile-header::before { top: 0; }
+                .me-v7 .me-profile-header::after { bottom: 0; }
+                .me-v7 .me-section-label {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.8rem;
+                }
+                .me-v7 .me-section-label::after {
+                    content: '';
+                    height: 1px;
+                    flex: 1;
+                    background: linear-gradient(90deg, currentColor, transparent);
+                    opacity: 0.22;
+                }
+                .me-v7 .link-card,
+                .me-v7 .card-3d,
+                .me-v7 .sub-card {
+                    border-radius: 0 !important;
+                    border-color: rgba(255, 255, 255, 0.12) !important;
+                    background: rgba(255, 255, 255, 0.025) !important;
+                    box-shadow: none;
+                }
+                .me-v7 .link-card:hover,
+                .me-v7 .card-3d:hover,
+                .me-v7 .sub-card:hover {
+                    border-color: rgba(96, 165, 250, 0.4) !important;
+                    background: linear-gradient(110deg, rgba(34, 211, 238, 0.045), rgba(139, 92, 246, 0.035)) !important;
+                }
+                .me-v7 input:not([type='range']) {
+                    border-radius: 0 !important;
+                }
+                .me-v7 .sub-card button[type='submit'] {
+                    border-radius: 0 !important;
+                    background: linear-gradient(90deg, #67e8f9, #60a5fa, #a78bfa) !important;
+                    color: #050505 !important;
+                }
+                @media (max-width: 420px) {
+                    .me-v7 .me-profile-title {
+                        font-size: clamp(3rem, 18vw, 4.5rem);
+                    }
+                }
+                @media (prefers-reduced-motion: reduce) {
+                    .me-v7 *,
+                    .me-v7 *::before,
+                    .me-v7 *::after {
+                        scroll-behavior: auto !important;
+                        animation-duration: 0.01ms !important;
+                        animation-iteration-count: 1 !important;
+                        transition-duration: 0.01ms !important;
+                    }
                 }
             `}</style>
         </main>

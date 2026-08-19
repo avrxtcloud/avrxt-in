@@ -32,20 +32,29 @@ function normalizeMeConfig(config: MeConfig): MeConfig {
 }
 
 export async function getMeConfigAction(): Promise<MeConfig> {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase
-        .from('me_config')
-        .select('data')
-        .eq('key', 'main_config')
-        .single();
-
-    if (error || !data) {
-        console.warn('Error fetching me_config, returning default:', error);
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+        console.warn('Supabase is not configured, returning default me_config.');
         return defaultMeConfig;
     }
 
-    return normalizeMeConfig(data.data as MeConfig);
+    try {
+        const supabase = await createClient();
+        const { data, error } = await supabase
+            .from('me_config')
+            .select('data')
+            .eq('key', 'main_config')
+            .single();
+
+        if (error || !data) {
+            console.warn('Error fetching me_config, returning default:', error);
+            return defaultMeConfig;
+        }
+
+        return normalizeMeConfig(data.data as MeConfig);
+    } catch (error) {
+        console.warn('Unable to fetch me_config, returning default:', error);
+        return defaultMeConfig;
+    }
 }
 
 export async function saveMeConfigAction(config: MeConfig) {

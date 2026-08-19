@@ -10,7 +10,7 @@ import PremiumLoader from '@/components/PremiumLoader';
 import GlobalLinkPreview from '@/components/GlobalLinkPreview';
 
 const CHROMELESS_ROUTES = new Set([
-    '/', '/home', '/maintenance', '/link-error-404',
+    '/', '/home', '/me', '/maintenance', '/link-error-404',
     '/400', '/401', '/403', '/404', '/408', '/429',
     '/500', '/502', '/503', '/504',
 ]);
