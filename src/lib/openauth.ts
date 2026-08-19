@@ -17,6 +17,17 @@ export function getOpenAuthClient() {
   return createClient({ clientID: 'avrxt-web', issuer: process.env.OPENAUTH_ISSUER_URL || 'https://auth.avrxt.dev' });
 }
 
+export function getAuthCallbackUrl(requestUrl: string, next: string) {
+  const request = new URL(requestUrl);
+  const isLocal = request.hostname === 'localhost' || request.hostname === '127.0.0.1';
+  const origin = isLocal
+    ? request.origin
+    : (process.env.AUTH_CALLBACK_ORIGIN || 'https://www.avrxt.dev');
+  const callback = new URL('/auth/callback', origin);
+  callback.searchParams.set('next', next);
+  return callback;
+}
+
 export async function setAuthTokens(access: string, refresh: string) {
   const store = await cookies();
   const options = { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' as const, path: '/', maxAge: 2592000 };
