@@ -8,13 +8,13 @@ export async function GET() {
     try {
         const tokens = await getSpotifyTokens();
         if (!tokens) {
-            return NextResponse.json({ isPlaying: false, error: 'Spotify not connected' });
+            return NextResponse.json({ isPlaying: false, connected: false, error: 'Spotify not connected' });
         }
 
         const nowPlaying = await getNowPlaying();
 
         if (nowPlaying.isPlaying) {
-            return NextResponse.json(nowPlaying);
+            return NextResponse.json({ ...nowPlaying, connected: true, fetchedAt: Date.now() });
         }
 
         // If not playing, get last played from history
@@ -27,7 +27,7 @@ export async function GET() {
             .single();
 
         if (error || !lastPlayed) {
-            return NextResponse.json({ isPlaying: false });
+            return NextResponse.json({ isPlaying: false, connected: true, fetchedAt: Date.now() });
         }
 
         return NextResponse.json({
@@ -36,6 +36,8 @@ export async function GET() {
             artist: lastPlayed.artist,
             albumImageUrl: lastPlayed.cover_url,
             playedAt: lastPlayed.played_at,
+            connected: true,
+            fetchedAt: Date.now(),
         });
     } catch (error) {
         console.error('Error in now-playing API:', error);

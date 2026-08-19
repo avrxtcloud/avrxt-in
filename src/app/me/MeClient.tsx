@@ -281,7 +281,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
             lastNowPlayingFetchAt = now;
 
             try {
-                const spotifyApiUrl = process.env.NEXT_PUBLIC_SPOTIFY_API_URL || edgeUrl('/v1/spotify/now-playing');
+                const spotifyApiUrl = '/api/spotify/now-playing';
 
                 try {
                     inFlight?.abort();

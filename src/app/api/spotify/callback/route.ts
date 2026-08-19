@@ -2,6 +2,7 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { verifyAdmin } from '@/lib/auth-checks';
 import { createAdminClient } from '@/utils/supabase/admin';
+import { getSpotifyRedirectUri } from '@/lib/spotify-oauth';
 
 const TOKEN_ENDPOINT = 'https://accounts.spotify.com/api/token';
 
@@ -25,9 +26,9 @@ export async function GET(request: Request) {
 
   const clientId = process.env.SPOTIFY_CLIENT_ID;
   const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
-  const redirectUri = process.env.SPOTIFY_REDIRECT_URI;
+  const redirectUri = getSpotifyRedirectUri(request.url);
 
-  if (!clientId || !clientSecret || !redirectUri) {
+  if (!clientId || !clientSecret) {
     return NextResponse.redirect(new URL('/me/admin?error=spotify_env_missing', request.url));
   }
 
@@ -65,9 +66,12 @@ export async function GET(request: Request) {
     access_token?: string;
     refresh_token?: string;
     expires_in?: number;
+    error?: string;
+    error_description?: string;
   };
 
   if (!tokenResponse.ok || !tokenData.access_token || !tokenData.expires_in) {
+    console.error('[SPOTIFY_TOKEN_EXCHANGE_FAILED]', tokenResponse.status, tokenData.error, tokenData.error_description);
     return redirectWithStateCleanup(request, '/me/admin?error=token_fetch_failed');
   }
 
