@@ -53,7 +53,7 @@ function LoginContent() {
             provider: 'discord',
             options: {
                 redirectTo: getCallbackUrl(),
-                scopes: 'identify email guilds guilds.members.read',
+                scopes: 'identify email',
                 skipBrowserRedirect: true,
             },
         });

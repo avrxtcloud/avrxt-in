@@ -66,14 +66,16 @@ export async function GET(request: Request) {
           || discordIdentity?.identity_data?.sub
           || data.user.user_metadata?.provider_id
           || data.user.user_metadata?.sub;
-        const providerToken = data.session.provider_token;
-
-        if (!discordId || !providerToken) {
+        if (!discordId) {
           await supabase.auth.signOut();
           return NextResponse.redirect(loginErrorUrl('metadata_missing'));
         }
 
-        const hasAccess = await checkDiscordRole(discordId, providerToken);
+        // Keep guild membership verification server-side. Requesting Discord's
+        // elevated guilds.members.read user scope can be rejected for apps that
+        // have not been approved for it; the bot token already verifies the same
+        // guild role without expanding the user's OAuth consent.
+        const hasAccess = await checkDiscordRole(discordId);
 
         if (!hasAccess) {
           await supabase.auth.signOut();
