@@ -12,6 +12,8 @@ function getSafeNextPath(nextValue: string | null): string {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
+  const providerError = searchParams.get('error');
+  const providerErrorCode = searchParams.get('error_code');
   const next = getSafeNextPath(searchParams.get('next'));
   const loginErrorUrl = (error: string) => {
     const url = new URL('/auth/login', request.url);
@@ -21,11 +23,31 @@ export async function GET(request: Request) {
     return url;
   };
 
+  if (providerError) {
+    console.error('[AUTH_CALLBACK] OAuth provider rejected authentication:', {
+      error: providerError,
+      code: providerErrorCode,
+      description: searchParams.get('error_description'),
+    });
+    return NextResponse.redirect(loginErrorUrl('provider_rejected'));
+  }
+
   if (code) {
     const supabase = await createClient();
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
-    if (!error && data.user && data.session) {
+    if (error) {
+      console.error('[AUTH_CALLBACK] Code exchange failed:', {
+        message: error.message,
+        code: error.code,
+        status: error.status,
+      });
+      return NextResponse.redirect(loginErrorUrl(
+        /code verifier|pkce/i.test(error.message) ? 'pkce_cookie_missing' : 'oauth_callback_failed'
+      ));
+    }
+
+    if (data.user && data.session) {
       const isAdminPath = next.startsWith('/me/admin') || next.startsWith('/docs/admin');
       const isSourceAdmin = searchParams.get('source') === 'admin';
       const isAdminRequest = isAdminPath || isSourceAdmin;
