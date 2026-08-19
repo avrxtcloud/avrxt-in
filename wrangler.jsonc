@@ -4,6 +4,9 @@
   "main": "auth-worker/worker.ts",
   "compatibility_date": "2026-08-19",
   "keep_vars": true,
+  "vars": {
+    "DISCORD_ADMIN_USER_ID": "1269352892146384957"
+  },
   "routes": [
     { "pattern": "auth.avrxt.dev", "custom_domain": true }
   ],

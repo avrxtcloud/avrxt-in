@@ -12,6 +12,7 @@ interface Env {
   DISCORD_TOKEN: string;
   DISCORD_GUILD_ID: string;
   DISCORD_ROLE_ID: string;
+  DISCORD_ADMIN_USER_ID?: string;
   GITHUB_CLIENT_ID: string;
   GITHUB_CLIENT_SECRET: string;
 }
@@ -50,7 +51,18 @@ function createIssuer(env: Env) {
           { headers: { Authorization: `Bot ${env.DISCORD_TOKEN}` } },
         );
         const member = memberResponse.ok ? await memberResponse.json() as { roles?: string[] } : null;
-        const admin = Boolean(member?.roles?.includes(env.DISCORD_ROLE_ID));
+        const isOwner = Boolean(env.DISCORD_ADMIN_USER_ID && profile.id === env.DISCORD_ADMIN_USER_ID);
+        const hasAdminRole = Boolean(member?.roles?.includes(env.DISCORD_ROLE_ID));
+        const admin = isOwner || hasAdminRole;
+
+        if (!admin) {
+          console.warn('[OPENAUTH_DISCORD_ACCESS_DENIED]', {
+            userId: profile.id,
+            memberStatus: memberResponse.status,
+            configuredRole: Boolean(env.DISCORD_ROLE_ID),
+            roleCount: member?.roles?.length || 0,
+          });
+        }
 
         return ctx.subject('user', {
           id: profile.id,
