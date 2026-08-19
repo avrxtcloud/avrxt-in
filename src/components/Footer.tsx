@@ -23,14 +23,14 @@ export default function Footer() {
     }
 
     return (
-        <footer className="py-12 border-t border-white/5 bg-zinc-900/30 backdrop-blur-sm">
+        <footer className="v7-footer py-12 border-t border-cyan-300/15 bg-[#060606]/90 backdrop-blur-sm">
             <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 items-center gap-4 text-center">
                 <div className="md:text-left order-2 md:order-1">
                     <p className="text-zinc-500 text-xs tracking-[0.4em] uppercase font-mono mb-1">
                         &copy; {isMounted ? year : '2026'} avrxt.dev
                     </p>
-                    <p className="text-zinc-700 text-[10px] tracking-widest uppercase">
-                        Infrastructure Layer Active
+                    <p className="text-cyan-300/50 text-[10px] tracking-widest uppercase font-mono">
+                        System / online
                     </p>
                 </div>
 {/* ... remaining code ... */}

@@ -86,7 +86,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark scroll-smooth">
-      <body className={`${inter.variable} ${spaceMono.variable} ${outfit.variable} ${instrumentSerif.variable} font-sans bg-[#050505] text-white selection:bg-white/10 overflow-x-hidden`}>
+      <body className={`${inter.variable} ${spaceMono.variable} ${outfit.variable} ${instrumentSerif.variable} theme-v7 font-sans bg-[#050505] text-white selection:bg-cyan-300/20 overflow-x-hidden`}>
         <SiteChrome position="before" />
         <main className="relative z-10 min-h-screen">
           {children}
