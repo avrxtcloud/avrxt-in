@@ -2,7 +2,6 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { createClient } from '@/utils/supabase/client';
 import { Github, Disc } from 'lucide-react'; // Assuming 'Disc' for Discord or similar generic icon if not available
 
 export default function LoginPage() {
@@ -20,14 +19,6 @@ function LoginContent() {
     const [clientError, setClientError] = useState<string | null>(null);
     const source = searchParams.get('source');
     const next = searchParams.get('next') || (source === 'guestbook' ? '/guestbook' : source === 'admin' ? '/me/admin' : '/docs/admin');
-    const supabase = createClient();
-
-    const getCallbackUrl = () => {
-        const callbackUrl = new URL('/auth/callback', window.location.origin);
-        callbackUrl.searchParams.set('next', next);
-        if (source) callbackUrl.searchParams.set('source', source);
-        return callbackUrl.toString();
-    };
 
     useEffect(() => {
         if (!source) {
@@ -36,12 +27,7 @@ function LoginContent() {
     }, [source, router]);
 
     const handleGithubLogin = async () => {
-        await supabase.auth.signInWithOAuth({
-            provider: 'github',
-            options: {
-                redirectTo: getCallbackUrl(),
-            },
-        });
+        router.push(`/auth/start?provider=github&next=${encodeURIComponent(next)}`);
     };
 
     const handleDiscordLogin = async () => {
@@ -49,23 +35,7 @@ function LoginContent() {
         setIsDiscordLoading(true);
         setClientError(null);
 
-        const { data, error } = await supabase.auth.signInWithOAuth({
-            provider: 'discord',
-            options: {
-                redirectTo: getCallbackUrl(),
-                scopes: 'identify email',
-                skipBrowserRedirect: true,
-            },
-        });
-
-        if (error || !data.url) {
-            console.error('[AUTH_LOGIN] Discord OAuth could not start:', error?.message);
-            setClientError('Discord sign-in could not start. Check the Supabase provider configuration.');
-            setIsDiscordLoading(false);
-            return;
-        }
-
-        window.location.assign(data.url);
+        router.push(`/auth/start?provider=discord&next=${encodeURIComponent(next)}`);
     };
 
     if (!source) return null;

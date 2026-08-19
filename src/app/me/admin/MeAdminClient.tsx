@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import {
     Plus, Trash2, Save, LogOut,
@@ -13,7 +13,6 @@ import { cn } from '@/lib/utils';
 import { MeConfig } from '@/lib/me-config';
 import { saveMeConfigAction } from '@/app/actions/me';
 import { logout } from '@/app/actions/auth';
-import { createClient } from '@/utils/supabase/client';
 import { disconnectSpotifyAction } from '@/app/actions/spotify';
 import { searchYouTubeAction } from '@/app/actions/youtube';
 import { uploadToR2Action, getPresignedR2UrlAction, deleteFromR2Action } from '@/app/actions/r2';
@@ -33,30 +32,6 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
     const [ytError, setYtError] = useState('');
     const [saveStatus, setSaveStatus] = useState<string>('');
     const [isPending, setIsPending] = useState(false);
-
-    useEffect(() => {
-        const checkIdentities = async () => {
-            const supabase = createClient();
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user?.identities) {
-                const discordId = user.identities.find(i => i.provider === 'discord')?.id;
-                if (discordId && !config.profile.presence?.discordId) {
-                    setConfig(prev => ({
-                        ...prev,
-                        profile: {
-                            ...prev.profile,
-                            presence: {
-                                ...prev.profile.presence,
-                                mode: prev.profile.presence?.mode || 'auto',
-                                discordId: discordId
-                            }
-                        }
-                    }));
-                }
-            }
-        };
-        checkIdentities();
-    }, []);
 
     const handleSave = async () => {
         setIsPending(true);
@@ -511,21 +486,12 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                                                 [DISCONNECT]
                                             </button>
                                         ) : (
-                                            <button
-                                                onClick={async () => {
-                                                    const supabase = createClient();
-                                                    await supabase.auth.signInWithOAuth({
-                                                        provider: 'discord',
-                                                        options: {
-                                                            redirectTo: `${window.location.origin}/auth/callback?source=admin&next=%2Fme%2Fadmin`,
-                                                            scopes: 'identify email guilds.members.read',
-                                                        }
-                                                    });
-                                                }}
+                                            <Link
+                                                href="/auth/start?provider=discord&next=%2Fme%2Fadmin"
                                                 className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-[9px] font-bold font-mono rounded-md transition-all uppercase"
                                             >
                                                 Connect_Discord
-                                            </button>
+                                            </Link>
                                         )}
                                     </div>
 

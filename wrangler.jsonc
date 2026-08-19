@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "avrxt-openauth",
+  "main": "auth-worker/worker.ts",
+  "compatibility_date": "2026-08-19",
+  "routes": [
+    { "pattern": "auth.avrxt.dev", "custom_domain": true }
+  ],
+  "kv_namespaces": [
+    { "binding": "OPENAUTH_STORAGE", "id": "1557005fc7e548ed90d4ca95b55ae0b1" }
+  ]
+}

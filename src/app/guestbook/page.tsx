@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server';
+import { getAuthUser } from '@/lib/openauth';
 import GuestbookClient from './GuestbookClient';
 import { getMessages } from '@/app/actions/guestbook';
 import type { Metadata } from 'next';
@@ -22,8 +22,7 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
 }
 
 export default async function GuestbookPage() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthUser();
     const { data: messages = [] } = await getMessages() as { data: any[] };
 
     return (

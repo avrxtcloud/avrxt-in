@@ -1,5 +1,4 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { updateSession } from '@/utils/supabase/middleware'
 
 const MAINTENANCE_BYPASS_PREFIXES = [
     '/maintenance',
@@ -50,12 +49,7 @@ export default async function proxy(request: NextRequest) {
         return NextResponse.next()
     }
 
-    const hasSupabaseConfig = Boolean(
-        process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    )
-    const sessionResponse = hasSupabaseConfig
-        ? await updateSession(request)
-        : NextResponse.next({ request })
+    const sessionResponse = NextResponse.next({ request })
 
     const bypassesMaintenance = MAINTENANCE_BYPASS_PREFIXES.some(prefix =>
         url.pathname === prefix || url.pathname.startsWith(`${prefix}/`)
