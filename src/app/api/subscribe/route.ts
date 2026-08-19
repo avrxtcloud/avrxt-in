@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
         <div style="background-color: #000; color: #fff; padding: 40px; font-family: Arial, sans-serif; max-width: 500px; margin: auto; border: 1px solid #1a1a1a; border-radius: 24px; text-align: center;">
           <h1 style="font-size: 24px; font-weight: 900; margin-bottom: 16px;">Greetings, avrxt</h1>
           <p style="color: #a1a1aa; line-height: 1.6; margin-bottom: 32px;">
-            Welcome to <strong>avrxt.in</strong>. You are now successfully subscribed to the avrxt mailing list.
+            Welcome to <strong>avrxt.dev</strong>. You are now successfully subscribed to the avrxt mailing list.
           </p>
           <div style="border-top: 1px solid #1a1a1a; padding-top: 24px; margin-top: 24px;">
             <p style="font-size: 14px; color: #666; margin-bottom: 4px;">Best regards @avrxt</p>

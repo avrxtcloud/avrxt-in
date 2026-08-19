@@ -116,7 +116,7 @@ export default function StatusBadge() {
     return (
         <div className="flex items-center justify-center p-0.5">
             <a
-                href="https://status.avrxt.in"
+                href="https://status.avrxt.dev"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group relative flex items-center gap-3 px-4 py-1.5 bg-zinc-900/20 backdrop-blur-md border border-white/5 rounded-xl transition-all duration-500 hover:border-white/10 hover:bg-zinc-900/40 hover:shadow-[0_0_30px_-10px_rgba(255,255,255,0.05)] overflow-hidden scale-[0.92]"

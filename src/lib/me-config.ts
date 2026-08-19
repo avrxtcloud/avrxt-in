@@ -7,6 +7,9 @@ export interface MeLink {
 }
 
 export interface MeConfig {
+    site?: {
+        maintenanceEnabled: boolean;
+    };
     profile: {
         handle: string;
         bio: string;
@@ -64,12 +67,15 @@ export interface MeConfig {
 }
 
 export const defaultMeConfig: MeConfig = {
+    site: {
+        maintenanceEnabled: false,
+    },
     profile: {
         handle: "@avrxt",
         bio: "It's Just ?",
-        avatarUrl: "https://objects.avrxt.in/assets/IMG_20251108_224641_264.webp",
-        logoUrl: "https://cdn.avrxt.in/assets/logo-02.png",
-        bannerUrl: "https://objects.avrxt.in/images/aviorxt_01.jpg",
+        avatarUrl: "https://cdn.avxt.qzz.io/assets/IMG_20251108_224641_264.webp",
+        logoUrl: "https://cdn.avxt.qzz.io/assets/logo-02.png",
+        bannerUrl: "https://cdn.avxt.qzz.io/images/aviorxt_01.jpg",
         themeColor: "#10b981",
         status: { text: 'Online', color: 'green' },
         presence: {
@@ -84,8 +90,8 @@ export const defaultMeConfig: MeConfig = {
     music: {
         title: "her",
         artist: "JVKE",
-        coverUrl: "https://objects.avrxt.in/assets/ab67616d0000b273a0934c15232680a3afc9da6e.jpeg",
-        audioUrl: "https://objects.avrxt.in/assets/SpotiDownloader.com%20-%20her%20-%20JVKE.mp3",
+        coverUrl: "https://cdn.avxt.qzz.io/assets/ab67616d0000b273a0934c15232680a3afc9da6e.jpeg",
+        audioUrl: "https://cdn.avxt.qzz.io/assets/SpotiDownloader.com%20-%20her%20-%20JVKE.mp3",
         youtubeVideoId: "",
         spotifyEnabled: false,
         spotifyAmbientEnabled: false
@@ -94,13 +100,13 @@ export const defaultMeConfig: MeConfig = {
         { id: '1', name: 'Instagram', url: 'https://instagram.com/avr.me', icon: 'Instagram', type: 'social' },
         { id: '2', name: 'GitHub', url: 'https://github.com/avrxt', icon: 'Github', type: 'social' },
         { id: '3', name: 'Discord', url: 'https://discord.com/users/1269352892146384957', icon: 'Discord', type: 'social' },
-        { id: '4', name: 'Email', url: 'mailto:hey@avrxt.in', icon: 'Mail', type: 'social' }
+        { id: '4', name: 'Email', url: 'mailto:hey@avrxt.dev', icon: 'Mail', type: 'social' }
     ],
     gallery: [],
     resources: [
         { id: 'r1', title: 'Visual Gallery', url: '/gallery', type: 'gallery' },
         { id: 'r2', title: 'Documentation Portal', url: '/docs', type: 'doc' },
-        { id: 'r3', title: 'Rethinking Email Infrastructure', url: '/docs/avrxt-resend-2025', type: 'post', previewUrl: 'https://www.avrxt.in/assets/screenshot-zoom-analytics.webp', meta: 'avrxt-resend-2025' }
+        { id: 'r3', title: 'Rethinking Email Infrastructure', url: '/docs/avrxt-resend-2025', type: 'post', previewUrl: 'https://avrxt.dev/assets/screenshot-zoom-analytics.webp', meta: 'avrxt-resend-2025' }
     ],
     widgets: {
         quotesEnabled: true,

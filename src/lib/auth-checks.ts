@@ -36,9 +36,13 @@ export async function verifyAdmin() {
     }
 
     // 3. Last Resort Fallback: Check Discord Live (Only works if Bot Token is set)
-    const isDiscord = user.app_metadata?.provider === 'discord';
+    const discordIdentity = user.identities?.find(identity => identity.provider === 'discord');
+    const isDiscord = user.app_metadata?.provider === 'discord' || Boolean(discordIdentity);
     if (isDiscord) {
-        const discordId = user.user_metadata?.provider_id || user.user_metadata?.sub;
+        const discordId = discordIdentity?.identity_data?.provider_id
+            || discordIdentity?.identity_data?.sub
+            || user.user_metadata?.provider_id
+            || user.user_metadata?.sub;
         if (discordId) {
             const hasAccess = await checkDiscordRole(discordId);
             if (hasAccess) {

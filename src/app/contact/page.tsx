@@ -119,7 +119,7 @@ export default function Contact() {
                     <Link href="https://github.com/avrxt" target="_blank" className="hover:text-white transition-colors">
                         <Github className="w-6 h-6" />
                     </Link>
-                    <Link href="mailto:support@avrxt.in" className="hover:text-white transition-colors">
+                    <Link href="mailto:support@avrxt.dev" className="hover:text-white transition-colors">
                         <Mail className="w-6 h-6" />
                     </Link>
                     <Link href="https://instagram.com/avr.me" target="_blank" className="hover:text-white transition-colors">

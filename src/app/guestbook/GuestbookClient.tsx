@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { User } from '@supabase/supabase-js';
 import { Github, Send, Trash2, Edit3, X, Check, ShieldAlert, TriangleAlert } from 'lucide-react';
 import { signInWithGithub, postMessage, deleteMessage, updateMessage } from '@/app/actions/guestbook';
@@ -31,6 +32,7 @@ type DialogState =
     | null;
 
 export default function GuestbookClient({ user, initialMessages }: { user: User | null, initialMessages: Message[] }) {
+    const router = useRouter();
     const [messages, setMessages] = useState<Message[]>(initialMessages);
     const [input, setInput] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,7 +49,7 @@ export default function GuestbookClient({ user, initialMessages }: { user: User 
     };
 
     const handleSignIn = () => {
-        window.location.href = '/auth/login?source=guestbook';
+        router.push('/auth/login?source=guestbook');
     };
 
     const handleSignOut = async () => {

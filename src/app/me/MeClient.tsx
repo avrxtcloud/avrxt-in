@@ -125,6 +125,13 @@ export default function MeClient({ config }: { config: MeConfig }) {
     // Weather: only fetch when enabled
     useEffect(() => {
         if (!weatherEnabled) return;
+        const fetchWeather = async () => {
+            try {
+                const res = await fetch(edgeUrl('/v1/fnc/geo/forecast?latitude=13.0827&longitude=80.2707&current=temperature_2m,relative_humidity_2m,wind_speed_10m'), { cache: 'no-store' });
+                const data = await res.json();
+                setWeather(data.current);
+            } catch (e) { console.error(e); }
+        };
         fetchWeather();
         // Weather doesn't need aggressive polling (limits-friendly).
     }, [weatherEnabled]);
@@ -150,6 +157,13 @@ export default function MeClient({ config }: { config: MeConfig }) {
             badgesNeeded;
         if (!presenceNeeded) return;
 
+        const fetchLanyard = async () => {
+            try {
+                const res = await fetch(edgeUrl(`/v1/realtime/dc-presence/${discordId}`), { cache: 'no-store' });
+                const data = await res.json();
+                if (data.success) setLanyardData(data.data);
+            } catch (e) { console.error(e); }
+        };
         fetchLanyard();
         const id = window.setInterval(fetchLanyard, 60000);
         return () => window.clearInterval(id);
@@ -492,25 +506,6 @@ export default function MeClient({ config }: { config: MeConfig }) {
     useEffect(() => {
         setYtReady(false);
     }, [youtubeVideoId]);
-
-    const fetchWeather = async () => {
-        try {
-            const res = await fetch(edgeUrl('/v1/fnc/geo/forecast?latitude=13.0827&longitude=80.2707&current=temperature_2m,relative_humidity_2m,wind_speed_10m'), { cache: 'no-store' });
-            const data = await res.json();
-            setWeather(data.current);
-        } catch (e) { console.error(e); }
-    };
-
-    const fetchLanyard = async () => {
-        try {
-            if (!config.profile.presence?.discordId) return;
-            const res = await fetch(edgeUrl(`/v1/realtime/dc-presence/${config.profile.presence.discordId}`), { cache: 'no-store' });
-            const data = await res.json();
-            if (data.success) {
-                setLanyardData(data.data);
-            }
-        } catch (e) { console.error(e); }
-    };
 
     const togglePlay = () => {
         if (isUsingYouTube) {
@@ -1153,7 +1148,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
                                     <Link href={res.url} className="link-card block aspect-[16/5] rounded-xl group relative overflow-hidden bg-white/[0.03] border border-white/[0.08] backdrop-blur-xl">
                                         <div
                                             className="absolute inset-0 bg-cover bg-center grayscale-[40%] group-hover:grayscale-0 transition-all duration-500"
-                                            style={{ backgroundImage: `url('${config.profile.bannerUrl || "https://objects.avrxt.in/images/aviorxt_01.jpg"}')` }}
+                                            style={{ backgroundImage: `url('${config.profile.bannerUrl || "https://cdn.avxt.qzz.io/images/aviorxt_01.jpg"}')` }}
                                         ></div>
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10"></div>
                                         <div className="absolute inset-x-0 bottom-0 p-4 flex items-center justify-between z-20">
@@ -1207,7 +1202,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
                         </Magnetic>
                     </div>
                     <div className="flex items-center justify-center gap-4 text-[10px] text-zinc-700 font-mono uppercase tracking-widest mt-2">
-                        <span>&copy; {isMounted ? new Date().getFullYear() : '2026'} avrxt.in</span>
+                        <span>&copy; {isMounted ? new Date().getFullYear() : '2026'} avrxt.dev</span>
                         <span className="text-zinc-800">|</span>
                         <Link href="/me/admin" className="text-zinc-800 hover:text-zinc-500 transition-colors">
                             ADMIN

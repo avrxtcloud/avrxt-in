@@ -11,7 +11,7 @@ export default async function Image() {
     {
       title: 'Guestbook',
       description: 'Leave Your Foot Print Here.',
-      eyebrow: 'avrxt.in /guestbook',
+      eyebrow: 'avrxt.dev /guestbook',
     },
     { fonts }
   );

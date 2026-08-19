@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-    const baseUrl = 'https://www.avrxt.in';
+    const baseUrl = 'https://avrxt.dev';
 
     const staticPages: {
         route: string;

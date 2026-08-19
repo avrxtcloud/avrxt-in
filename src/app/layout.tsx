@@ -7,11 +7,8 @@ import Footer from "@/components/Footer";
 import CustomCursor from "@/components/CustomCursor";
 import ParallaxBackground from "@/components/ParallaxBackground";
 import PremiumLoader from "@/components/PremiumLoader";
-<<<<<< v6-1-beta
 import GlobalLinkPreview from "@/components/GlobalLinkPreview";
-======
 import { ogSize } from "@/lib/og-image";
->>>>>> main
 
 const inter = Inter({
   variable: "--font-sans",
@@ -36,25 +33,25 @@ const instrumentSerif = Instrument_Serif({
   style: ["italic"],
 });
 
-const siteFavicon = "https://cdn.avrxt.in/icons/favicon.jpg";
+const siteFavicon = "https://cdn.avxt.qzz.io/icons/favicon.jpg";
 const metadataBase = new URL(
   process.env.NEXT_PUBLIC_SITE_URL ||
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
-    "https://www.avrxt.in"
+    "https://avrxt.dev"
 );
 
 const openGraphImage = {
   url: "/opengraph-image",
   width: ogSize.width,
   height: ogSize.height,
-  alt: "avrxt.in preview image",
+  alt: "avrxt.dev preview image",
 } as const;
 
 const twitterImage = {
   url: "/twitter-image",
   width: ogSize.width,
   height: ogSize.height,
-  alt: "avrxt.in preview image",
+  alt: "avrxt.dev preview image",
 } as const;
 
 export const metadata: Metadata = {
@@ -70,7 +67,7 @@ export const metadata: Metadata = {
     title: "avrxt | Full Stack Developer & Tech Innovator",
     description: "avrxt: Full Stack Developer specializing in React, Node.js, API development, and AI automation. Building secure, scalable, and enterprise-ready web solutions.",
     type: "website",
-    siteName: "avrxt.in",
+    siteName: "avrxt.dev",
     images: [openGraphImage],
   },
   twitter: {

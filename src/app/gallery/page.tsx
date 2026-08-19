@@ -9,10 +9,10 @@ export default function Gallery() {
     const [selectedImg, setSelectedImg] = useState<string | null>(null);
 
     const images = [
-        { id: '001', name: 'Thanjavur', src: 'https://objects.avrxt.in/images/aviorxt_01.jpg', description: 'When art, architecture, and divinity meet' },
-        { id: '003', name: "The Wing's Edge", src: 'https://objects.avrxt.in/images/aviorxt_03.jpg' },
-        { id: '005', name: '@Blue', src: 'https://objects.avrxt.in/images/aviorxt_05.jpg' },
-        { id: '006', name: 'Artifact', src: 'https://objects.avrxt.in/images/aviorxt_06.jpg' },
+        { id: '001', name: 'Thanjavur', src: 'https://cdn.avxt.qzz.io/images/aviorxt_01.jpg', description: 'When art, architecture, and divinity meet' },
+        { id: '003', name: "The Wing's Edge", src: 'https://cdn.avxt.qzz.io/images/aviorxt_03.jpg' },
+        { id: '005', name: '@Blue', src: 'https://cdn.avxt.qzz.io/images/aviorxt_05.jpg' },
+        { id: '006', name: 'Artifact', src: 'https://cdn.avxt.qzz.io/images/aviorxt_06.jpg' },
     ];
 
     useEffect(() => {
@@ -115,7 +115,7 @@ export default function Gallery() {
                 </div>
 
                 <footer className="mt-40 pt-12 text-center border-t border-white/5">
-                    <p className="text-[10px] text-zinc-700 font-mono uppercase tracking-[0.5em]">&copy; 2025 // AVRXT.IN // SILO_SECURED</p>
+                    <p className="text-[10px] text-zinc-700 font-mono uppercase tracking-[0.5em]">&copy; 2025 // AVRXT.DEV // SILO_SECURED</p>
                 </footer>
             </section>
 

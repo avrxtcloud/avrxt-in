@@ -16,16 +16,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
     const doc = await getDocBySlug(slug);
     if (!doc) {
-<<<<<< v6-1-beta
-        return buildPageMetadata({ title: 'Docs', description: 'Browse engineering docs by avrxt.', noIndex: true });
-======
         return buildPageMetadata({
             title: 'Docs',
             description: 'Browse engineering docs, playbooks, and technical resources authored by avrxt.',
             noIndex: true,
             path: '/docs',
         });
->>>>>> main
     }
     return buildPageMetadata({
         title: doc.title,
@@ -118,7 +114,7 @@ export default async function DocPage({ params }: Props) {
                         <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
                         All Docs
                     </Link>
-                    <span className="text-[10px] text-zinc-700 font-mono uppercase tracking-widest">avrxt.in/docs</span>
+                    <span className="text-[10px] text-zinc-700 font-mono uppercase tracking-widest">avrxt.dev/docs</span>
                 </div>
             </main>
         </div>

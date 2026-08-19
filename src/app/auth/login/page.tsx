@@ -20,6 +20,13 @@ function LoginContent() {
     const next = searchParams.get('next') || (source === 'guestbook' ? '/guestbook' : source === 'admin' ? '/me/admin' : '/docs/admin');
     const supabase = createClient();
 
+    const getCallbackUrl = () => {
+        const callbackUrl = new URL('/auth/callback', window.location.origin);
+        callbackUrl.searchParams.set('next', next);
+        if (source) callbackUrl.searchParams.set('source', source);
+        return callbackUrl.toString();
+    };
+
     useEffect(() => {
         if (!source) {
             router.push('/');
@@ -27,21 +34,19 @@ function LoginContent() {
     }, [source, router]);
 
     const handleGithubLogin = async () => {
-        const origin = window.location.origin;
         await supabase.auth.signInWithOAuth({
             provider: 'github',
             options: {
-                redirectTo: `${origin}/auth/callback?next=${next}`,
+                redirectTo: getCallbackUrl(),
             },
         });
     };
 
     const handleDiscordLogin = async () => {
-        const origin = window.location.origin;
         await supabase.auth.signInWithOAuth({
             provider: 'discord',
             options: {
-                redirectTo: `${origin}/auth/callback?next=${next}`,
+                redirectTo: getCallbackUrl(),
                 scopes: 'identify email guilds.members.read',
             },
         });
@@ -71,7 +76,9 @@ function LoginContent() {
                             {searchParams.get('error') === 'discord_required' && 'Discord authentication is required.'}
                             {searchParams.get('error') === 'metadata_missing' && 'Discord identity not found.'}
                             {searchParams.get('error') === 'unauthorized_role' && 'Access Denied: Required Role Missing.'}
-                            {!['discord_required', 'metadata_missing', 'unauthorized_role'].includes(searchParams.get('error') || '') && 'An authentication error occurred.'}
+                            {searchParams.get('error') === 'oauth_callback_failed' && 'Discord authentication could not be completed. Please try again.'}
+                            {searchParams.get('error') === 'admin_session_failed' && 'Admin access was verified, but the secure session could not be refreshed. Please sign in again.'}
+                            {!['discord_required', 'metadata_missing', 'unauthorized_role', 'oauth_callback_failed', 'admin_session_failed'].includes(searchParams.get('error') || '') && 'An authentication error occurred.'}
                         </p>
                     </div>
                 )}

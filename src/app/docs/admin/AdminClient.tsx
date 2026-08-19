@@ -66,7 +66,15 @@ function ImageUploadModal({ onInsert, onClose }: { onInsert: (md: string) => voi
             if ('error' in res && res.error) throw new Error(res.error);
             const { uploadUrl, publicUrl } = res as { uploadUrl: string; publicUrl: string; key: string; success: boolean };
             // Upload directly to R2
-            await fetch(uploadUrl, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } });
+            const uploadResponse = await fetch(uploadUrl, {
+                method: 'PUT',
+                body: file,
+                headers: { 'Content-Type': file.type || 'application/octet-stream' },
+            });
+            if (!uploadResponse.ok) {
+                const details = (await uploadResponse.text()).slice(0, 200);
+                throw new Error(`R2 upload failed (${uploadResponse.status})${details ? `: ${details}` : ''}`);
+            }
             onInsert(`![${alt || file.name}](${publicUrl})`);
         } catch (err: any) {
             setError(err.message);
@@ -336,7 +344,7 @@ export default function AdminClient({ initialDocs, userEmail }: AdminClientProps
     };
 
     const triggerGoogleIndex = async (slug: string) => {
-        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://avrxt.in';
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://avrxt.dev';
         const url = `${siteUrl}/docs/${slug}`;
         try {
             const res = await fetch('/api/search-console-index', {
@@ -648,6 +656,8 @@ export default function AdminClient({ initialDocs, userEmail }: AdminClientProps
                                     {/* Formatting toolbar (only in edit / split) */}
                                     {activeTab !== 'preview' && (
                                         <div className="flex items-center gap-0.5 px-3 py-1.5 overflow-x-auto border-t border-white/5 scrollbar-hide">
+                                            {/* Actions only read the editor ref from click handlers, never during render. */}
+                                            {/* eslint-disable-next-line react-hooks/refs */}
                                             {toolbarActions.map((a, i) => (
                                                 <ToolbarBtn key={i} icon={a.icon} label={a.label} onClick={a.action} />
                                             ))}

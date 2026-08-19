@@ -11,7 +11,7 @@ function siteBaseUrl(): string {
   const base =
     process.env.NEXT_PUBLIC_SITE_URL ||
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '') ||
-    'https://www.avrxt.in';
+    'https://avrxt.dev';
   return base.replace(/\/+$/, '');
 }
 
@@ -57,7 +57,7 @@ async function proxyPageScreenshot(path: string): Promise<Response | null> {
       redirect: 'follow',
       headers: {
         accept: 'image/*,*/*;q=0.8',
-        'user-agent': 'avrxt-og/1.0 (+https://www.avrxt.in)',
+        'user-agent': 'avrxt-og/1.0 (+https://avrxt.dev)',
       },
       signal: timeoutSignal,
     });
@@ -136,7 +136,7 @@ function topBar(path: string) {
                 '"Space Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
             }}
           >
-            avrxt.in
+            avrxt.dev
           </div>
           <div
             style={{

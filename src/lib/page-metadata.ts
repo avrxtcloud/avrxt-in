@@ -10,7 +10,7 @@ type PageMetadataInput = {
 };
 
 const SITE_NAME = 'avrxt';
-const DEFAULT_OG_IMAGE_ALT = 'avrxt.in preview image';
+const DEFAULT_OG_IMAGE_ALT = 'avrxt.dev preview image';
 
 function withSiteSuffix(title: string) {
   const normalized = title.trim();
@@ -56,7 +56,7 @@ export function buildPageMetadata({
       title: fullTitle,
       description: normalizedDescription,
       type: 'website',
-      siteName: 'avrxt.in',
+      siteName: 'avrxt.dev',
       images: [openGraphImage],
     },
     twitter: {

@@ -1,6 +1,6 @@
 # ☁️  Cloudflare R2 Asset Management System
 
-This document outlines the high-performance asset storage architecture implemented for **avrxt.in**, migrating from Supabase Storage to Cloudflare R2 for better latency, cost-efficiency, and edge delivery.
+This document outlines the high-performance asset storage architecture implemented for **avrxt.dev**, migrating from Supabase Storage to Cloudflare R2 for better latency, cost-efficiency, and edge delivery.
 
 ---
 
@@ -36,8 +36,8 @@ Vercel has a hard 4.5MB limit on request bodies. To support large **4K videos (5
 
 ### 2. Intelligent Folder Hierarchy
 Assets are automatically routed to global edge CDN paths:
-- **Images**: `/i/` mapped to `i.cdn.avrxt.in`
-- **Videos/Audio**: `/v/` mapped to `v.cdn.avrxt.in`
+- **Images**: `/i/` mapped to `cdn.avxt.qzz.io`
+- **Videos/Audio**: `/v/` mapped to `cdn.avxt.qzz.io`
 
 ### 3. Automated Zero-Waste Storage
 When a user updates a profile picture, banner, or music track:
@@ -54,7 +54,8 @@ In the `/me/admin` gallery, deleting an item doesn't just remove it from the UI;
 
 ### 🛂 CORS Configuration
 To allow the browser to talk to Cloudflare, the following CORS policy is applied:
-- **Allowed Origins**: `www.avrxt.in`, `preview.avrxt.space`, `localhost:3000`
+- **Allowed Origins**: `avrxt.dev`, `www.avrxt.dev`, `localhost:3000`
+- Apply the policy in `cloudflare/r2-cors.json` to the R2 bucket before testing direct uploads.
 - **Allowed Methods**: `PUT, GET, POST, DELETE, HEAD`
 - **Allowed Headers**: `*` (Support for `x-amz` checksums)
 
@@ -72,8 +73,9 @@ To allow the browser to talk to Cloudflare, the following CORS policy is applied
 | `R2_ENDPOINT` | Cloudflare R2 S3 API Endpoint |
 | `R2_ACCESS_KEY_ID` | API Access Key |
 | `R2_SECRET_ACCESS_KEY` | API Secret Key |
-| `NEXT_PUBLIC_R2_IMAGE_DOMAIN` | `i.cdn.avrxt.in` |
-| `NEXT_PUBLIC_R2_VIDEO_DOMAIN` | `v.cdn.avrxt.in` |
+| `NEXT_PUBLIC_R2_DOMAIN` | `https://cdn.avxt.qzz.io` |
+| `NEXT_PUBLIC_R2_IMAGE_DOMAIN` | `https://cdn.avxt.qzz.io` |
+| `NEXT_PUBLIC_R2_VIDEO_DOMAIN` | `https://cdn.avxt.qzz.io` |
 
 ---
 

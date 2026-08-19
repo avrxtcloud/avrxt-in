@@ -139,7 +139,7 @@ export function renderOgImage(
                   boxShadow: '0 0 32px rgba(16,185,129,0.40)',
                 }}
               />
-              <div style={{ fontSize: 20, letterSpacing: 3, opacity: 0.9, fontFamily: mono }}>avrxt.in</div>
+              <div style={{ fontSize: 20, letterSpacing: 3, opacity: 0.9, fontFamily: mono }}>avrxt.dev</div>
             </div>
             <div
               style={{

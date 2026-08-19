@@ -7,7 +7,7 @@ import {
     Music, Link as LinkIcon, Book,
     Check, ArrowUp, ArrowDown,
     User, Eye, AlertCircle, Camera, Upload, Activity,
-    Search, Youtube
+    Search, Youtube, Wrench
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MeConfig } from '@/lib/me-config';
@@ -261,6 +261,51 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                         </div>
                     )}
 
+                    <div className={cn(
+                        "mb-8 flex flex-col gap-5 rounded-2xl border p-6 sm:flex-row sm:items-center sm:justify-between",
+                        config.site?.maintenanceEnabled
+                            ? "border-amber-500/30 bg-amber-500/10"
+                            : "border-white/5 bg-zinc-900/40"
+                    )}>
+                        <div className="flex items-start gap-4">
+                            <div className={cn(
+                                "mt-0.5 rounded-xl p-2.5",
+                                config.site?.maintenanceEnabled ? "bg-amber-500/15 text-amber-400" : "bg-white/5 text-zinc-500"
+                            )}>
+                                <Wrench size={18} />
+                            </div>
+                            <div>
+                                <h2 className="font-mono text-sm font-bold uppercase tracking-widest">Maintenance_Mode</h2>
+                                <p className="mt-1 max-w-lg text-xs leading-5 text-zinc-500">
+                                    Redirect public pages to the maintenance screen. Admin, authentication, and API routes stay available. Press Save to apply.
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            role="switch"
+                            aria-checked={config.site?.maintenanceEnabled === true}
+                            onClick={() => setConfig(prev => ({
+                                ...prev,
+                                site: { maintenanceEnabled: !prev.site?.maintenanceEnabled },
+                            }))}
+                            className={cn(
+                                "relative h-8 w-16 shrink-0 rounded-full border transition-colors",
+                                config.site?.maintenanceEnabled
+                                    ? "border-amber-400/50 bg-amber-500/30"
+                                    : "border-white/10 bg-zinc-800"
+                            )}
+                        >
+                            <span className={cn(
+                                "absolute top-1 h-6 w-6 rounded-full transition-all",
+                                config.site?.maintenanceEnabled
+                                    ? "left-9 bg-amber-300"
+                                    : "left-1 bg-zinc-500"
+                            )} />
+                            <span className="sr-only">Toggle maintenance mode</span>
+                        </button>
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {/* Left Column */}
                         <div className="space-y-6">
@@ -471,7 +516,10 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                                                     const supabase = createClient();
                                                     await supabase.auth.signInWithOAuth({
                                                         provider: 'discord',
-                                                        options: { redirectTo: window.location.href }
+                                                        options: {
+                                                            redirectTo: `${window.location.origin}/auth/callback?source=admin&next=%2Fme%2Fadmin`,
+                                                            scopes: 'identify email guilds.members.read',
+                                                        }
                                                     });
                                                 }}
                                                 className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-[9px] font-bold font-mono rounded-md transition-all uppercase"

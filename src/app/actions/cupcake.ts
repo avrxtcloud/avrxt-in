@@ -139,7 +139,7 @@ export async function verifyTipAndSave(paymentDetails: PaymentDetails, tipDetail
     try {
       const resend = new Resend(process.env.RESEND_API_KEY);
       await resend.emails.send({
-        from: process.env.RESEND_FROM_EMAIL || 'support@avrxt.in',
+        from: process.env.RESEND_FROM_EMAIL || 'support@avrxt.dev',
         to: userEmail,
         subject: 'A sweet note from avrxt',
         html: `

@@ -130,7 +130,7 @@ export async function GET(request: Request) {
       headers: {
         // Some sites return lighter markup when the UA looks like a browser.
         'user-agent':
-          'Mozilla/5.0 (compatible; avrxt-link-preview/1.0; +https://avrxt.in)',
+          'Mozilla/5.0 (compatible; avrxt-link-preview/1.0; +https://avrxt.dev)',
         accept: 'text/html,application/xhtml+xml',
       },
       // Avoid edge caching; we set our own CDN cache headers on the response.

@@ -6,7 +6,7 @@
   "workers_dev": true,
   "routes": [
     {
-      "pattern": "guestbook-mod.avrxt.in",
+      "pattern": "guestbook-mod.avrxt.dev",
       "custom_domain": true
     }
   ],

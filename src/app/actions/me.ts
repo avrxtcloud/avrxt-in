@@ -9,6 +9,9 @@ import { verifyAdmin } from '@/lib/auth-checks';
 function normalizeMeConfig(config: MeConfig): MeConfig {
     const normalized: MeConfig = {
         ...config,
+        site: {
+            maintenanceEnabled: config.site?.maintenanceEnabled === true,
+        },
         profile: { ...config.profile },
         music: { ...config.music },
         links: Array.isArray(config.links) ? config.links : [],
@@ -67,5 +70,6 @@ export async function saveMeConfigAction(config: MeConfig) {
 
     revalidatePath('/me');
     revalidatePath('/me/admin');
+    revalidatePath('/maintenance');
     return { success: true };
 }
