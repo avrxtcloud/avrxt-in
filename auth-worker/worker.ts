@@ -87,9 +87,12 @@ function createIssuer(env: Env) {
   });
 }
 
+let openAuthApp: ReturnType<typeof createIssuer> | undefined;
+
 const worker = {
   fetch(request: Request, env: Env, executionCtx: ExecutionContext) {
-    return createIssuer(env).fetch(request, env, executionCtx);
+    openAuthApp ??= createIssuer(env);
+    return openAuthApp.fetch(request, env, executionCtx);
   },
 };
 

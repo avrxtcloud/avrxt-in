@@ -3,6 +3,7 @@
   "name": "avrxt-openauth",
   "main": "auth-worker/worker.ts",
   "compatibility_date": "2026-08-19",
+  "keep_vars": true,
   "routes": [
     { "pattern": "auth.avrxt.dev", "custom_domain": true }
   ],
