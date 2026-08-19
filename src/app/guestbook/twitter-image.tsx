@@ -1,7 +1,7 @@
 import { ogContentType, ogSize, renderOgImage } from '@/lib/og-image';
 import { getOgFonts } from '@/app/_og/fonts';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 export const size = ogSize;
 export const contentType = ogContentType;
 

@@ -1,13 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Space_Mono, Outfit, Instrument_Serif } from "next/font/google";
-import { Suspense } from "react";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import CustomCursor from "@/components/CustomCursor";
-import ParallaxBackground from "@/components/ParallaxBackground";
-import PremiumLoader from "@/components/PremiumLoader";
-import GlobalLinkPreview from "@/components/GlobalLinkPreview";
+import SiteChrome from "@/components/SiteChrome";
 import { ogSize } from "@/lib/og-image";
 
 const inter = Inter({
@@ -93,18 +87,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark scroll-smooth">
       <body className={`${inter.variable} ${spaceMono.variable} ${outfit.variable} ${instrumentSerif.variable} font-sans bg-[#050505] text-white selection:bg-white/10 overflow-x-hidden`}>
-        <Suspense fallback={null}>
-          <PremiumLoader />
-        </Suspense>
-        <CustomCursor />
-        <ParallaxBackground />
-        <div className="mesh-gradient" />
-        <Navbar />
+        <SiteChrome position="before" />
         <main className="relative z-10 min-h-screen">
           {children}
         </main>
-        <GlobalLinkPreview />
-        <Footer />
+        <SiteChrome position="after" />
       </body>
     </html>
   );

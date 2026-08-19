@@ -1,6 +1,6 @@
 # avrxt |  Full-Stack Infrastructure & Personal Engine
 
-![avrxt](https://cdn.avrxt.in/assets/logo-02.png)
+![avrxt](https://cdn.avxt.qzz.io/assets/logo-02.png)
 
 A high-performance, premium personal website and service platform built with **Next.js 15+**, **Supabase**, **Tailwind CSS 4**, and **Vercel Analytics**. Designed for speed, security, scalability, and absolute control.
 
@@ -95,8 +95,8 @@ graph TD
         DB_SPOT_HISTORY["Supabase table spotify_history"]
         DB_TIPS["Supabase table cupcake_tips"]
         R2["Cloudflare R2 bucket"]
-        CDN_I["i.cdn.avrxt.in image CDN"]
-        CDN_V["v.cdn.avrxt.in media CDN"]
+        CDN_I["cdn.avxt.qzz.io image CDN"]
+        CDN_V["cdn.avxt.qzz.io media CDN"]
     end
 
     ACT_GUEST --> DB_GUEST
@@ -123,7 +123,7 @@ graph TD
         MAILCHECK["mailcheck.ai disposable email check"]
         DNS_MX["DNS MX resolution"]
         BETTERSTACK["Betterstack status API"]
-        STATUS_FALLBACK["status.avrxt.in badge fallback"]
+        STATUS_FALLBACK["status.avrxt.dev badge fallback"]
         DISCORD["Discord role verification"]
     end
 
@@ -173,7 +173,7 @@ graph TD
 
 - **Dynamic Asset Sync**: Automated deletion of old files when replacing profile pictures, banners, or music tracks.
 
-- **CDN Segmentation**: Intelligent routing to `i.cdn.avrxt.in` (images) and `v.cdn.avrxt.in` (media).
+- **CDN Routing**: Images and media are served through `cdn.avxt.qzz.io`.
 
 - **Hard-Purge Logic**: Immediate cloud deletion when removing items from the visual gallery.
 
@@ -217,7 +217,7 @@ A hardened, internal mailing engine replaces the previous proxy-based implementa
 
 - **Shield Protocol (Spam Defense)**:
 
-  - **Internal Blocklist**: Prevents `avrxt.in`, `avrxt.space`, and `aviorxt.aero` from internal spamming.
+  - **Internal Blocklist**: Prevents owned domains from internal spamming.
 
   - **Burner Detection**: Integrated **Mailcheck.ai** and local blacklists to block temporary/throwaway email providers.
 
@@ -501,7 +501,7 @@ The system follows a **"Dark Mesh"** design language:
 
 - **FIX**: Resolved build-time crashes caused by top-level `Resend` instantiation across `actions/`.
 
-- **NEW**: Implemented **Glory at avrxt.in** custom branding for all transactional emails.
+- **NEW**: Implemented **avrxt.dev** custom branding for all transactional emails.
 
 - **NEW**: Added **Shield Protocol** (MX lookup + Blacklisting) to save on mailing costs.
 
@@ -519,6 +519,6 @@ Copyright © 2026 **@avrxt**. All rights reserved.
 
 ⚠️ **LEGAL NOTICE**: Any unauthorized usage or duplication of this project will lead to immediate **legal action**.
 
-**Developer**: [@avrxt](https://instagram.com/aviorxt) | [support@avrxt.in](mailto:support@avrxt.in)
+**Developer**: [@avrxt](https://instagram.com/aviorxt) | [support@avrxt.dev](mailto:support@avrxt.dev)
 
 *Last Updated: March 7, 2026 by Vipin R*

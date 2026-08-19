@@ -6,11 +6,8 @@ type OgFont = {
 };
 
 async function loadFont(url: URL) {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Failed to load font: ${url.toString()} (${response.status})`);
-  }
-  return response.arrayBuffer();
+  const font = await readFile(url);
+  return font.buffer.slice(font.byteOffset, font.byteOffset + font.byteLength) as ArrayBuffer;
 }
 
 export async function getOgFonts(): Promise<OgFont[]> {
@@ -20,3 +17,4 @@ export async function getOgFonts(): Promise<OgFont[]> {
     { name: 'Space Mono', data: spaceMono, weight: 400, style: 'normal' },
   ];
 }
+import { readFile } from 'node:fs/promises';
