@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
     await sleep(2000);
 
     const { error: emailError } = await resend.emails.send({
-      from: 'avrxt.dev <Notify@send.AvrXt.dev>',
+      from: 'avrxt.dev <Notify@AvrXt.dev>',
       to: sanitizedEmail,
       subject: 'Connection Established: Welcome to avrxt.dev',
       html: `
