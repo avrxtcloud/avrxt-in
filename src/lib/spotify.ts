@@ -1,10 +1,14 @@
 import { createAdminClient } from '@/utils/supabase/admin';
 
-const client_id = process.env.SPOTIFY_CLIENT_ID;
-const client_secret = process.env.SPOTIFY_CLIENT_SECRET;
-const basic = Buffer.from(`${client_id}:${client_secret}`).toString('base64');
 const NOW_PLAYING_ENDPOINT = `https://api.spotify.com/v1/me/player/currently-playing`;
 const TOKEN_ENDPOINT = `https://accounts.spotify.com/api/token`;
+
+function getBasicAuthorization() {
+    const clientId = process.env.SPOTIFY_CLIENT_ID;
+    const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+    if (!clientId || !clientSecret) throw new Error('Spotify credentials are not configured');
+    return Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+}
 
 export async function getSpotifyTokens() {
     const supabase = createAdminClient();
@@ -21,7 +25,7 @@ export async function refreshAccessToken(refresh_token: string) {
     const response = await fetch(TOKEN_ENDPOINT, {
         method: 'POST',
         headers: {
-            Authorization: `Basic ${basic}`,
+            Authorization: `Basic ${getBasicAuthorization()}`,
             'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: new URLSearchParams({
@@ -31,13 +35,14 @@ export async function refreshAccessToken(refresh_token: string) {
     });
 
     const data = await response.json();
-    if (!response.ok) throw new Error('Failed to refresh token');
+    if (!response.ok || !data.access_token) throw new Error(`Failed to refresh Spotify token (${response.status})`);
 
     const supabase = createAdminClient();
     const { error: updateError } = await supabase
         .from('spotify_tokens')
         .update({
             access_token: data.access_token,
+            ...(data.refresh_token ? { refresh_token: data.refresh_token } : {}),
             expires_at: new Date(Date.now() + data.expires_in * 1000).toISOString(),
         })
         .match({ refresh_token });
@@ -64,11 +69,12 @@ export async function getNowPlaying() {
         },
     });
 
-    if (response.status === 204 || response.status > 400) {
+    if (response.status === 204 || !response.ok) {
         return { isPlaying: false };
     }
 
     const song = await response.json();
+    if (!song?.item) return { isPlaying: false };
 
     // Save to history if playing
     if (song.is_playing) {

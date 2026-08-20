@@ -17,7 +17,7 @@ export default function DocWrapper({ children, title, category, date }: DocWrapp
             <header className="sticky top-0 z-50 bg-[#000000]/90 backdrop-blur-sm border-b border-[#333]">
                 <nav className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
                     <Link href="/" className="text-2xl font-bold tracking-widest uppercase font-mono">
-                        <img src="https://avrxt.in/logo.png" alt="avrxt logo" className="h-8 w-auto" />
+                        <img src="https://cdn.avxt.qzz.io/assets/logo.png" alt="avrxt logo" className="h-8 w-auto" />
                     </Link>
                     <Link href="/docs" className="text-sm border border-[#f8f8f8] px-3 py-1 hover:bg-[#f8f8f8] hover:text-[#000000] transition-all duration-300 font-mono">
                         /back_to_library

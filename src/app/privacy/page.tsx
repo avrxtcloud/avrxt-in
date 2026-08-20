@@ -11,7 +11,7 @@ export const metadata = buildPageMetadata({
 
 export default function Privacy() {
     const lastUpdated = "January 15, 2026";
-    const supportEmail = "support@avrxt.in";
+    const supportEmail = "support@avrxt.dev";
 
     return (
         <main className="max-w-3xl mx-auto px-6 pt-40 pb-32">

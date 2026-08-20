@@ -3,6 +3,8 @@
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { moderateGuestbookMessage } from '@/lib/guestbook-moderation';
+import { getAuthUser } from '@/lib/openauth';
+import { createAdminClient } from '@/utils/supabase/admin';
 
 export async function getMessages() {
     const supabase = await createClient();
@@ -16,10 +18,10 @@ export async function getMessages() {
 }
 
 export async function postMessage(message: string, userName: string, userAvatar: string) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthUser();
 
     if (!user) return { error: 'You must be logged in to post.' };
+    const supabase = createAdminClient();
 
     const normalizedMessage = message.trim();
     if (!normalizedMessage) return { error: 'Message cannot be empty.' };
@@ -46,10 +48,10 @@ export async function postMessage(message: string, userName: string, userAvatar:
 }
 
 export async function updateMessage(id: string, message: string) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthUser();
 
     if (!user) return { error: 'Unauthorized' };
+    const supabase = createAdminClient();
 
     const normalizedMessage = message.trim();
     if (!normalizedMessage) return { error: 'Message cannot be empty.' };
@@ -73,10 +75,10 @@ export async function updateMessage(id: string, message: string) {
 }
 
 export async function deleteMessage(id: string) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthUser();
 
     if (!user) return { error: 'Unauthorized' };
+    const supabase = createAdminClient();
 
     const { error } = await supabase
         .from('guestbook')
@@ -90,25 +92,5 @@ export async function deleteMessage(id: string) {
 }
 
 export async function signInWithGithub() {
-    const supabase = await createClient();
-
-    // Dynamically detect origin to prevent "undefined" errors if ENV is missing
-    let origin = process.env.NEXT_PUBLIC_API_URL;
-
-    if (!origin) {
-        const { headers } = await import('next/headers');
-        const headerList = await headers();
-        const host = headerList.get('host');
-        const protocol = host?.includes('localhost') ? 'http' : 'https';
-        origin = `${protocol}://${host}`;
-    }
-
-    const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'github',
-        options: {
-            redirectTo: `${origin}/auth/callback?next=/guestbook`,
-        },
-    });
-
-    return { url: data.url, error: error?.message };
+    return { url: '/auth/start?provider=github&next=%2Fguestbook', error: undefined };
 }

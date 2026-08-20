@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import React from 'react';
 import Link from 'next/link';
+import { createClient } from '@/utils/supabase/client';
 import {
     ExternalLink,
     Play,
@@ -29,6 +31,9 @@ import Reveal from '@/components/Reveal';
 import Tilt from '@/components/Tilt';
 import Magnetic from '@/components/Magnetic';
 import { MeConfig } from '@/lib/me-config';
+import { edgeUrl } from '@/lib/edge';
+import { apiUrl } from '@/lib/api-gateway';
+import { DISCORD_BADGES } from '@/lib/discord-badges';
 
 const iconMap: Record<string, any> = {
     Github, Twitter, Instagram, Linkedin, LinkedinIcon, Youtube, ExternalLink, Mail
@@ -96,88 +101,289 @@ export default function MeClient({ config }: { config: MeConfig }) {
     const [spotifyLast, setSpotifyLast] = useState<any>(null);
     const [spotifyProgress, setSpotifyProgress] = useState(0);
     const spotifyEnabled = Boolean(config.music.spotifyEnabled);
+    const spotifyAmbientEnabled = Boolean(config.music.spotifyAmbientEnabled);
+    const weatherEnabled = config.profile.weatherEnabled !== false;
     const [lanyardData, setLanyardData] = useState<any>(null);
     const [isMounted, setIsMounted] = useState(false);
     const [subscribeStatus, setSubscribeStatus] = useState<{ type: 'success' | 'error' | null, message: string }>({ type: null, message: '' });
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [activeBadgeId, setActiveBadgeId] = useState<string | null>(null);
 
     const audioRef = useRef<HTMLAudioElement>(null);
     const ytContainerRef = useRef<HTMLDivElement>(null);
     const ytPlayerRef = useRef<any>(null);
     const ytPendingPlayRef = useRef(false);
     const [ytReady, setYtReady] = useState(false);
+    const spotifyProgressBarRef = useRef<HTMLDivElement>(null);
+    const spotifyProgressLastStateUpdateRef = useRef<number>(0);
 
     useEffect(() => {
         setIsMounted(true);
-        fetchWeather();
         setQuote(pickQuote());
-        const lanyardInterval = setInterval(fetchLanyard, 10000);
-        fetchLanyard();
-        return () => clearInterval(lanyardInterval);
+        return () => { };
     }, []);
 
+    // Weather: only fetch when enabled
     useEffect(() => {
-        if (!spotifyEnabled) {
-            setSpotifyData(null);
-            setSpotifyLast(null);
-            return;
-        }
-
-        let cancelled = false;
-
-        const fetchSpotify = async () => {
+        if (!weatherEnabled) return;
+        const fetchWeather = async () => {
             try {
-                const spotifyApiUrl = process.env.NEXT_PUBLIC_SPOTIFY_API_URL || '/api/spotify/now-playing';
-                const res = await fetch(spotifyApiUrl, { cache: 'no-store' });
+                const res = await fetch(apiUrl('/v1/geo/forecast?latitude=13.0827&longitude=80.2707&current=temperature_2m,relative_humidity_2m,wind_speed_10m', edgeUrl('/v1/fnc/geo/forecast?latitude=13.0827&longitude=80.2707&current=temperature_2m,relative_humidity_2m,wind_speed_10m')), { cache: 'no-store' });
                 const data = await res.json();
+                setWeather(data.current);
+            } catch (e) { console.error(e); }
+        };
+        fetchWeather();
+        // Weather doesn't need aggressive polling (limits-friendly).
+    }, [weatherEnabled]);
 
-                if (cancelled) return;
+    // Discord Presence: only fetch when auto mode + id present, poll every 60s
+    useEffect(() => {
+        const discordId = config.profile.presence?.discordId;
+        if (!discordId) return;
 
-                if (data?.isPlaying) {
-                    setSpotifyData({ ...data, fetchedAt: Date.now() });
-                    setSpotifyLast(null);
-                } else {
-                    setSpotifyData(null);
-                    if (data?.title && data?.artist) {
-                        setSpotifyLast(data);
-                    } else {
-                        setSpotifyLast(null);
+        const manualSelected = Object.keys(config.profile.presence?.badgesManual || {})
+            .filter((k) => Boolean((config.profile.presence?.badgesManual || {})[k]))
+            .sort()
+            .join('|');
+
+        const badgesEnabled = config.profile.presence?.badgesEnabled !== false;
+        const badgesMode = config.profile.presence?.badgesMode || 'auto';
+        const badgesNeeded = badgesEnabled && (badgesMode === 'auto' || manualSelected.length > 0);
+        const serverTagNeeded = config.profile.presence?.serverTagEnabled !== false;
+
+        const presenceNeeded =
+            config.profile.presence?.mode === 'auto' ||
+            serverTagNeeded ||
+            badgesNeeded;
+        if (!presenceNeeded) return;
+
+        const fetchLanyard = async () => {
+            try {
+                const res = await fetch(apiUrl(`/v1/discord/presence/${discordId}`, edgeUrl(`/v1/realtime/dc-presence/${discordId}`)), { cache: 'no-store' });
+                const data = await res.json();
+                if (data.success) setLanyardData(data.data);
+            } catch (e) { console.error(e); }
+        };
+        fetchLanyard();
+        const id = window.setInterval(fetchLanyard, 60000);
+        return () => window.clearInterval(id);
+    }, [
+        config.profile.presence?.mode,
+        config.profile.presence?.discordId,
+        config.profile.presence?.serverTagEnabled,
+        config.profile.presence?.badgesEnabled,
+        config.profile.presence?.badgesMode,
+        // Re-evaluate polling when the selected manual badges change.
+        JSON.stringify(config.profile.presence?.badgesManual || {})
+    ]);
+
+    // 2. Spotify Listeners (Realtime & Local Progress)
+    useEffect(() => {
+        if (!spotifyEnabled) return;
+
+        const supabase = createClient();
+        let isActive = true;
+        let pollTimeout: number | undefined;
+        let inFlight: AbortController | null = null;
+        let lastNowPlayingFetchAt = 0;
+
+        const normalizeIncoming = (input: any) => {
+            if (!input) return null;
+            const isPlaying = Boolean(input.isPlaying ?? input.is_playing);
+            const title = input.title ?? null;
+            const artist = input.artist ?? null;
+            const albumImageUrl = input.albumImageUrl ?? input.album_image_url ?? null;
+            const songUrl = input.songUrl ?? input.song_url ?? null;
+            const progressRaw = input.progressMs ?? input.progress_ms;
+            const durationRaw = input.durationMs ?? input.duration_ms;
+            const progressMs =
+                progressRaw === null || typeof progressRaw === 'undefined' ? undefined : (Number(progressRaw) || 0);
+            const durationMs =
+                durationRaw === null || typeof durationRaw === 'undefined' ? undefined : (Number(durationRaw) || 0);
+            const updatedAt = input.updatedAt ?? input.updated_at ?? null;
+            return { isPlaying, title, artist, albumImageUrl, songUrl, progressMs, durationMs, updatedAt };
+        };
+
+        const applySpotifyState = (raw: any) => {
+            const data = normalizeIncoming(raw);
+            if (!data?.title) return;
+
+            if (data.isPlaying) {
+                setSpotifyLast(null);
+                setSpotifyData((prev: any) => {
+                    const prevTitle = prev?.title;
+                    const prevArtist = prev?.artist;
+                    const prevSongUrl = prev?.songUrl;
+                    const sameTrack = Boolean(
+                        prev &&
+                        ((prevSongUrl && data.songUrl && prevSongUrl === data.songUrl) ||
+                            (prevTitle === data.title && prevArtist === data.artist))
+                    );
+
+                    const next: any = {
+                        ...(sameTrack ? prev : {}),
+                        ...data,
+                    };
+
+                    // Preserve duration/progress if upstream update is partial.
+                    if (typeof data.durationMs === 'undefined' && typeof prev?.durationMs !== 'undefined') {
+                        next.durationMs = prev.durationMs;
                     }
-                }
-            } catch (e) {
-                console.error('Spotify fetch failed', e);
-                if (cancelled) return;
+                    if (typeof data.progressMs === 'undefined' && typeof prev?.progressMs !== 'undefined') {
+                        next.progressMs = prev.progressMs;
+                    }
+
+                    // Update `fetchedAt` when we got a fresh progress reading; otherwise keep the previous base.
+                    if (typeof data.progressMs !== 'undefined') {
+                        next.fetchedAt = Date.now();
+                    } else if (typeof prev?.fetchedAt !== 'undefined') {
+                        next.fetchedAt = prev.fetchedAt;
+                    } else {
+                        next.fetchedAt = Date.now();
+                    }
+
+                    return next;
+                });
+            } else {
                 setSpotifyData(null);
+                setSpotifyLast(data);
             }
         };
 
-        fetchSpotify();
-        const id = window.setInterval(fetchSpotify, 15000);
+        const clearPoll = () => {
+            if (pollTimeout) window.clearTimeout(pollTimeout);
+            pollTimeout = undefined;
+        };
+
+        const scheduleNext = (ms: number) => {
+            if (!isActive) return;
+            clearPoll();
+            pollTimeout = window.setTimeout(() => {
+                void syncNowPlaying();
+            }, ms);
+        };
+
+        const syncNowPlaying = async () => {
+            if (!isActive) return;
+
+            // Reduce background churn; resync quickly when the tab returns.
+            if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+                scheduleNext(30_000);
+                return;
+            }
+
+            // Vercel free-plan friendly throttle (even on focus/visibility triggers).
+            const now = Date.now();
+            if (lastNowPlayingFetchAt && now - lastNowPlayingFetchAt < 15_000) {
+                scheduleNext(15_000 - (now - lastNowPlayingFetchAt));
+                return;
+            }
+            lastNowPlayingFetchAt = now;
+
+            try {
+                const spotifyApiUrl = apiUrl('/v1/spotify/now-playing', '/api/spotify/now-playing');
+
+                try {
+                    inFlight?.abort();
+                } catch { }
+                inFlight = new AbortController();
+
+                const res = await fetch(spotifyApiUrl, {
+                    cache: 'no-store',
+                    signal: inFlight.signal,
+                    headers: { accept: 'application/json' }
+                });
+                if (!res.ok) throw new Error(`Spotify sync failed: ${res.status}`);
+
+                const data = await res.json();
+                if (!isActive) return;
+
+                const normalized = normalizeIncoming(data);
+                applySpotifyState(normalized);
+                scheduleNext(15_000);
+            } catch (e: any) {
+                if (e?.name === 'AbortError') return;
+                console.error('Spotify sync failed', e);
+                scheduleNext(15_000);
+            }
+        };
+
+        const onVisibilityOrFocus = () => {
+            if (!isActive) return;
+            if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+                void syncNowPlaying();
+            }
+        };
+        window.addEventListener('focus', onVisibilityOrFocus);
+        document.addEventListener('visibilitychange', onVisibilityOrFocus);
+
+        void syncNowPlaying();
+
+        // Subscribe to Realtime Updates (Directly from status table)
+        const channel = supabase
+            .channel('spotify_realtime_v2')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'spotify_status' },
+                (payload) => {
+                    const mapped = normalizeIncoming(payload.new);
+                    if (!mapped) return;
+                    applySpotifyState(mapped);
+                    // Keep polling cadence predictable (limits-friendly).
+                    scheduleNext(15_000);
+                }
+            )
+            .subscribe();
+
         return () => {
-            cancelled = true;
-            window.clearInterval(id);
+            isActive = false;
+            supabase.removeChannel(channel);
+            clearPoll();
+            try { inFlight?.abort(); } catch { }
+            window.removeEventListener('focus', onVisibilityOrFocus);
+            document.removeEventListener('visibilitychange', onVisibilityOrFocus);
         };
     }, [spotifyEnabled]);
 
+    // 3. Spotify Progress Prediction (limits-friendly; avoids polling spam)
     useEffect(() => {
+        const barEl = spotifyProgressBarRef.current;
+
         if (!spotifyData?.isPlaying || !spotifyData?.durationMs) {
             setSpotifyProgress(0);
+            if (barEl) barEl.style.width = '0%';
             return;
         }
 
-        const base = spotifyData.progressMs || 0;
-        const duration = spotifyData.durationMs;
-        const fetchedAt = spotifyData.fetchedAt || Date.now();
+        const durationMs = Number(spotifyData.durationMs) || 0;
+        if (durationMs <= 0) return;
 
-        const tick = () => {
-            const elapsed = Date.now() - fetchedAt;
-            const pct = Math.min(100, Math.max(0, ((base + elapsed) / duration) * 100));
-            setSpotifyProgress(pct);
+        let raf = 0;
+        const baseProgressMs = Number(spotifyData.progressMs) || 0;
+        const baseTimestamp = Number(spotifyData.fetchedAt) || Date.now();
+
+        const animate = () => {
+            const elapsed = Date.now() - baseTimestamp;
+            const current = Math.min(baseProgressMs + elapsed, durationMs);
+            const pct = Math.min(100, Math.max(0, (current / durationMs) * 100));
+
+            if (barEl) {
+                barEl.style.width = `${pct}%`;
+            }
+
+            // Throttle state updates (range input / react render) to reduce churn.
+            const now = Date.now();
+            if (now - spotifyProgressLastStateUpdateRef.current >= 250) {
+                spotifyProgressLastStateUpdateRef.current = now;
+                setSpotifyProgress(pct);
+            }
+
+            raf = requestAnimationFrame(animate);
         };
 
-        tick();
-        const id = window.setInterval(tick, 500);
-        return () => window.clearInterval(id);
+        raf = requestAnimationFrame(animate);
+        return () => cancelAnimationFrame(raf);
     }, [spotifyData?.isPlaying, spotifyData?.durationMs, spotifyData?.progressMs, spotifyData?.fetchedAt]);
 
     useEffect(() => {
@@ -302,25 +508,6 @@ export default function MeClient({ config }: { config: MeConfig }) {
         setYtReady(false);
     }, [youtubeVideoId]);
 
-    const fetchWeather = async () => {
-        try {
-            const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=13.0827&longitude=80.2707&current=temperature_2m,relative_humidity_2m,wind_speed_10m');
-            const data = await res.json();
-            setWeather(data.current);
-        } catch (e) { console.error(e); }
-    };
-
-    const fetchLanyard = async () => {
-        try {
-            if (!config.profile.presence?.discordId) return;
-            const res = await fetch(`https://api.lanyard.rest/v1/users/${config.profile.presence.discordId}`);
-            const data = await res.json();
-            if (data.success) {
-                setLanyardData(data.data);
-            }
-        } catch (e) { console.error(e); }
-    };
-
     const togglePlay = () => {
         if (isUsingYouTube) {
             const player = ytPlayerRef.current;
@@ -443,7 +630,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
         const data = Object.fromEntries(formData);
 
         try {
-            const response = await fetch('/api/subscribe', {
+            const response = await fetch(apiUrl('/v1/subscribe', '/api/subscribe'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
@@ -467,25 +654,97 @@ export default function MeClient({ config }: { config: MeConfig }) {
     // Hydration guard for everything that depends on isMounted
     if (!isMounted) return null;
 
-    const profileName = config.profile.handle.startsWith('@') ? config.profile.handle.slice(1) : config.profile.handle;
+    const rawHandle = (config.profile.handle || '').trim();
+    const headingName = rawHandle.startsWith('@') ? rawHandle.slice(1) : rawHandle;
+
+    const formatLocation = (raw: string | undefined | null) => {
+        const value = (raw || '').trim() || 'PLANET_EARTH';
+        const parts = value.split(',').map((p) => p.trim()).filter(Boolean);
+        if (parts.length >= 2) {
+            const city = parts[0].toUpperCase();
+            const country = parts.slice(1).join(', ').toUpperCase();
+            return `// ${city} // ${country}`;
+        }
+        return `// ${value.toUpperCase()}`;
+    };
 
     // Presence Logic
     const isManual = config.profile.presence?.mode === 'manual';
-    const displayStatus = isManual ? config.profile.status?.text || 'Online' : lanyardData?.discord_status || 'offline';
-    const statusColor = isManual ? config.profile.status?.color || 'green' : (lanyardData?.discord_status || 'offline');
+    const discordStatus = (lanyardData?.discord_status || 'offline') as string;
+    const displayStatus = isManual
+        ? config.profile.status?.text || 'Online'
+        : (discordStatus === 'online' ? 'Active'
+            : discordStatus === 'idle' ? 'Sleep'
+                : discordStatus === 'dnd' ? 'DND'
+                    : 'Offline');
+    const statusColor = isManual ? (config.profile.status?.color || 'green') : discordStatus;
 
-    const getStatusBg = (color: string) => {
-        if (color === 'online' || color === 'green') return 'bg-emerald-500';
-        if (color === 'idle' || color === 'yellow') return 'bg-yellow-500';
-        if (color === 'dnd' || color === 'red') return 'bg-red-500';
-        if (color === 'blue') return 'bg-blue-500';
-        if (color === 'purple') return 'bg-purple-500';
-        return 'bg-zinc-600';
+    const showSpotifyAmbient =
+        spotifyEnabled &&
+        spotifyAmbientEnabled &&
+        Boolean(spotifyData?.isPlaying) &&
+        Boolean(spotifyData?.albumImageUrl);
+
+    const getPresenceClasses = (color: string) => {
+        // Auto presence (Lanyard): online/idle/dnd/offline
+        if (color === 'online') return { dot: 'bg-emerald-500', text: 'text-emerald-400' };
+        if (color === 'idle') return { dot: 'bg-yellow-500', text: 'text-yellow-400' };
+        if (color === 'dnd') return { dot: 'bg-red-500', text: 'text-red-400' };
+        if (color === 'offline') return { dot: 'bg-zinc-600', text: 'text-zinc-400' };
+
+        // Manual palette fallback
+        if (color === 'green') return { dot: 'bg-emerald-500', text: 'text-emerald-400' };
+        if (color === 'yellow') return { dot: 'bg-yellow-500', text: 'text-yellow-400' };
+        if (color === 'red') return { dot: 'bg-red-500', text: 'text-red-400' };
+        if (color === 'blue') return { dot: 'bg-blue-500', text: 'text-blue-400' };
+        if (color === 'purple') return { dot: 'bg-purple-500', text: 'text-purple-400' };
+        return { dot: 'bg-zinc-600', text: 'text-zinc-400' };
     };
+
+    const presenceClasses = getPresenceClasses(statusColor);
+
+    const discordUser = lanyardData?.discord_user as any;
+    const showServerTag = config.profile.presence?.serverTagEnabled !== false;
+    const badgesEnabled = config.profile.presence?.badgesEnabled !== false;
+    const badgesMode = config.profile.presence?.badgesMode || 'auto';
+    const manualBadges = config.profile.presence?.badgesManual || {};
+
+    const publicFlags = Number(discordUser?.public_flags ?? discordUser?.publicFlags ?? 0) || 0;
+    const hasDecorations = Boolean(discordUser?.avatar_decoration_data);
+    const hasCollectibles = Boolean(discordUser?.collectibles);
+
+    // Best-effort detection for newer profile collectibles.
+    const collectibleStr = JSON.stringify(discordUser?.collectibles || {});
+    const hasOrb = /orb/i.test(collectibleStr) || /orb/i.test(String(discordUser?.avatar_decoration_data?.asset || ''));
+    const hasQuest = /quest/i.test(collectibleStr) || /quest/i.test(JSON.stringify(lanyardData?.kv || {}));
+
+    const discordBadges = DISCORD_BADGES.filter((badge) => {
+        if (!badgesEnabled) return false;
+
+        if (badgesMode === 'manual') {
+            return Boolean(manualBadges[badge.id]);
+        }
+
+        // auto
+        if (typeof badge.bit === 'number') {
+            return (publicFlags & badge.bit) === badge.bit;
+        }
+        if (badge.detection === 'nitro') return hasDecorations || hasCollectibles;
+        if (badge.detection === 'orb') return hasOrb;
+        if (badge.detection === 'quest') return hasQuest;
+        return false;
+    });
+
+    const primaryGuild = discordUser?.primary_guild;
+    const guildTag = showServerTag ? ((primaryGuild?.tag as string | undefined) || '') : '';
+    const guildId = (primaryGuild?.identity_guild_id as string | undefined) || '';
+    const guildBadgeHash = (primaryGuild?.badge as string | undefined) || '';
+    const guildTagBadgeUrl =
+        guildId && guildBadgeHash ? `https://cdn.discordapp.com/guild-tag-badges/${guildId}/${guildBadgeHash}?size=48` : '';
 
     return (
         <main className={cn(
-            "min-h-screen bg-black text-white relative flex flex-col items-center select-none overflow-x-hidden pt-16 pb-12",
+            "me-v7 min-h-[100dvh] bg-[#050505] text-white relative flex flex-col items-center select-none overflow-x-hidden px-1 pt-12 pb-12 sm:pt-16",
             isImmersive && "immersive-mode"
         )}>
             {/* Background Decor */}
@@ -493,8 +752,24 @@ export default function MeClient({ config }: { config: MeConfig }) {
                 "fixed inset-0 z-0 transition-all duration-1000",
                 isImmersive ? "blur-xl scale-110" : ""
             )}>
-                <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,#1a1a1a_0%,#000_70%)]"></div>
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:56px_56px]"></div>
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(34,211,238,0.08),transparent_28%),radial-gradient(circle_at_85%_80%,rgba(139,92,246,0.08),transparent_32%),#050505]"></div>
+
+                {/* Spotify Ambient (cover-based) */}
+                {showSpotifyAmbient && (
+                    <div className="absolute inset-0 pointer-events-none transition-opacity duration-700">
+                        <div
+                            className="absolute inset-0 opacity-35 blur-3xl scale-125 saturate-150"
+                            style={{
+                                backgroundImage: `url(${spotifyData.albumImageUrl})`,
+                                backgroundSize: 'cover',
+                                backgroundPosition: 'center',
+                            }}
+                        />
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_15%,rgba(16,185,129,0.18),transparent_55%),radial-gradient(circle_at_75%_85%,rgba(59,130,246,0.14),transparent_60%)] mix-blend-screen opacity-80" />
+                        <div className="absolute inset-0 bg-black/55" />
+                    </div>
+                )}
 
                 {/* Immersive Glows */}
                 <div className={cn(
@@ -513,37 +788,98 @@ export default function MeClient({ config }: { config: MeConfig }) {
                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.08] mix-blend-overlay pointer-events-none"></div>
             </div>
 
-            <div className="relative z-20 w-full max-w-md px-6 flex flex-col items-center [perspective:1000px]">
+            <div className="relative z-20 w-full max-w-2xl px-5 sm:px-8 flex flex-col items-center [perspective:1000px]">
                 {/* Profile Header */}
-                <Reveal className="text-center mb-10" direction="down" delay={0.1}>
+                <Reveal className="me-profile-header w-full border-l border-white/20 py-7 pl-5 text-left mb-10 sm:py-10 sm:pl-8" direction="down" delay={0.1}>
                     <div className="mb-6 relative inline-block">
                         <div className="absolute inset-0 animate-pulse bg-emerald-500/20 blur-2xl rounded-full scale-110 opacity-30"></div>
                         <img
                             src={config.profile.avatarUrl}
                             alt={config.profile.handle}
-                            className="w-24 h-24 rounded-full border-2 border-white/10 relative z-10 shadow-2xl hover:scale-105 transition-transform duration-500"
+                            className="w-24 h-24 rounded-none border border-white/20 relative z-10 shadow-2xl hover:scale-105 transition-transform duration-500"
                         />
                         <div className={cn(
                             "absolute bottom-1 right-1 w-5 h-5 rounded-full border-4 border-black z-20 transition-colors duration-500",
-                            getStatusBg(statusColor)
+                            presenceClasses.dot
                         )} />
                     </div>
-                    <h1 className="text-3xl font-black tracking-tighter mb-1 uppercase italic">
-                        {profileName}<span className="text-emerald-500">_</span>
+                    <h1 className="me-profile-title font-[family-name:var(--font-outfit)] text-[clamp(3.5rem,12vw,7rem)] font-black tracking-[-0.085em] leading-[0.82] mb-3 uppercase text-transparent [-webkit-text-stroke:1px_rgba(255,255,255,0.78)]">
+                        {headingName}
                     </h1>
-                    <p className="text-[10px] font-mono text-zinc-500 tracking-[0.3em] uppercase mb-4">
-                        {config.profile.handle} // {config.profile.location || 'PLANET_EARTH'}
-                    </p>
-                    <div className="flex items-center justify-center gap-4 text-[9px] font-mono text-zinc-600 bg-white/5 py-1.5 px-4 rounded-full border border-white/5 backdrop-blur">
+                    {weatherEnabled && (
+                        <p className="text-[10px] font-mono text-cyan-400/70 tracking-[0.3em] uppercase mb-4">
+                            {formatLocation(config.profile.location)}
+                        </p>
+                    )}
+                    {weatherEnabled && (
+                        <div className="flex items-center justify-center gap-4 text-[9px] font-mono text-zinc-600 bg-white/5 py-1.5 px-4 rounded-full border border-white/5 backdrop-blur">
                         <span className="flex items-center gap-1.5"><Cloud size={10} /> {weather?.temperature_2m || '??'}°C</span>
                         <span className="opacity-20">|</span>
                         <span className="flex items-center gap-1.5"><Droplets size={10} /> {weather?.relative_humidity_2m || '??'}%</span>
                         <span className="opacity-20">|</span>
                         <span className="flex items-center gap-1.5"><Wind size={10} /> {weather?.wind_speed_10m || '??'}km/h</span>
+                        </div>
+                    )}
+                    <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 bg-white/[0.03] border border-white/10">
+                        <span className={cn("text-[8px] font-mono uppercase tracking-widest", presenceClasses.text)}>{displayStatus}</span>
                     </div>
-                    <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
-                        <span className="text-[8px] font-mono text-emerald-500 uppercase tracking-widest">{displayStatus}</span>
-                    </div>
+
+                    {(guildTag || discordBadges.length > 0) && (
+                        <div className="mt-3 flex items-center justify-center gap-2 flex-wrap">
+                            {guildTag && (
+                                <div
+                                    className="group relative inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/5 border border-white/10 backdrop-blur"
+                                    aria-label={`Discord primary guild tag ${guildTag}`}
+                                    title={`Discord Server Tag: ${guildTag}`}
+                                >
+                                    {guildTagBadgeUrl && (
+                                        <img
+                                            src={guildTagBadgeUrl}
+                                            alt={`Discord server tag badge (${guildTag})`}
+                                            title={`Discord server tag badge (${guildTag})`}
+                                            className="w-4 h-4 rounded-[4px]"
+                                            loading="lazy"
+                                            onError={(e) => {
+                                                // Hide if CDN asset is missing for some reason.
+                                                (e.currentTarget as HTMLImageElement).style.display = 'none';
+                                            }}
+                                        />
+                                    )}
+                                    <span className="text-[9px] font-mono text-zinc-300 uppercase tracking-widest">{guildTag}</span>
+                                    <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-black/80 px-2 py-1 text-[9px] font-mono text-zinc-200 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100">
+                                        {`Server Tag: ${guildTag}`}
+                                    </span>
+                                </div>
+                            )}
+
+                            {discordBadges.map((badge) => {
+                                const isActive = activeBadgeId === badge.id;
+                                return (
+                                    <button
+                                        key={badge.id}
+                                        type="button"
+                                        aria-label={badge.label}
+                                        onClick={() => setActiveBadgeId((prev) => (prev === badge.id ? null : badge.id))}
+                                        className="group relative"
+                                    >
+                                        <img
+                                            src={badge.src}
+                                            alt={badge.label}
+                                            className="w-5 h-5 opacity-90 hover:opacity-100 transition-opacity"
+                                            loading="lazy"
+                                            draggable={false}
+                                        />
+                                        <span className={cn(
+                                            "pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-black/80 px-2 py-1 text-[9px] font-mono text-zinc-200 transition-opacity duration-200",
+                                            isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100"
+                                        )}>
+                                            {badge.label}
+                                        </span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
                 </Reveal>
 
                 {/* Status/Quote Widget */}
@@ -568,7 +904,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
 
                 {/* Links Section */}
                 <div className="w-full mb-8">
-                    <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.2em] mb-3 ml-1 block">Social_Connections</span>
+                    <span className="me-section-label text-[10px] font-mono text-cyan-400 uppercase tracking-[0.3em] mb-3 ml-1 block">Social_Connections</span>
                     <div className="space-y-3">
                         {config.links.map((link, idx) => {
                             const isCustomIcon = link.icon && (link.icon.startsWith('http') || link.icon.startsWith('/') || link.icon.startsWith('data:'));
@@ -604,7 +940,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
                 {/* Music Player Section */}
                 <div className="w-full mb-8">
                     <div className="flex items-center justify-between mb-3 ml-1">
-                        <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.2em] block">Audio_Terminal</span>
+                        <span className="me-section-label text-[10px] font-mono text-blue-400 uppercase tracking-[0.3em] block">Audio_Terminal</span>
                         <div className="flex items-center gap-3">
                             <button onClick={() => setIsImmersive(!isImmersive)} className={cn(
                                 "text-[9px] font-mono uppercase tracking-widest transition-all",
@@ -667,7 +1003,8 @@ export default function MeClient({ config }: { config: MeConfig }) {
 
                                     <div className="mt-3 relative h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
                                         <div
-                                            className="absolute top-0 left-0 h-full bg-emerald-500 transition-all duration-300 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
+                                            ref={spotifyProgressBarRef}
+                                            className="absolute top-0 left-0 h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
                                             style={{ width: `${spotifyData?.isPlaying ? spotifyProgress : progress}%` }}
                                         />
                                         <input
@@ -721,7 +1058,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
                 {/* Gallery Section */}
                 {config.gallery && config.gallery.length > 0 && (
                     <div className="w-full mb-10">
-                        <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.2em] mb-3 ml-1 block">Visual_Feed</span>
+                        <span className="me-section-label text-[10px] font-mono text-violet-400 uppercase tracking-[0.3em] mb-3 ml-1 block">Visual_Feed</span>
                         <div className="grid grid-cols-2 gap-3">
                             {config.gallery.map((item) => (
                                 <Reveal key={item.id} direction="up" delay={0.4}>
@@ -762,7 +1099,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
                     <Tilt intensity={5}>
                         <div className="sub-card p-6 rounded-2xl border border-white/15 bg-white/[0.04] backdrop-blur-3xl relative overflow-hidden">
                             <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
-                            <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.2em] mb-3 block">// Newsletter</span>
+                            <span className="me-section-label text-[10px] font-mono text-violet-400 uppercase tracking-[0.3em] mb-3 block">// Newsletter</span>
                             <h3 className="text-lg font-bold tracking-tight mb-1 text-white">Stay Synchronized</h3>
                             <p className="text-xs text-zinc-400 mb-5 leading-relaxed">
                                 Get Your Special Note&apos;s <span className="inline-block animate-bounce">🍂</span>
@@ -804,7 +1141,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
 
                 {/* Resources */}
                 <div className="w-full mb-10">
-                    <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.2em] mb-3 ml-1 block">Resources_&_Visuals</span>
+                    <span className="me-section-label text-[10px] font-mono text-blue-400 uppercase tracking-[0.3em] mb-3 ml-1 block">Resources_&_Visuals</span>
                     <div className="space-y-3">
                         {config.resources.map((res, i) => (
                             <Reveal key={res.id} direction="up" delay={0.5 + (i * 0.05)}>
@@ -812,7 +1149,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
                                     <Link href={res.url} className="link-card block aspect-[16/5] rounded-xl group relative overflow-hidden bg-white/[0.03] border border-white/[0.08] backdrop-blur-xl">
                                         <div
                                             className="absolute inset-0 bg-cover bg-center grayscale-[40%] group-hover:grayscale-0 transition-all duration-500"
-                                            style={{ backgroundImage: `url('${config.profile.bannerUrl || "https://objects.avrxt.in/images/aviorxt_01.jpg"}')` }}
+                                            style={{ backgroundImage: `url('${config.profile.bannerUrl || "https://cdn.avxt.qzz.io/images/aviorxt_01.jpg"}')` }}
                                         ></div>
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10"></div>
                                         <div className="absolute inset-x-0 bottom-0 p-4 flex items-center justify-between z-20">
@@ -866,7 +1203,7 @@ export default function MeClient({ config }: { config: MeConfig }) {
                         </Magnetic>
                     </div>
                     <div className="flex items-center justify-center gap-4 text-[10px] text-zinc-700 font-mono uppercase tracking-widest mt-2">
-                        <span>&copy; {isMounted ? new Date().getFullYear() : '2026'} avrxt.in</span>
+                        <span>&copy; {isMounted ? new Date().getFullYear() : '2026'} avrxt.dev</span>
                         <span className="text-zinc-800">|</span>
                         <Link href="/me/admin" className="text-zinc-800 hover:text-zinc-500 transition-colors">
                             ADMIN
@@ -892,6 +1229,70 @@ export default function MeClient({ config }: { config: MeConfig }) {
                 }
                 .animate-bounce-slow {
                     animation: bounce-slow 3s ease-in-out infinite;
+                }
+                .me-v7 .me-profile-header {
+                    position: relative;
+                }
+                .me-v7 .me-profile-header::before,
+                .me-v7 .me-profile-header::after {
+                    content: '';
+                    position: absolute;
+                    left: -3px;
+                    width: 6px;
+                    height: 6px;
+                    border-radius: 999px;
+                    background: white;
+                }
+                .me-v7 .me-profile-header::before { top: 0; }
+                .me-v7 .me-profile-header::after { bottom: 0; }
+                .me-v7 .me-section-label {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.8rem;
+                }
+                .me-v7 .me-section-label::after {
+                    content: '';
+                    height: 1px;
+                    flex: 1;
+                    background: linear-gradient(90deg, currentColor, transparent);
+                    opacity: 0.22;
+                }
+                .me-v7 .link-card,
+                .me-v7 .card-3d,
+                .me-v7 .sub-card {
+                    border-radius: 0 !important;
+                    border-color: rgba(255, 255, 255, 0.12) !important;
+                    background: rgba(255, 255, 255, 0.025) !important;
+                    box-shadow: none;
+                }
+                .me-v7 .link-card:hover,
+                .me-v7 .card-3d:hover,
+                .me-v7 .sub-card:hover {
+                    border-color: rgba(96, 165, 250, 0.4) !important;
+                    background: linear-gradient(110deg, rgba(34, 211, 238, 0.045), rgba(139, 92, 246, 0.035)) !important;
+                }
+                .me-v7 input:not([type='range']) {
+                    border-radius: 0 !important;
+                }
+                .me-v7 .sub-card button[type='submit'] {
+                    border-radius: 0 !important;
+                    background: linear-gradient(90deg, #67e8f9, #60a5fa, #a78bfa) !important;
+                    color: #050505 !important;
+                }
+                @media (max-width: 420px) {
+                    .me-v7 .me-profile-title {
+                        font-size: clamp(3rem, 18vw, 4.5rem);
+                    }
+                }
+                @media (prefers-reduced-motion: reduce) {
+                    .me-v7 *,
+                    .me-v7 *::before,
+                    .me-v7 *::after {
+                        scroll-behavior: auto !important;
+                        animation-duration: 0.01ms !important;
+                        animation-iteration-count: 1 !important;
+                        transition-duration: 0.01ms !important;
+                    }
                 }
             `}</style>
         </main>

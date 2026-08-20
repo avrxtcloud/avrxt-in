@@ -18,7 +18,7 @@ function getAllowedOrigin(request: NextRequest): string {
   const configured = process.env.NEXT_PUBLIC_SITE_URL;
   const origin = request.headers.get('origin');
   if (configured && origin && origin === configured) return origin;
-  return configured || 'https://www.avrxt.in';
+  return configured || 'https://avrxt.dev';
 }
 
 export async function POST(request: NextRequest) {

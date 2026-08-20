@@ -1,0 +1,15 @@
+{
+  "$schema": "https://developers.cloudflare.com/wrangler/config-schema.json",
+  "name": "avrxt-edge-api",
+  "main": "worker.js",
+  "compatibility_date": "2026-03-27",
+  "workers_dev": true,
+  // Optional env vars:
+  // - ALLOWED_ORIGINS: comma-separated allowlist for CORS (default: *)
+  // - SPOTIFY_NOW_PLAYING_UPSTREAM: override upstream now-playing endpoint
+  "vars": {
+    "ALLOWED_ORIGINS": "",
+    "SPOTIFY_NOW_PLAYING_UPSTREAM": ""
+  }
+}
+

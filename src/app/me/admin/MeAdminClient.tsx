@@ -1,22 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import {
     Plus, Trash2, Save, LogOut,
     Music, Link as LinkIcon, Book,
     Check, ArrowUp, ArrowDown,
     User, Eye, AlertCircle, Camera, Upload, Activity,
-    Search, Youtube
+    Search, Youtube, Wrench
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MeConfig } from '@/lib/me-config';
 import { saveMeConfigAction } from '@/app/actions/me';
 import { logout } from '@/app/actions/auth';
-import { createClient } from '@/utils/supabase/client';
 import { disconnectSpotifyAction } from '@/app/actions/spotify';
 import { searchYouTubeAction } from '@/app/actions/youtube';
 import { uploadToR2Action, getPresignedR2UrlAction, deleteFromR2Action } from '@/app/actions/r2';
+import { edgeUrl } from '@/lib/edge';
+import { apiUrl } from '@/lib/api-gateway';
+import { DISCORD_BADGES } from '@/lib/discord-badges';
 
 interface MeAdminClientProps {
     initialConfig: MeConfig;
@@ -31,29 +33,6 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
     const [ytError, setYtError] = useState('');
     const [saveStatus, setSaveStatus] = useState<string>('');
     const [isPending, setIsPending] = useState(false);
-
-    useEffect(() => {
-        const checkIdentities = async () => {
-            const supabase = createClient();
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user?.identities) {
-                const discordId = user.identities.find(i => i.provider === 'discord')?.id;
-                if (discordId && !config.profile.presence?.discordId) {
-                    setConfig(prev => ({
-                        ...prev,
-                        profile: {
-                            ...prev.profile,
-                            presence: {
-                                mode: prev.profile.presence?.mode || 'auto',
-                                discordId: discordId
-                            }
-                        }
-                    }));
-                }
-            }
-        };
-        checkIdentities();
-    }, []);
 
     const handleSave = async () => {
         setIsPending(true);
@@ -258,6 +237,51 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                         </div>
                     )}
 
+                    <div className={cn(
+                        "mb-8 flex flex-col gap-5 rounded-2xl border p-6 sm:flex-row sm:items-center sm:justify-between",
+                        config.site?.maintenanceEnabled
+                            ? "border-amber-500/30 bg-amber-500/10"
+                            : "border-white/5 bg-zinc-900/40"
+                    )}>
+                        <div className="flex items-start gap-4">
+                            <div className={cn(
+                                "mt-0.5 rounded-xl p-2.5",
+                                config.site?.maintenanceEnabled ? "bg-amber-500/15 text-amber-400" : "bg-white/5 text-zinc-500"
+                            )}>
+                                <Wrench size={18} />
+                            </div>
+                            <div>
+                                <h2 className="font-mono text-sm font-bold uppercase tracking-widest">Maintenance_Mode</h2>
+                                <p className="mt-1 max-w-lg text-xs leading-5 text-zinc-500">
+                                    Redirect public pages to the maintenance screen. Admin, authentication, and API routes stay available. Press Save to apply.
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            role="switch"
+                            aria-checked={config.site?.maintenanceEnabled === true}
+                            onClick={() => setConfig(prev => ({
+                                ...prev,
+                                site: { maintenanceEnabled: !prev.site?.maintenanceEnabled },
+                            }))}
+                            className={cn(
+                                "relative h-8 w-16 shrink-0 rounded-full border transition-colors",
+                                config.site?.maintenanceEnabled
+                                    ? "border-amber-400/50 bg-amber-500/30"
+                                    : "border-white/10 bg-zinc-800"
+                            )}
+                        >
+                            <span className={cn(
+                                "absolute top-1 h-6 w-6 rounded-full transition-all",
+                                config.site?.maintenanceEnabled
+                                    ? "left-9 bg-amber-300"
+                                    : "left-1 bg-zinc-500"
+                            )} />
+                            <span className="sr-only">Toggle maintenance mode</span>
+                        </button>
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {/* Left Column */}
                         <div className="space-y-6">
@@ -320,14 +344,14 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                                             <button
                                                 onClick={() => setConfig({
                                                     ...config,
-                                                    profile: { ...config.profile, weatherEnabled: !config.profile.weatherEnabled }
+                                                    profile: { ...config.profile, weatherEnabled: config.profile.weatherEnabled === false }
                                                 })}
                                                 className={cn(
                                                     "px-3 py-1 rounded-md text-[9px] font-bold font-mono transition-all uppercase",
-                                                    config.profile.weatherEnabled ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-zinc-800 text-zinc-500 border border-white/5"
+                                                    config.profile.weatherEnabled !== false ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-zinc-800 text-zinc-500 border border-white/5"
                                                 )}
                                             >
-                                                {config.profile.weatherEnabled ? 'ENABLED' : 'DISABLED'}
+                                                {config.profile.weatherEnabled !== false ? 'ENABLED' : 'DISABLED'}
                                             </button>
                                         </div>
                                         <div className="flex gap-2">
@@ -344,7 +368,8 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                                                     if (!query) return;
                                                     setSaveStatus('SEARCHING_GEO...');
                                                     try {
-                                                        const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=en&format=json`);
+                                                        const path = `/v1/geo/search?name=${encodeURIComponent(query)}&count=5&language=en&format=json`;
+                                                        const res = await fetch(apiUrl(path, edgeUrl(`/v1/fnc/geo/search?name=${encodeURIComponent(query)}&count=5&language=en&format=json`)), { cache: 'no-store' });
                                                         const data = await res.json();
                                                         if (data.results) {
                                                             // We'll use a simple alert/prompt for now or just take the first one
@@ -452,6 +477,7 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                                                     profile: {
                                                         ...config.profile,
                                                         presence: {
+                                                            ...config.profile.presence,
                                                             mode: config.profile.presence?.mode || 'manual',
                                                             discordId: ''
                                                         }
@@ -462,18 +488,12 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                                                 [DISCONNECT]
                                             </button>
                                         ) : (
-                                            <button
-                                                onClick={async () => {
-                                                    const supabase = createClient();
-                                                    await supabase.auth.signInWithOAuth({
-                                                        provider: 'discord',
-                                                        options: { redirectTo: window.location.href }
-                                                    });
-                                                }}
+                                            <Link
+                                                href="/auth/start?provider=discord&next=%2Fme%2Fadmin"
                                                 className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-[9px] font-bold font-mono rounded-md transition-all uppercase"
                                             >
                                                 Connect_Discord
-                                            </button>
+                                            </Link>
                                         )}
                                     </div>
 
@@ -488,6 +508,7 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                                                     profile: {
                                                         ...config.profile,
                                                         presence: {
+                                                            ...config.profile.presence,
                                                             mode: config.profile.presence?.mode || 'manual',
                                                             discordId: e.target.value
                                                         }
@@ -495,6 +516,146 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                                                 })}
                                                 placeholder="Discord User ID"
                                             />
+
+                                            <div className="mt-3 flex items-center justify-between gap-3">
+                                                <span className={cn(
+                                                    "text-[10px] font-mono uppercase tracking-widest",
+                                                    config.profile.presence?.discordId ? "text-zinc-500" : "text-zinc-700"
+                                                )}>Server_Tag</span>
+                                                <button
+                                                    onClick={() => setConfig({
+                                                        ...config,
+                                                        profile: {
+                                                            ...config.profile,
+                                                            presence: {
+                                                                ...config.profile.presence,
+                                                                mode: config.profile.presence?.mode || 'manual',
+                                                                serverTagEnabled: !(config.profile.presence?.serverTagEnabled !== false),
+                                                            }
+                                                        }
+                                                    })}
+                                                    className={cn(
+                                                        "w-10 h-5 rounded-full transition-all relative border",
+                                                        (config.profile.presence?.serverTagEnabled !== false) ? "bg-emerald-500/20 border-emerald-500/50" : "bg-white/5 border-white/10"
+                                                    )}
+                                                >
+                                                    <div className={cn(
+                                                        "absolute top-1 w-2.5 h-2.5 rounded-full transition-all",
+                                                        (config.profile.presence?.serverTagEnabled !== false) ? "right-1 bg-emerald-500" : "left-1 bg-zinc-600"
+                                                    )}></div>
+                                                </button>
+                                            </div>
+
+                                            <div className="mt-3 flex items-center justify-between gap-3">
+                                                <span className={cn(
+                                                    "text-[10px] font-mono uppercase tracking-widest",
+                                                    config.profile.presence?.discordId ? "text-zinc-500" : "text-zinc-700"
+                                                )}>Discord_Badges</span>
+                                            <button
+                                                onClick={() => {
+                                                    const currentlyEnabled = config.profile.presence?.badgesEnabled !== false;
+                                                    const nextEnabled = !currentlyEnabled;
+                                                    setConfig({
+                                                        ...config,
+                                                        profile: {
+                                                            ...config.profile,
+                                                            presence: {
+                                                                ...config.profile.presence,
+                                                                mode: config.profile.presence?.mode || 'manual',
+                                                                badgesEnabled: nextEnabled,
+                                                                badgesMode: nextEnabled ? (config.profile.presence?.badgesMode || 'auto') : 'auto'
+                                                            }
+                                                        }
+                                                    });
+                                                }}
+                                                className={cn(
+                                                    "w-10 h-5 rounded-full transition-all relative border",
+                                                    (config.profile.presence?.badgesEnabled !== false) ? "bg-emerald-500/20 border-emerald-500/50" : "bg-white/5 border-white/10"
+                                                )}
+                                            >
+                                                    <div className={cn(
+                                                        "absolute top-1 w-2.5 h-2.5 rounded-full transition-all",
+                                                        (config.profile.presence?.badgesEnabled !== false) ? "right-1 bg-emerald-500" : "left-1 bg-zinc-600"
+                                                    )}></div>
+                                                </button>
+                                            </div>
+
+                                            <div className="mt-4 flex items-center justify-between gap-3">
+                                                <span className={cn(
+                                                    "text-[10px] font-mono uppercase tracking-widest",
+                                                    config.profile.presence?.discordId ? "text-zinc-500" : "text-zinc-700"
+                                                )}>Badges_Mode</span>
+                                                <button
+                                                    onClick={() => setConfig({
+                                                        ...config,
+                                                        profile: {
+                                                            ...config.profile,
+                                                            presence: {
+                                                                ...config.profile.presence,
+                                                                mode: config.profile.presence?.mode || 'manual',
+                                                                badgesMode: (config.profile.presence?.badgesMode || 'auto') === 'auto' ? 'manual' : 'auto'
+                                                            }
+                                                        }
+                                                    })}
+                                                    disabled={config.profile.presence?.badgesEnabled === false}
+                                                    className={cn(
+                                                        "px-3 py-1 rounded-md text-[9px] font-bold font-mono transition-all uppercase border",
+                                                        config.profile.presence?.badgesEnabled === false && "opacity-40 cursor-not-allowed",
+                                                        (config.profile.presence?.badgesMode || 'auto') === 'manual'
+                                                            ? "bg-purple-500/15 text-purple-300 border-purple-500/30"
+                                                            : "bg-blue-500/15 text-blue-300 border-blue-500/30"
+                                                    )}
+                                                >
+                                                    {(config.profile.presence?.badgesMode || 'auto') === 'manual' ? 'MANUAL' : 'AUTO'}
+                                                </button>
+                                            </div>
+
+                                            {(config.profile.presence?.badgesEnabled !== false) && ((config.profile.presence?.badgesMode || 'auto') === 'manual') && (
+                                                <div className="mt-3 rounded-xl bg-black/30 border border-white/5 p-3">
+                                                    <div className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest mb-2">Select_Badges</div>
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        {DISCORD_BADGES.map((badge) => {
+                                                            const enabled = Boolean(config.profile.presence?.badgesManual?.[badge.id]);
+                                                            return (
+                                                                <label
+                                                                    key={badge.id}
+                                                                    className={cn(
+                                                                        "flex items-center gap-2 px-2 py-1.5 rounded-lg border cursor-pointer select-none transition-all",
+                                                                        enabled ? "bg-emerald-500/10 border-emerald-500/20" : "bg-white/0 border-white/5 hover:border-white/10"
+                                                                    )}
+                                                                >
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={enabled}
+                                                                        onChange={(e) => {
+                                                                            const next = Boolean(e.target.checked);
+                                                                            setConfig({
+                                                                                ...config,
+                                                                                profile: {
+                                                                                    ...config.profile,
+                                                                                    presence: {
+                                                                                        ...config.profile.presence,
+                                                                                        mode: config.profile.presence?.mode || 'manual',
+                                                                                        badgesMode: 'manual',
+                                                                                        badgesManual: {
+                                                                                            ...(config.profile.presence?.badgesManual || {}),
+                                                                                            [badge.id]: next
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            });
+                                                                        }}
+                                                                        className="accent-emerald-500"
+                                                                    />
+                                                                    <span className="text-[9px] font-mono text-zinc-300 truncate" title={badge.label}>
+                                                                        {badge.label}
+                                                                    </span>
+                                                                </label>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -553,7 +714,15 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                                     <div className="flex items-center gap-3">
                                         <span className="text-[10px] font-mono text-zinc-500 uppercase">Live_Spotify</span>
                                         <button
-                                            onClick={() => setConfig({ ...config, music: { ...config.music, spotifyEnabled: !config.music.spotifyEnabled } })}
+                                            onClick={() => setConfig({
+                                                ...config,
+                                                music: {
+                                                    ...config.music,
+                                                    spotifyEnabled: !config.music.spotifyEnabled,
+                                                    // When disabling Spotify, also disable ambient to prevent confusion.
+                                                    spotifyAmbientEnabled: config.music.spotifyEnabled ? false : config.music.spotifyAmbientEnabled
+                                                }
+                                            })}
                                             className={cn(
                                                 "w-10 h-5 rounded-full transition-all relative border",
                                                 config.music.spotifyEnabled ? "bg-emerald-500/20 border-emerald-500/50" : "bg-white/5 border-white/10"
@@ -565,6 +734,33 @@ export default function MeAdminClient({ initialConfig, isSpotifyConnected }: MeA
                                             )}></div>
                                         </button>
                                     </div>
+                                </div>
+
+                                <div className="flex justify-between items-center">
+                                    <div className="flex items-center gap-2">
+                                        <span className={cn(
+                                            "text-[10px] font-mono uppercase",
+                                            config.music.spotifyEnabled ? "text-zinc-500" : "text-zinc-700"
+                                        )}>Spotify_Ambient</span>
+                                        <span className="text-[9px] font-mono text-zinc-700 uppercase">(cover_glow)</span>
+                                    </div>
+                                    <button
+                                        onClick={() => setConfig({
+                                            ...config,
+                                            music: { ...config.music, spotifyAmbientEnabled: !config.music.spotifyAmbientEnabled }
+                                        })}
+                                        disabled={!config.music.spotifyEnabled}
+                                        className={cn(
+                                            "w-10 h-5 rounded-full transition-all relative border",
+                                            !config.music.spotifyEnabled && "opacity-40 cursor-not-allowed",
+                                            config.music.spotifyAmbientEnabled ? "bg-emerald-500/20 border-emerald-500/50" : "bg-white/5 border-white/10"
+                                        )}
+                                    >
+                                        <div className={cn(
+                                            "absolute top-1 w-2.5 h-2.5 rounded-full transition-all",
+                                            config.music.spotifyAmbientEnabled ? "right-1 bg-emerald-500" : "left-1 bg-zinc-600"
+                                        )}></div>
+                                    </button>
                                 </div>
 
                                 {/* Spotify Connection */}

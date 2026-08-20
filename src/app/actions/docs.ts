@@ -4,13 +4,14 @@ import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { DocArticle } from '@/lib/docs-config';
 import { verifyAdmin } from '@/lib/auth-checks';
+import { createAdminClient } from '@/utils/supabase/admin';
 
 // Fetch all docs (Admin view - sees drafts too)
 export async function getAdminDocs() {
     const { authorized } = await verifyAdmin();
     if (!authorized) return [];
 
-    const supabase = await createClient();
+    const supabase = createAdminClient();
     const { data, error } = await supabase
         .from('documents')
         .select('*')
@@ -63,7 +64,7 @@ export async function createDocAction(doc: Partial<DocArticle>) {
         return { error: `Unauthorized: ${authError}` };
     }
 
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     // Remove ID if present to let Supabase generate UUID
     const { id, ...docData } = doc;
@@ -93,7 +94,7 @@ export async function updateDocAction(id: string, updates: Partial<DocArticle>) 
         return { error: `Unauthorized: ${authError}` };
     }
 
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     const { data, error } = await supabase
         .from('documents')
@@ -120,7 +121,7 @@ export async function deleteDocAction(id: string) {
         return { error: `Unauthorized: ${authError}` };
     }
 
-    const supabase = await createClient();
+    const supabase = createAdminClient();
     const { error } = await supabase.from('documents').delete().eq('id', id);
 
     if (error) {

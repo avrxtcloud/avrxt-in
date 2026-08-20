@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { ShieldCheck, Activity, ExternalLink, AlertTriangle, AlertCircle } from 'lucide-react';
+import { apiUrl } from '@/lib/api-gateway';
 
 type StatusState = {
     status: 'operational' | 'down' | 'maintenance' | 'unknown' | 'degraded';
@@ -16,10 +17,11 @@ export default function StatusBadge() {
 
     useEffect(() => {
         let mounted = true;
+        let lastFetchAt = 0;
 
         const fetchStatus = async () => {
             try {
-                const response = await fetch('/api/status', {
+                const response = await fetch(apiUrl('/v1/status', '/api/status'), {
                     method: 'GET',
                     cache: 'no-store'
                 });
@@ -37,23 +39,30 @@ export default function StatusBadge() {
             }
         };
 
-        fetchStatus();
+        const fetchStatusThrottled = () => {
+            const now = Date.now();
+            if (lastFetchAt && now - lastFetchAt < 60000) return;
+            lastFetchAt = now;
+            fetchStatus();
+        };
 
-        const interval = setInterval(fetchStatus, 15000);
+        fetchStatusThrottled();
+
+        const interval = setInterval(fetchStatusThrottled, 60000);
         const refreshOnFocus = () => {
             if (document.visibilityState === 'visible') {
-                fetchStatus();
+                fetchStatusThrottled();
             }
         };
 
         document.addEventListener('visibilitychange', refreshOnFocus);
-        window.addEventListener('focus', fetchStatus);
+        window.addEventListener('focus', fetchStatusThrottled);
 
         return () => {
             mounted = false;
             clearInterval(interval);
             document.removeEventListener('visibilitychange', refreshOnFocus);
-            window.removeEventListener('focus', fetchStatus);
+            window.removeEventListener('focus', fetchStatusThrottled);
         };
     }, []);
 
@@ -108,7 +117,7 @@ export default function StatusBadge() {
     return (
         <div className="flex items-center justify-center p-0.5">
             <a
-                href="https://status.avrxt.in"
+                href="https://status.avrxt.dev"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group relative flex items-center gap-3 px-4 py-1.5 bg-zinc-900/20 backdrop-blur-md border border-white/5 rounded-xl transition-all duration-500 hover:border-white/10 hover:bg-zinc-900/40 hover:shadow-[0_0_30px_-10px_rgba(255,255,255,0.05)] overflow-hidden scale-[0.92]"

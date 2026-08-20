@@ -188,7 +188,7 @@ async function checkStatusProvider(name: string): Promise<CheckResult> {
     }
 
     const fallbackResponse = await withTimeout(
-      fetch('https://status.avrxt.in/badge?theme=dark', { cache: 'no-store' }),
+      fetch('https://status.avrxt.dev/badge?theme=dark', { cache: 'no-store' }),
       10000
     );
 

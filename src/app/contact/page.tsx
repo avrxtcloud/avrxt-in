@@ -4,12 +4,13 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Github, Mail, Instagram, Menu } from 'lucide-react';
 import Reveal from '@/components/Reveal';
+import { apiUrl } from '@/lib/api-gateway';
 
 export default function Contact() {
     const [formStatus, setFormStatus] = useState<{ type: 'success' | 'error' | null, message: string }>({ type: null, message: '' });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const API_ENDPOINT = '/api/contact';
+    const API_ENDPOINT = apiUrl('/v1/contact', '/api/contact');
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -119,7 +120,7 @@ export default function Contact() {
                     <Link href="https://github.com/avrxt" target="_blank" className="hover:text-white transition-colors">
                         <Github className="w-6 h-6" />
                     </Link>
-                    <Link href="mailto:support@avrxt.in" className="hover:text-white transition-colors">
+                    <Link href="mailto:support@avrxt.dev" className="hover:text-white transition-colors">
                         <Mail className="w-6 h-6" />
                     </Link>
                     <Link href="https://instagram.com/avr.me" target="_blank" className="hover:text-white transition-colors">

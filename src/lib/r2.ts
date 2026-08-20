@@ -1,6 +1,22 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
+const DEFAULT_CDN_URL = "https://cdn.avxt.qzz.io";
+
+function requireEnv(name: string) {
+    const value = process.env[name]?.trim();
+    if (!value) throw new Error(`Missing required R2 configuration: ${name}`);
+    return value;
+}
+
+function getCdnBaseUrl(folder: 'i' | 'v') {
+    const configured = folder === 'i'
+        ? process.env.NEXT_PUBLIC_R2_IMAGE_DOMAIN
+        : process.env.NEXT_PUBLIC_R2_VIDEO_DOMAIN;
+    const value = configured?.trim() || process.env.NEXT_PUBLIC_R2_DOMAIN?.trim() || DEFAULT_CDN_URL;
+    return (/^https?:\/\//i.test(value) ? value : `https://${value}`).replace(/\/$/, "");
+}
+
 const r2 = new S3Client({
     region: "auto",
     endpoint: process.env.R2_ENDPOINT?.replace(/\/$/, ""), // Remove trailing slash if exists
@@ -11,7 +27,7 @@ const r2 = new S3Client({
 });
 
 export async function uploadFile(buffer: Buffer, fileName: string, contentType: string, folder: 'i' | 'v') {
-    const bucketName = process.env.R2_BUCKET_NAME!;
+    const bucketName = requireEnv('R2_BUCKET_NAME');
     const key = `${folder}/${fileName}`;
 
     await r2.send(
@@ -23,12 +39,11 @@ export async function uploadFile(buffer: Buffer, fileName: string, contentType: 
         })
     );
 
-    const domain = folder === 'i' ? process.env.NEXT_PUBLIC_R2_IMAGE_DOMAIN : process.env.NEXT_PUBLIC_R2_VIDEO_DOMAIN;
-    return `https://${domain}/${folder}/${fileName}`;
+    return `${getCdnBaseUrl(folder)}/${folder}/${encodeURIComponent(fileName)}`;
 }
 
 export async function getPresignedUploadUrl(fileName: string, contentType: string, folder: 'i' | 'v') {
-    const bucketName = process.env.R2_BUCKET_NAME!;
+    const bucketName = requireEnv('R2_BUCKET_NAME');
     const key = `${folder}/${fileName}`;
 
     const command = new PutObjectCommand({
@@ -40,26 +55,21 @@ export async function getPresignedUploadUrl(fileName: string, contentType: strin
     // Valid for 1 hour
     const url = await getSignedUrl(r2, command, { expiresIn: 3600 });
 
-    const domain = folder === 'i' ? process.env.NEXT_PUBLIC_R2_IMAGE_DOMAIN : process.env.NEXT_PUBLIC_R2_VIDEO_DOMAIN;
-    const publicUrl = `https://${domain}/${folder}/${fileName}`;
+    const publicUrl = `${getCdnBaseUrl(folder)}/${folder}/${encodeURIComponent(fileName)}`;
 
     return { uploadUrl: url, publicUrl, key };
 }
 
 export async function deleteFile(url: string) {
-    const bucketName = process.env.R2_BUCKET_NAME!;
+    const bucketName = requireEnv('R2_BUCKET_NAME');
 
     // Extract key from URL
-    // Domains: i.cdn.avrxt.in or v.cdn.avrxt.in
-    let folder = '';
-    if (url.includes(process.env.NEXT_PUBLIC_R2_IMAGE_DOMAIN!)) folder = 'i';
-    else if (url.includes(process.env.NEXT_PUBLIC_R2_VIDEO_DOMAIN!)) folder = 'v';
-    else return; // Not an R2 URL we manage
+    const parsed = new URL(url);
+    const allowedHosts = new Set([getCdnBaseUrl('i'), getCdnBaseUrl('v')].map(value => new URL(value).host));
+    if (!allowedHosts.has(parsed.host)) return;
 
-    const fileName = url.split('/').pop();
-    if (!fileName) return;
-
-    const key = `${folder}/${fileName}`;
+    const key = decodeURIComponent(parsed.pathname.replace(/^\/+/, ''));
+    if (!/^[iv]\/.+/.test(key)) return;
 
     try {
         await r2.send(

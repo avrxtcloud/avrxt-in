@@ -1,12 +1,11 @@
 'use server'
 
-import { createClient } from '@/utils/supabase/server';
+import { verifyAdmin } from '@/lib/auth-checks';
 
 export async function searchYouTubeAction(query: string) {
     // Admin-only: verify authentication
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { error: 'Unauthorized' };
+    const { authorized } = await verifyAdmin();
+    if (!authorized) return { error: 'Unauthorized' };
 
     const apiKey = process.env.YOUTUBE_API_KEY;
     if (!apiKey) return { error: 'YouTube API key not configured. Add YOUTUBE_API_KEY to your environment variables.' };

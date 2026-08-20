@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useRef, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X, Search, Command } from 'lucide-react';
@@ -12,10 +12,6 @@ export default function Navbar() {
     const [searchQuery, setSearchQuery] = useState('');
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const pathname = usePathname();
-
-    // Sliding highlight state
-    const [hoverStyle, setHoverStyle] = useState({ left: 0, width: 0, opacity: 0 });
-    const navRef = useRef<HTMLDivElement>(null);
 
     const searchItems = useMemo(() => {
         return [
@@ -58,19 +54,6 @@ export default function Navbar() {
         { name: 'Support', href: '/cupcake' },
     ];
 
-    const handleMouseEnter = (e: React.MouseEvent<HTMLAnchorElement>) => {
-        const target = e.currentTarget;
-        setHoverStyle({
-            left: target.offsetLeft,
-            width: target.offsetWidth,
-            opacity: 1
-        });
-    };
-
-    const handleMouseLeave = () => {
-        setHoverStyle(prev => ({ ...prev, opacity: 0 }));
-    };
-
     const handleToggleMenu = () => {
         setIsOpen((prev) => !prev);
         setIsSearchOpen(false);
@@ -111,10 +94,7 @@ export default function Navbar() {
                     (isOpen || isSearchOpen) ? "z-[300]" : "z-[100]"
                 )}
             >
-                <nav
-                    ref={navRef}
-                    className="relative flex items-center bg-zinc-900/80 backdrop-blur-2xl border border-white/10 rounded-full px-2 py-2 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-500 hover:border-white/20 pointer-events-auto"
-                >
+                <nav className="v7-navbar relative flex items-center bg-[#080808]/90 backdrop-blur-2xl border border-white/10 px-2 py-2 shadow-[0_20px_60px_rgba(0,0,0,0.7)] transition-all duration-500 hover:border-cyan-300/25 pointer-events-auto">
                     {/* Logo */}
                     <Magnetic>
                         <Link href="/" className="px-4 py-2 transition-transform hover:scale-110 active:scale-95 flex items-center">
@@ -126,16 +106,6 @@ export default function Navbar() {
                         </Link>
                     </Magnetic>
 
-                    {/* Sliding Highlight */}
-                    <div
-                        className="absolute h-[32px] bg-white/10 rounded-full transition-all duration-300 ease-out pointer-events-none"
-                        style={{
-                            left: `${hoverStyle.left}px`,
-                            width: `${hoverStyle.width}px`,
-                            opacity: hoverStyle.opacity
-                        }}
-                    />
-
                     {/* Nav Links - Desktop */}
                     <div className="hidden sm:flex items-center gap-1 relative">
                         {navLinks.map((link) => {
@@ -144,11 +114,9 @@ export default function Navbar() {
                                 <Link
                                     key={link.href}
                                     href={link.href}
-                                    onMouseEnter={handleMouseEnter}
-                                    onMouseLeave={handleMouseLeave}
                                     className={cn(
-                                        "px-4 py-2 text-[13px] font-medium transition-colors relative z-10",
-                                        isActive ? "text-white" : "text-zinc-500 hover:text-white"
+                                        "px-4 py-2 text-[11px] font-mono uppercase tracking-[0.16em] transition-colors relative z-10 border-l border-white/5",
+                                        isActive ? "text-cyan-300 bg-cyan-300/[0.06]" : "text-zinc-500 hover:text-white hover:bg-white/[0.03]"
                                     )}
                                 >
                                     {link.name}
@@ -161,7 +129,7 @@ export default function Navbar() {
                     <Magnetic>
                         <button
                             onClick={handleToggleSearch}
-                            className="hidden sm:flex items-center gap-3 px-4 py-2 hover:bg-white/5 rounded-full transition-all group"
+                            className="hidden sm:flex items-center gap-3 px-4 py-2 hover:bg-cyan-300/[0.06] transition-all group border-l border-white/5"
                         >
                             <Search className="w-3 h-3 group-hover:text-white transition-colors" />
                             <span className="text-[11px] font-mono opacity-50 uppercase tracking-widest hidden lg:block">Search</span>
@@ -185,14 +153,14 @@ export default function Navbar() {
                         <Magnetic>
                             <button
                                 onClick={handleToggleMenu}
-                                className="p-2.5 rounded-full bg-white/5 hover:bg-white/10 hover:scale-110 active:scale-95 transition-all flex items-center gap-2 group"
+                                className="p-2.5 bg-white/5 hover:bg-cyan-300/10 active:scale-95 transition-all flex items-center gap-2 group border-l border-white/10"
                             >
                                 {isOpen && (
-                                    <span className="text-[8px] font-mono text-emerald-400 uppercase tracking-widest animate-pulse">
+                                    <span className="text-[8px] font-mono text-cyan-300 uppercase tracking-widest animate-pulse">
                                         ESC
                                     </span>
                                 )}
-                                {isOpen ? <X className="w-4 h-4 text-emerald-400" /> : <Menu className="w-4 h-4" />}
+                                {isOpen ? <X className="w-4 h-4 text-cyan-300" /> : <Menu className="w-4 h-4" />}
                             </button>
                         </Magnetic>
                     </div>
@@ -202,7 +170,7 @@ export default function Navbar() {
             {isSearchOpen && (
                 <div className="fixed inset-0 z-[250] flex items-start justify-center pt-[10vh] sm:pt-[15vh] px-4 sm:px-6">
                     <div className="absolute inset-0 bg-black/90 backdrop-blur-xl cursor-pointer" onClick={() => setIsSearchOpen(false)} />
-                    <div className="relative w-full max-w-2xl bg-[#080808] border border-white/10 rounded-3xl sm:rounded-[2rem] shadow-[0_0_100px_rgba(0,0,0,1)] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                    <div className="v7-search relative w-full max-w-2xl bg-[#080808] border border-cyan-300/20 shadow-[0_0_100px_rgba(0,0,0,1)] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                         <div className="p-4 sm:p-6 flex items-center gap-4 border-b border-white/5 bg-white/[0.01]">
                             <Search className="w-5 h-5 text-zinc-600" />
                             <input
@@ -227,7 +195,7 @@ export default function Navbar() {
                                     key={item.href}
                                     href={item.href}
                                     onClick={() => setIsSearchOpen(false)}
-                                    className="group flex items-center justify-between p-3 sm:p-4 rounded-xl hover:bg-white/[0.04] border border-white/0 hover:border-white/5 transition-all transform hover:translate-x-1"
+                                    className="group flex items-center justify-between p-3 sm:p-4 hover:bg-cyan-300/[0.04] border-l border-white/0 hover:border-cyan-300/50 transition-all transform hover:translate-x-1"
                                 >
                                     <div>
                                         <div className="text-sm font-bold text-zinc-400 group-hover:text-white transition-colors flex items-center gap-2">
@@ -259,7 +227,7 @@ export default function Navbar() {
             {isOpen && (
                 <div className="fixed inset-0 z-[200] bg-[#050505] flex flex-col pt-32 px-10 animate-in fade-in duration-500 overflow-hidden">
                     <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[radial-gradient(#fff_1px,transparent_1px)] bg-[size:32px_32px]"></div>
-                    <div className="absolute top-0 right-0 w-full h-[50vh] bg-gradient-to-b from-emerald-500/[0.03] to-transparent pointer-events-none" />
+                    <div className="absolute top-0 right-0 w-full h-[50vh] bg-gradient-to-b from-cyan-400/[0.06] via-blue-500/[0.03] to-transparent pointer-events-none" />
 
                     <div className="relative z-10 space-y-3">
                         <div className="flex items-center gap-3 mb-8">
@@ -282,7 +250,7 @@ export default function Navbar() {
                         <Link
                             href="/me"
                             onClick={() => setIsOpen(false)}
-                            className="group block text-5xl sm:text-6xl font-black tracking-tighter text-emerald-500/10 hover:text-emerald-400 transition-all transform hover:translate-x-4 active:scale-95 origin-left"
+                            className="group block text-5xl sm:text-6xl font-black tracking-tighter text-cyan-300/20 hover:text-cyan-300 transition-all transform hover:translate-x-4 active:scale-95 origin-left"
                         >
                             /me
                         </Link>

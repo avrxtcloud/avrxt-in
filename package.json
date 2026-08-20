@@ -6,34 +6,51 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "auth:dev": "wrangler dev",
+    "auth:deploy": "wrangler deploy",
+    "api:dev": "wrangler dev --config api-worker/wrangler.jsonc",
+    "api:deploy": "wrangler deploy --config api-worker/wrangler.jsonc"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1000.0",
     "@aws-sdk/s3-request-presigner": "^3.1000.0",
+    "@openauthjs/openauth": "^0.4.3",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.90.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.36.0",
+    "googleapis": "^171.4.0",
     "lru-cache": "^11.2.6",
     "lucide-react": "^0.562.0",
-    "next": "16.1.6",
-    "nodemailer": "^7.0.12",
+    "next": "^16.3.1",
+    "nodemailer": "^9.0.5",
     "razorpay": "^2.9.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "react-markdown": "^10.1.0",
+    "rehype-highlight": "^7.0.2",
+    "rehype-raw": "^7.0.0",
+    "rehype-stringify": "^10.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-parse": "^11.0.0",
+    "remark-rehype": "^11.1.2",
     "resend": "^6.7.0",
-    "tailwind-merge": "^3.4.0"
+    "tailwind-merge": "^3.4.0",
+    "unified": "^11.0.5",
+    "valibot": "^1.4.2"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260819.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/nodemailer": "^7.0.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.1.6",
+    "eslint-config-next": "^16.3.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^4.124.0"
   }
 }

@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server';
+import { createAdminClient } from '@/utils/supabase/admin';
 import { getMeConfigAction } from '@/app/actions/me';
 import MeAdminClient from './MeAdminClient';
 import { buildPageMetadata } from '@/lib/page-metadata';
@@ -14,7 +14,7 @@ export const metadata = buildPageMetadata({
 export default async function MeAdminPage() {
     await protectAdminPage();
 
-    const supabase = await createClient();
+    const supabase = createAdminClient();
     const config = await getMeConfigAction();
 
     const { data: spotifyToken } = await supabase

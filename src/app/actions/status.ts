@@ -132,7 +132,7 @@ export async function getStatusHistory() {
 // Simple scraper fallback when no API key is configured
 export async function getPublicStatus() {
     try {
-        const res = await fetch('https://status.avrxt.in/badge?theme=dark', {
+        const res = await fetch('https://status.avrxt.dev/badge?theme=dark', {
             next: { revalidate: 300 }
         });
         const html = await res.text();

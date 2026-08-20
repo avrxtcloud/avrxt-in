@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { User } from '@supabase/supabase-js';
+import { useRouter } from 'next/navigation';
+import type { AuthUser } from '@/lib/openauth';
 import { Github, Send, Trash2, Edit3, X, Check, ShieldAlert, TriangleAlert } from 'lucide-react';
 import { signInWithGithub, postMessage, deleteMessage, updateMessage } from '@/app/actions/guestbook';
 import { cn } from '@/lib/utils';
+import AutoLinkPreview from '@/components/AutoLinkPreview';
 
 interface Message {
     id: string;
@@ -29,7 +31,8 @@ type DialogState =
     }
     | null;
 
-export default function GuestbookClient({ user, initialMessages }: { user: User | null, initialMessages: Message[] }) {
+export default function GuestbookClient({ user, initialMessages }: { user: AuthUser | null, initialMessages: Message[] }) {
+    const router = useRouter();
     const [messages, setMessages] = useState<Message[]>(initialMessages);
     const [input, setInput] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,7 +49,7 @@ export default function GuestbookClient({ user, initialMessages }: { user: User 
     };
 
     const handleSignIn = () => {
-        window.location.href = '/auth/login?source=guestbook';
+        router.push('/auth/login?source=guestbook');
     };
 
     const handleSignOut = async () => {
@@ -253,7 +256,10 @@ export default function GuestbookClient({ user, initialMessages }: { user: User 
                                             </div>
                                         </div>
                                     ) : (
-                                        <p className="text-zinc-400 text-sm leading-relaxed">{msg.message}</p>
+                                        <>
+                                            <p className="text-zinc-400 text-sm leading-relaxed">{msg.message}</p>
+                                            <AutoLinkPreview text={msg.message} />
+                                        </>
                                     )}
 
                                     {/* Actions for owner */}

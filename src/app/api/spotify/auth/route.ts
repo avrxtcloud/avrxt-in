@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { NextResponse } from 'next/server';
 import { verifyAdmin } from '@/lib/auth-checks';
+import { getSpotifyRedirectUri } from '@/lib/spotify-oauth';
 
 export async function GET(request: Request) {
   const { authorized } = await verifyAdmin();
@@ -9,10 +10,10 @@ export async function GET(request: Request) {
   }
 
   const clientId = process.env.SPOTIFY_CLIENT_ID;
-  const redirectUri = process.env.SPOTIFY_REDIRECT_URI;
+  const redirectUri = getSpotifyRedirectUri(request.url);
   const scope = 'user-read-currently-playing user-read-playback-state user-read-recently-played';
 
-  if (!clientId || !redirectUri) {
+  if (!clientId) {
     return NextResponse.redirect(new URL('/me/admin?error=spotify_env_missing', request.url));
   }
 

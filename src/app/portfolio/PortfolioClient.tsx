@@ -28,8 +28,8 @@ import Tilt from '@/components/Tilt';
 import Magnetic from '@/components/Magnetic';
 
 const PERSONAL_PHOTOS = [
-    'https://cdn.avrxt.in/images/14041223_125659207.jpg',
-    'https://cdn.avrxt.in/images/14041223_125715885.jpg'
+    'https://cdn.avxt.qzz.io/images/14041223_125659207.jpg',
+    'https://cdn.avxt.qzz.io/images/14041223_125715885.jpg'
 ];
 
 const CATEGORIES = ['All', 'Web', 'Infrastructure', 'AI', 'Full-Stack'];
@@ -103,7 +103,7 @@ export default function PortfolioClient() {
     const [copied, setCopied] = useState(false);
 
     const handleCopyEmail = () => {
-        navigator.clipboard.writeText('dev@avrxt.in');
+        navigator.clipboard.writeText('dev@avrxt.dev');
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };
@@ -151,7 +151,7 @@ export default function PortfolioClient() {
                             </div>
                             <div className="hidden sm:block">
                                 <div className="text-[9px] font-mono uppercase tracking-widest text-zinc-600">Email Payload</div>
-                                <div className="text-sm font-bold text-zinc-300">dev@avrxt.in</div>
+                                <div className="text-sm font-bold text-zinc-300">dev@avrxt.dev</div>
                             </div>
                         </div>
 

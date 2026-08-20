@@ -4,14 +4,14 @@ import { buildPageMetadata } from '@/lib/page-metadata';
 export const metadata = buildPageMetadata({
     title: 'Terms of Service',
     description:
-        'The formal Terms and Conditions for accessing avrxt.in and using our Cloud architecture. Review our rules on API usage, liability, and conduct.',
+        'The formal Terms and Conditions for accessing avrxt.dev and using our Cloud architecture. Review our rules on API usage, liability, and conduct.',
     keywords: ['terms of service', 'legal terms', 'avrxt terms', 'API usage rules', 'user conduct', 'legal jurisdiction'],
     path: '/terms',
 });
 
 export default function Terms() {
     const lastUpdated = "January 15, 2026";
-    const supportEmail = "support@avrxt.in";
+    const supportEmail = "support@avrxt.dev";
 
     return (
         <main className="max-w-3xl mx-auto px-6 pt-40 pb-32">

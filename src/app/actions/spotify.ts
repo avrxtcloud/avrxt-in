@@ -1,15 +1,15 @@
 'use server';
 
-import { createClient } from '@/utils/supabase/server';
 import { searchSpotify } from '@/lib/spotify';
 import { revalidatePath } from 'next/cache';
 import { verifyAdmin } from '@/lib/auth-checks';
+import { createAdminClient } from '@/utils/supabase/admin';
 
 export async function disconnectSpotifyAction() {
     const { authorized, error: authError } = await verifyAdmin();
     if (!authorized) return { error: `Unauthorized: ${authError}` };
 
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     const { error } = await supabase.from('spotify_tokens').delete().neq('id', '00000000-0000-0000-0000-000000000000');
 

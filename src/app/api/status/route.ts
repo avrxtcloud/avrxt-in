@@ -60,7 +60,7 @@ async function fetchBetterstackStatus(): Promise<StatusPayload> {
 
 async function fetchPublicStatus(): Promise<StatusPayload> {
     try {
-        const response = await fetch('https://status.avrxt.in/badge?theme=dark', {
+        const response = await fetch('https://status.avrxt.dev/badge?theme=dark', {
             cache: 'no-store'
         });
 
