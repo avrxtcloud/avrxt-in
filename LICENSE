@@ -1,11 +1,21 @@
-Copyright (c) 2026 avrxt. All rights reserved.
+MIT License
 
-Proprietary and Confidential.
+Copyright (c) 2026 Muhammad Irshad C P
 
-This software and all related documentation are the exclusive property of @avrxt. 
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-No part of this project, including its source code, design elements, architecture, or content, may be copied, reproduced, distributed, or modified in any form or by any means without the express prior written permission of @avrxt.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-Unauthorized usage, redistribution, or derivation of this project is strictly prohibited and will result in immediate legal action under applicable intellectual property laws.
-
-For permissions or inquiries, contact: support@avrxt.dev
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
